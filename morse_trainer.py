@@ -2,13 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
-A PyQt5 application to help a user learn to send and copy Morse code.
+Morse Trainer is an application to help a user learn to send and copy Morse.
 
-You need a morse key and Code Practice Oscillator (CPO).
+Usage:  morse_trainer [-d <debug>]  [-h]
+
+where  -d <debug>  sets the debug level to the number <debug>
+and    -h          prints this help and then stops.
+
+You will need a morse key and Code Practice Oscillator (CPO).
 """
 
 import sys
 import json
+import getopt
 import platform
 import traceback
 
@@ -93,8 +99,6 @@ class MorseTrainer(QTabWidget):
         # update visible controls with state values
         self.update_UI()
 
-        log('MorseTrainer: finished, app ready to go ###############################')
-
     def initUI(self):
         self.send_tab = QWidget()
         self.copy_tab = QWidget()
@@ -132,18 +136,25 @@ class MorseTrainer(QTabWidget):
 
         # start layout
         buttons = QVBoxLayout()
+        buttons.maximumSize()
         buttons.addStretch()
         buttons.addWidget(self.btn_send_start_stop)
         buttons.addItem(QSpacerItem(20, 20))
         buttons.addWidget(self.btn_send_clear)
 
+        controls = QVBoxLayout()
+        controls.addItem(QSpacerItem(20, 20))   # empty, for now
+
         hbox = QHBoxLayout()
+        hbox.addLayout(controls)
         hbox.addStretch()
+        #hbox.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
         layout.addWidget(self.send_display)
         layout.addWidget(instructions)
+        layout.addStretch()
         layout.addLayout(hbox)
         self.send_tab.setLayout(layout)
 
@@ -183,6 +194,7 @@ class MorseTrainer(QTabWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.copy_display)
         layout.addWidget(instructions)
+        layout.addStretch()
         layout.addLayout(hbox)
         self.copy_tab.setLayout(layout)
 
@@ -190,6 +202,7 @@ class MorseTrainer(QTabWidget):
         self.copy_speeds.changed.connect(self.copy_speeds_changed)
 
     def InitStatsTab(self):
+        # create all tab widgets
         doc_text = ('This shows your sending and receiving proficiency. '
                     'Each bar shows your proficiency for a character.  The '
                     'taller the bar the better.  You need to practice the '
@@ -211,17 +224,24 @@ class MorseTrainer(QTabWidget):
         self.copy_status.setState(percents)
         btn_clear = QPushButton('Clear')
 
+        # lay out the tab
+        buttons = QVBoxLayout()
+        buttons.addStretch()
+        buttons.addWidget(btn_clear)
+
+        controls = QVBoxLayout()
+        controls.addWidget(self.send_status)
+        controls.addWidget(self.copy_status)
+
         hbox = QHBoxLayout()
-        hbox.addStretch()
-        hbox.addWidget(btn_clear)
+        hbox.addLayout(controls)
+        buttons.addItem(QSpacerItem(10, 1))
+        hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
-
         layout.addWidget(instructions)
-        layout.addWidget(self.send_status)
-        layout.addWidget(self.copy_status)
+        layout.addStretch()
         layout.addLayout(hbox)
-
         self.stats_tab.setLayout(layout)
 
         # connect the 'Clear' button to debug code
@@ -278,10 +298,11 @@ class MorseTrainer(QTabWidget):
         # the character sets we test on and associated variables
         self.copy_using_Koch = True
         self.copy_Koch_number = 2
-        self.copy_Koch_list = [char for char in utils.Koch[:self.copy_Koch_number]]
+        self.copy_Koch_list = [ch for ch in utils.Koch[:self.copy_Koch_number]]
         self.copy_User_chars = {}
 
-        self.send_Koch_list = [] # [char for char in utils.Koch[:self.send_Koch_number]]
+        self.send_Koch_number = 2
+        self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
 
         # send and copy speeds
         self.send_wpm = None        # not used yet
@@ -300,14 +321,14 @@ class MorseTrainer(QTabWidget):
 
         # read JSON from file, if we can
         if filename is None:
-            log('load_state: no state file configured to recover from')
+            log.info('load_state: no state file configured to recover from')
             return
 
         try:
             with open(filename, 'r') as fd:
                 data = json.load(fd)
         except FileNotFoundError:
-            log("load_state: state file '%s' not found" % filename)
+            log.info("load_state: state file '%s' not found" % filename)
             return
 
         # get data from the restore dictionary, if possible
@@ -317,7 +338,8 @@ class MorseTrainer(QTabWidget):
             except KeyError:
                 pass
             else:
-                log('load_state: setting var %s to %s' % (var_name, str(value)))
+                log.debug('load_state: setting var %s to %s'
+                          % (var_name, str(value)))
                 setattr(self, var_name, value)
 
         #####
@@ -424,21 +446,50 @@ class MorseTrainer(QTabWidget):
 if __name__ == '__main__':
     import sys
 
+    # small 'usage' function
+    def usage(msg=None):
+        if msg:
+            print(('*'*80 + '\n%s\n' + '*'*80) % msg)
+        print(__doc__)
+
     # our own handler for uncaught exceptions
     def excepthook(type, value, tb):
         msg = '\n' + '=' * 80
         msg += '\nUncaught exception:\n'
         msg += ''.join(traceback.format_exception(type, value, tb))
         msg += '=' * 80 + '\n'
-        log(msg)
+        log.critical(msg)
         print(msg)
 
     # plug our handler into the python system
     sys.excepthook = excepthook
 
-    log = logger.Log('debug.log', logger.Log.DEBUG)
+    # start the logging
+    log = logger.Log('debug.log', logger.Log.CRITICAL)
     log('Morse Trainer %s started' % ProgramVersion)
 
+    # parse command line options
+    argv = sys.argv[1:]
+
+    try:
+        (opts, args) = getopt.getopt(argv, 'd:h', ['debug=', 'help'])
+    except getopt.GetoptError as err:
+        usage(err)
+        sys.exit(1)
+
+    for (opt, param) in opts:
+        if opt in ['-d', '--debug']:
+            try:
+                debug = int(param)
+                log.set_level(debug)
+            except ValueError:
+                usage("-d must be followed by an integer, got '%s'" % param)
+                sys.exit(1)
+        elif opt in ['-h', '--help']:
+            usage()
+            sys.exit(0)
+
+    # launch the app
     app = QApplication(sys.argv)
     ex = MorseTrainer()
     ex.show()

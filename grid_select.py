@@ -28,7 +28,7 @@ from PyQt5.QtGui import QFont
 
 import utils
 import logger
-log = logger.Log('debug.log', logger.Log.DEBUG)
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class GridSelect(QWidget):

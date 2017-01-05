@@ -37,7 +37,7 @@ QGroupBox:title{
 }
 """
 
-log = logger.Log('debug.log', logger.Log.DEBUG)
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 def str_trace(msg=None):
@@ -60,7 +60,7 @@ def str_trace(msg=None):
 def log_trace(msg=None):
     """Log a traceback string."""
 
-    log(str_trace(msg))
+    log.debug(str_trace(msg))
 
 
 def morse2display(morse):

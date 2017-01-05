@@ -23,7 +23,7 @@ from PyQt5.QtCore import pyqtSignal
 
 import utils
 import logger
-log = logger.Log('debug.log', logger.Log.DEBUG)
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class Speeds(QWidget):
@@ -103,12 +103,10 @@ class Speeds(QWidget):
         """
 
         self.word_speed = wpm
-        log('Speeds.setState: wpm=%s' % str(wpm))
         self.spb_words.setValue(wpm)
 
         if cwpm is not None:
             self.char_speed = cwpm
-            log('Speeds.setState: cwpm=%s' % str(cwpm))
             self.spb_chars.setValue(cwpm)
 
         self.update()

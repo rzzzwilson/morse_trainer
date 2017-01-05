@@ -27,6 +27,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont
 
 from proficiency import Proficiency
+import utils
 
 
 class CharsetProficiency(QWidget):
@@ -75,6 +76,7 @@ class CharsetProficiency(QWidget):
         layout = QVBoxLayout()
 
         groupbox = QGroupBox(self.gbox_name)
+        groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()

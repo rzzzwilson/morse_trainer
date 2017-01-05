@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from grid_select import GridSelect
 import utils
 import logger
-log = logger.Log('debug.log', logger.Log.DEBUG)
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class Charset(QWidget):
@@ -296,7 +296,6 @@ class Charset(QWidget):
         utils.log_trace('EMIT from charset.py')
 
         if not self.inhibit:
-            log('was_changed: emitting state=%s' % str(self.getState()))
             self.changed.emit(self.getState())
 
     def setAllAlphasHandler(self, signal):

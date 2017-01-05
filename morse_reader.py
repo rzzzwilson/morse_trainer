@@ -17,7 +17,7 @@ from instructions import Instructions
 import utils
 
 import logger
-log = logger.Log('debug.log', logger.Log.DEBUG)
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 # set platform-dependent stuff, if any
@@ -68,14 +68,11 @@ class MorseReader(QThread):
 
         self.copy_morse = copy_morse.ReadMorse()
         if self.params_file:
-            log('Loading params from %s' % self.params_file)
             self.copy_morse.load_params(self.params_file)
 
     def __del__(self):
-        log('__del__')
         # save updated params
         if self.params_file:
-            log('Saving params to %s' % self.params_file)
             self.copy_morse.save_params(self.params_file)
         # close morse reader
         self.running = False
@@ -83,16 +80,13 @@ class MorseReader(QThread):
 
     def close(self):
         if self.params_file:
-            log('Saving params to %s' % self.params_file)
             self.copy_morse.save_params(self.params_file)
-        log('Stopping thread')
         self.running = False
 
     def run(self):
         self.running = True
         while self.running:
             char = self.copy_morse.read_morse()
-            log('found: %s' % char)
             if len(char) == 1:
                 self.sig_obj.morse_char.emit(char)
 
