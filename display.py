@@ -74,11 +74,11 @@ class Display(QWidget):
         TooltipOffset = 33
         TooltipLineOffset = 13
     elif platform.system() == 'Linux':
-        DefaultWidgetHeight = 55
+        DefaultWidgetHeight = 70
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 24
-        BaselineOffsetLower = 48
-        FontSize = 30
+        BaselineOffsetUpper = 34
+        BaselineOffsetLower = 65
+        FontSize = 34
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
