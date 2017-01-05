@@ -17,6 +17,7 @@ import json
 import getopt
 import platform
 import traceback
+from random import randint
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
@@ -52,7 +53,7 @@ class MorseTrainer(QTabWidget):
         MinimumHeight = 675
     elif platform.system() == 'Linux':
         MinimumWidth = 815
-        MinimumHeight = 655
+        MinimumHeight = 670
     elif platform.system() == 'Darwin':
         MinimumWidth = 815
         MinimumHeight = 675
@@ -63,10 +64,8 @@ class MorseTrainer(QTabWidget):
     DefaultWordsPerMinute = 10
     DefaultCharWordsPerMinute = 10
 
-    # constants for the three tabs
-    SendTab = 0
-    CopyTab = 1
-    StatisticsTab = 2
+    # 'enum' constants for the three tabs
+    (SendTab, CopyTab, StatisticsTab) = range(3)
 
     # dict to convert tab index to name
     TabIndex2Name = {SendTab: 'Send',
@@ -116,10 +115,11 @@ class MorseTrainer(QTabWidget):
         self.setMaximumHeight(MorseTrainer.MinimumHeight)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
 
-        # connect events to slots
+        # connect 'change tab' event to handler
         self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
-        self.copy_groups.changed.connect(self.copy_group_change)
-        self.copy_charset.changed.connect(self.copy_charset_change)
+
+        # connect 'Send' events to handlers
+#        self.copy_speeds.changed.connect(self.copy_speeds_changed)
 
     def initSendTab(self):
         # define widgets on this tab
@@ -198,8 +198,29 @@ class MorseTrainer(QTabWidget):
         layout.addLayout(hbox)
         self.copy_tab.setLayout(layout)
 
-        # tie events raised here to handlers
+        # connect 'Copy' events to handlers
         self.copy_speeds.changed.connect(self.copy_speeds_changed)
+        self.copy_groups.changed.connect(self.copy_group_change)
+        self.copy_charset.changed.connect(self.copy_charset_change)
+        self.btn_copy_start_stop.clicked.connect(self.copy_start)
+        self.btn_copy_clear.clicked.connect(self.copy_clear)
+
+    def copy_start(self, event):
+        """The Copy 'start/pause' button was clicked."""
+
+        if self.processing:
+            self.processing = False
+            self.btn_copy_start_stop.setText('Start')
+        else:
+            self.processing = True
+            self.btn_copy_start_stop.setText('Pause')
+
+        log.debug('After Copy start/pause button, .processing=%s' % str(self.processing))
+
+    def copy_clear(self, event):
+        """The Copy 'clear' button was clicked."""
+
+        pass
 
     def InitStatsTab(self):
         # create all tab widgets
@@ -213,13 +234,16 @@ class MorseTrainer(QTabWidget):
                     'are tested with.\n\n'
                     'Pressing the "Clear" button will clear the statistics.')
         instructions = Instructions(doc_text)
-        self.send_status = CharsetProficiency('Send Proficiency', utils.Alphabetics,
-                                              utils.Numbers, utils.Punctuation)
+        self.send_status = CharsetProficiency('Send Proficiency',
+                                              utils.Alphabetics,
+                                              utils.Numbers,
+                                              utils.Punctuation)
         percents = self.stats2percent(self.send_stats)
         self.send_status.setState(percents)
         self.copy_status = CharsetProficiency('Copy Proficiency',
-                                                 utils.Alphabetics, utils.Numbers,
-                                                 utils.Punctuation)
+                                              utils.Alphabetics,
+                                              utils.Numbers,
+                                              utils.Punctuation)
         percents = self.stats2percent(self.copy_stats)
         self.copy_status.setState(percents)
         btn_clear = QPushButton('Clear')
@@ -244,8 +268,31 @@ class MorseTrainer(QTabWidget):
         layout.addLayout(hbox)
         self.stats_tab.setLayout(layout)
 
-        # connect the 'Clear' button to debug code
-#        btn_clear.clicked.connect(self.xyzzy)
+        # connect 'Stats' events to handlers
+        btn_clear.clicked.connect(self.xyzzy)       # DEBUG
+
+    def xyzzy(self):
+        """Fill the send/copy stats display with random data."""
+
+        # generate random data for send
+        new = {}
+        for char in self.send_stats:
+            if char in 'A0?':
+                # first in each set is 0.0
+                new[char] = 0.0
+            else:
+                new[char] = randint(0,100)/100
+        self.send_status.setState(new)
+
+        # generate random data for copy
+        new = {}
+        for char in self.copy_stats:
+            if char in 'A0?':
+                # first in each set is 0.0
+                new[char] = 0.0
+            else:
+                new[char] = randint(0,100)/100
+        self.copy_status.setState(new)
 
     def update_UI(self):
         """Update controls that show state values."""
@@ -254,7 +301,9 @@ class MorseTrainer(QTabWidget):
         self.copy_speeds.setState(self.copy_wpm)
 
         # the copy test sets (Koch and user-selected)
-        self.copy_charset.setState(self.copy_using_Koch, self.copy_Koch_number, self.copy_User_chars)
+        self.copy_charset.setState(self.copy_using_Koch,
+                                   self.copy_Koch_number,
+                                   self.copy_User_chars)
 
     def copy_speeds_changed(self, cwpm, wpm):
         """Something in the "copy speed" group changed.
@@ -275,7 +324,9 @@ class MorseTrainer(QTabWidget):
         """Handle a chage in the Copy charset group widget."""
 
         (self.copy_using_Koch,
-         self.copy_Koch_number, self.copy_User_chars) = state
+         self.copy_Koch_number,
+         self.copy_User_chars) = state
+
         self.update_UI()
 
     def closeEvent(self, *args, **kwargs):
@@ -286,6 +337,9 @@ class MorseTrainer(QTabWidget):
 
     def clear_data(self):
         """Define and clear all internal variables."""
+
+        # state variable shows send or copy processing
+        self.processing = False
 
         # clear the send/copy statistics
         # each dictionary contains tuples of (<num_chars>, <num_ok>)
