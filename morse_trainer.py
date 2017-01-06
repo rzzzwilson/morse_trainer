@@ -14,6 +14,7 @@ You will need a morse key and Code Practice Oscillator (CPO).
 
 import sys
 import json
+import time
 import getopt
 import platform
 import traceback
@@ -209,13 +210,35 @@ class MorseTrainer(QTabWidget):
         """The Copy 'start/pause' button was clicked."""
 
         if self.processing:
-            self.processing = False
-            self.btn_copy_start_stop.setText('Start')
-        else:
-            self.processing = True
-            self.btn_copy_start_stop.setText('Pause')
+            # enable the Clear button and speed/grouping
+            self.btn_copy_clear.setDisabled(False)
+            self.copy_speeds.setDisabled(False)
 
-        log.debug('After Copy start/pause button, .processing=%s' % str(self.processing))
+            # close down the running Send thread
+            self.btn_copy_start_stop.setText('Start')
+            # terminate the Send thread
+
+            # disable the key event listener
+            self.processing = False
+        else:
+            # disable the Clear button and speed/grouping
+            self.btn_copy_clear.setDisabled(True)
+            self.copy_speeds.setDisabled(True)
+
+            self.btn_copy_start_stop.setText('Pause')
+            self.threadCopy = CopyThread(self.copy_Koch_list, self.copy_cwpm, self.copy_wpm)
+
+            # connect to events from the new thread
+            self.threadCopy.copy_char.connect(self.thread_done_one)
+
+            # enable the key event listener
+
+            # start the Send thread
+            self.processing = True
+            self.threadCopy.start()
+
+    def thread_done_one(self, char):
+        print('thread_done_one: %s' % char)
 
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
@@ -495,6 +518,86 @@ class MorseTrainer(QTabWidget):
         """Make app show the required tab index sheet."""
 
         self.setCurrentIndex(tab_index)
+
+
+class CopyThread(QThread):
+    """A thread to create morse sounds with the speaker which the user copies.
+
+    It also sends a signal to the main thread at the start of each character.
+    """
+
+    copy_char = pyqtSignal(str)
+
+    def __init__(self, charset, cwpm, wpm):
+        QThread.__init__(self)
+        self.charset = charset
+        self.cwpm = cwpm
+        self.wpm = wpm
+        self.running = False
+
+    def __del__(self):
+        self.running = False
+        self.wait()
+
+    def run(self):
+        # the main thread could make this False
+        self.running = True
+
+        while self.running:
+            # select char to send
+            # send signal to main thread containing 'char'
+            # make the character soud in morse
+
+            # debug - choose random char and just signal main thread
+            self.copy_char.emit('A')
+            time.sleep(1)
+
+
+def XCopyThread(QThread):
+    """A thread to create morse sounds with the speaker which the user copies.
+
+    It also sends a signal to the main thread at the start of each character.
+    """
+
+    copy_char = pyqtSignal()
+
+    #def __init__(self, charset, cwpm, cpm):
+    def __init__(self, name, num):
+        """Create a Copy thread.
+
+        charset  a sequence of chars to choose from
+        cwpm     the character speed
+        cpm      the overall speed
+        """
+
+#        log('CopyThread: charset=%s, cwpm=%s, wpm=%s' % (str(charset), str(cwpm), str(wpm)))
+
+        QThread.__init__(self)
+#        self.charset = charset
+#        self.cwpm = cwpm
+#        self.wpm = wpm
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        """While flag self.running is True:
+               select a random character from the test charset
+               send signal naming char to main thread
+               sound the char in morse
+        """
+
+        # the main thread could make this False
+        self.running = True
+
+        while self.running:
+            # select char to send
+            # send signal to main thread containing 'char'
+            # make the character soud in morse
+
+            # debug - choose random char and just signal main thread
+            self.copy_char.emit()
+            time.sleep(0.5)
 
 
 if __name__ == '__main__':
