@@ -140,7 +140,7 @@ class Log(object):
         sym = self._level_num_to_name.get(level, None)
         if sym is None:
             # not recognized symbolic but it's legal, so interpret as 'XXXX+2'
-            sym_10 = 10 * (level/10)
+            sym_10 = int(10 * (level//10))
             sym_rem = level - sym_10
             sym = '%s+%d' % (self._level_num_to_name[sym_10], sym_rem)
 
