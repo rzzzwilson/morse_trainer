@@ -293,8 +293,6 @@ class Charset(QWidget):
     def was_changed(self):
         """Something changed inside the widget.  Tell the world."""
 
-        utils.log_trace('EMIT from charset.py')
-
         if not self.inhibit:
             self.changed.emit(self.getState())
 
