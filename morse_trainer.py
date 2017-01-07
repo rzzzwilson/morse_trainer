@@ -18,7 +18,7 @@ import time
 import getopt
 import platform
 import traceback
-from random import randint
+from random import randrange
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
@@ -33,6 +33,7 @@ from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
 from instructions import Instructions
+from send_morse import SendMorse
 import utils
 import logger
 
@@ -79,7 +80,7 @@ class MorseTrainer(QTabWidget):
     # define names of the state variables to be saved/restored
     StateVarNames = ['send_stats', 'copy_stats', 'copy_using_Koch',
                      'copy_Koch_number', 'copy_Koch_list',
-                     'copy_User_chars', 'copy_wpm', 'copy_cwpm',
+                     'copy_User_chars_dict', 'copy_wpm', 'copy_cwpm',
                      'copy_group_index', 'send_wpm', 'send_Koch_list',
                      'current_tab_index']
 
@@ -88,6 +89,7 @@ class MorseTrainer(QTabWidget):
         super(MorseTrainer, self).__init__(parent)
 
         # define internal state variables
+        self.send_morse_obj = SendMorse()       # the Send morse object
         self.clear_data()
 
         # define the UI
@@ -171,7 +173,7 @@ class MorseTrainer(QTabWidget):
         instructions = Instructions(doc_text)
         self.copy_speeds = Speeds()
         self.copy_groups = Groups()
-        self.copy_charset = Charset()
+        self.copy_charset = Charset(utils.AllUserChars)
         self.btn_copy_start_stop = QPushButton('Start')
         self.btn_copy_clear = QPushButton('Clear')
 
@@ -206,39 +208,84 @@ class MorseTrainer(QTabWidget):
         self.btn_copy_start_stop.clicked.connect(self.copy_start)
         self.btn_copy_clear.clicked.connect(self.copy_clear)
 
-    def copy_start(self, event):
+    def copy_start(self, event=None):
         """The Copy 'start/pause' button was clicked."""
 
         if self.processing:
-            # enable the Clear button and speed/grouping
+            # enable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(False)
             self.copy_speeds.setDisabled(False)
+            self.copy_groups.setDisabled(False)
+            self.copy_charset.setDisabled(False)
 
-            # close down the running Send thread
+            # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
-            # terminate the Send thread
 
-            # disable the key event listener
+            # change state variables to reflect the stop
             self.processing = False
+            self.keypress_count = 0
         else:
-            # disable the Clear button and speed/grouping
+            # disable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
+            self.copy_groups.setDisabled(True)
+            self.copy_charset.setDisabled(True)
 
             self.btn_copy_start_stop.setText('Pause')
-            self.threadCopy = CopyThread(self.copy_Koch_list, self.copy_cwpm, self.copy_wpm)
+            self.prev_send_char = None
+            self.send_char = self.get_random_char(self.copy_Koch_list)
+            self.threadCopy = CopyThread(self.send_char, self.send_morse_obj)
 
             # connect to events from the new thread
-            self.threadCopy.copy_char.connect(self.thread_done_one)
-
-            # enable the key event listener
+            self.threadCopy.finished.connect(self.send_thread_finished)
 
             # start the Send thread
             self.processing = True
+            self.keypress_count = 0
             self.threadCopy.start()
 
-    def thread_done_one(self, char):
-        print('thread_done_one: %s' % char)
+    def send_thread_finished(self):
+        """Catch signal when Send thread finished.
+
+        If still processing, start new thread.
+        """
+
+        if self.processing:
+            self.keypress_count = 0
+            self.prev_send_char = self.send_char
+            self.send_char = self.get_random_char(self.copy_Koch_list)
+            self.threadCopy = CopyThread(self.send_char, self.send_morse_obj)
+            self.threadCopy.finished.connect(self.send_thread_finished)
+            self.threadCopy.start()
+
+    def get_random_char(self, charset):
+        """Get a random char from the charset sequence."""
+
+        index = randrange(len(charset))
+        return charset[index]
+
+
+    def keyPressEvent(self, e):
+        """When self.processing is True we handle keypresses."""
+
+        if not self.processing:
+            return
+
+        key_int = e.key()
+        if key_int < 128:
+            char = chr(key_int)
+            if char in utils.Koch:
+                self.keypress_count += 1
+                if self.keypress_count == 1:
+                    print('User guess: %s (%s was sounded)' % (char, self.prev_send_char))
+                elif self.keypress_count == 2:
+                    print('User 2nd guess %s (%s was sounded)' % (char, self.send_char))
+                else:
+                    print('IGNORED guess: %s' % char)
+            else:
+                print('User pressed BAD key: %s' % char)
+        else:
+            print('Unprintable char: %O' % key_int)
 
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
@@ -304,7 +351,7 @@ class MorseTrainer(QTabWidget):
                 # first in each set is 0.0
                 new[char] = 0.0
             else:
-                new[char] = randint(0,100)/100
+                new[char] = randrange(100)/100
         self.send_status.setState(new)
 
         # generate random data for copy
@@ -314,7 +361,7 @@ class MorseTrainer(QTabWidget):
                 # first in each set is 0.0
                 new[char] = 0.0
             else:
-                new[char] = randint(0,100)/100
+                new[char] = randrange(100)/100
         self.copy_status.setState(new)
 
     def update_UI(self):
@@ -326,7 +373,7 @@ class MorseTrainer(QTabWidget):
         # the copy test sets (Koch and user-selected)
         self.copy_charset.setState(self.copy_using_Koch,
                                    self.copy_Koch_number,
-                                   self.copy_User_chars)
+                                   self.copy_User_chars_dict)
 
     def copy_speeds_changed(self, cwpm, wpm):
         """Something in the "copy speed" group changed.
@@ -337,6 +384,7 @@ class MorseTrainer(QTabWidget):
 
         self.copy_cwpm = cwpm
         self.copy_wpm = wpm
+        self.send_morse_obj.set_speeds(cwpm, wpm)
 
     def copy_group_change(self, index):
         """Copy grouping changed."""
@@ -344,11 +392,18 @@ class MorseTrainer(QTabWidget):
         self.copy_group_index = index
 
     def copy_charset_change(self, state):
-        """Handle a chage in the Copy charset group widget."""
+        """Handle a change in the Copy charset group widget."""
 
         (self.copy_using_Koch,
          self.copy_Koch_number,
-         self.copy_User_chars) = state
+         self.copy_User_chars_dict) = state
+
+        # update the Koch test set
+        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
+
+        # update the user test set
+        on = [ch for ch in self.copy_User_chars_dict if self.copy_User_chars_dict[ch]]
+        self.copy_User_sequence = ''.join(on)
 
         self.update_UI()
 
@@ -361,6 +416,11 @@ class MorseTrainer(QTabWidget):
     def clear_data(self):
         """Define and clear all internal variables."""
 
+        # the morse sound object and Send state variables
+        self.keypress_count = 0             # keypress counter
+        self.prev_send_char = None          # previous Send char
+        self.send_char = None               # current Send char
+
         # state variable shows send or copy processing
         self.processing = False
 
@@ -368,15 +428,15 @@ class MorseTrainer(QTabWidget):
         # each dictionary contains tuples of (<num_chars>, <num_ok>)
         self.send_stats = {}
         self.copy_stats = {}
-        for char in utils.Alphabetics + utils.Numbers + utils.Punctuation:
+        for char in utils.AllUserChars:
             self.send_stats[char] = (0, 0)
             self.copy_stats[char] = (0, 0)
 
         # the character sets we test on and associated variables
         self.copy_using_Koch = True
         self.copy_Koch_number = 2
-        self.copy_Koch_list = [ch for ch in utils.Koch[:self.copy_Koch_number]]
-        self.copy_User_chars = {}
+        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
+        self.copy_User_chars_dict = {ch:False for ch in utils.AllUserChars}
 
         self.send_Koch_number = 2
         self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
@@ -430,8 +490,11 @@ class MorseTrainer(QTabWidget):
         # the charset used
         self.copy_charset.setState(self.copy_using_Koch,
                                    self.copy_Koch_number,
-                                   self.copy_User_chars)
+                                   self.copy_User_chars_dict)
+        # update the Send morse sounder object
+        self.send_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
 
+        # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
         self.update()
 
@@ -501,7 +564,8 @@ class MorseTrainer(QTabWidget):
 
         # if we left the "copy" tab, turn off action, if any
         if self.previous_tab_index == MorseTrainer.CopyTab:
-            pass
+            self.processing = True
+            self.copy_start()       # to set UI state to "not processing"
 
         # if we changed to the "statistics" tab, refresh the stats widget
         if tab_index == MorseTrainer.StatisticsTab:
@@ -521,83 +585,38 @@ class MorseTrainer(QTabWidget):
 
 
 class CopyThread(QThread):
-    """A thread to create morse sounds with the speaker which the user copies.
+    """A thread to sound a morse character to the speakers.
 
-    It also sends a signal to the main thread at the start of each character.
+    It sends a signal to the main thread when finished.
     """
 
-    copy_char = pyqtSignal(str)
+    # the signal when finished
+    finished = pyqtSignal()
 
-    def __init__(self, charset, cwpm, wpm):
+    def __init__(self, char, sound_object):
+        """Create a thread to sound one morse character.
+
+        char         the character to sound
+        sound_object  the object that makes morse sounds
+        """
+
         QThread.__init__(self)
-        self.charset = charset
-        self.cwpm = cwpm
-        self.wpm = wpm
-        self.running = False
+        self.char = char
+        self.sound_object = sound_object
 
     def __del__(self):
-        self.running = False
+        """Delete the thread."""
+
         self.wait()
 
     def run(self):
-        # the main thread could make this False
-        self.running = True
+        """Sound the character."""
 
-        while self.running:
-            # select char to send
-            # send signal to main thread containing 'char'
-            # make the character soud in morse
+        # make the character sound in morse
+        self.sound_object.send(self.char)
 
-            # debug - choose random char and just signal main thread
-            self.copy_char.emit('A')
-            time.sleep(1)
-
-
-def XCopyThread(QThread):
-    """A thread to create morse sounds with the speaker which the user copies.
-
-    It also sends a signal to the main thread at the start of each character.
-    """
-
-    copy_char = pyqtSignal()
-
-    #def __init__(self, charset, cwpm, cpm):
-    def __init__(self, name, num):
-        """Create a Copy thread.
-
-        charset  a sequence of chars to choose from
-        cwpm     the character speed
-        cpm      the overall speed
-        """
-
-#        log('CopyThread: charset=%s, cwpm=%s, wpm=%s' % (str(charset), str(cwpm), str(wpm)))
-
-        QThread.__init__(self)
-#        self.charset = charset
-#        self.cwpm = cwpm
-#        self.wpm = wpm
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        """While flag self.running is True:
-               select a random character from the test charset
-               send signal naming char to main thread
-               sound the char in morse
-        """
-
-        # the main thread could make this False
-        self.running = True
-
-        while self.running:
-            # select char to send
-            # send signal to main thread containing 'char'
-            # make the character soud in morse
-
-            # debug - choose random char and just signal main thread
-            self.copy_char.emit()
-            time.sleep(0.5)
+        # send signal to main thread: finished
+        self.finished.emit()
 
 
 if __name__ == '__main__':
