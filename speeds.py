@@ -35,23 +35,24 @@ class Speeds(QWidget):
     MinSpeed = 5
     MaxSpeed = 40
 
-    def __init__(self, char_speed=MinSpeed):
+    def __init__(self, char_speed=MinSpeed, word_speed=MaxSpeed):
         QWidget.__init__(self)
-        self.initUI(char_speed)
+        self.initUI(char_speed, word_speed)
         self.setWindowTitle('Test Speeds widget')
         self.setFixedHeight(80)
         self.show()
 
         # define state variables
         self.char_speed = char_speed
+        self.word_speed = word_speed
 
-    def initUI(self, char_speed):
+    def initUI(self, char_speed, word_speed):
         # define the widgets we are going to use
         lbl_words = QLabel('  Overall')
         self.spb_words = QSpinBox(self)
         self.spb_words.setMinimum(Speeds.MinSpeed)
         self.spb_words.setMaximum(Speeds.MaxSpeed)
-        self.spb_words.setValue(char_speed)
+        self.spb_words.setValue(word_speed)
         self.spb_words.setSuffix(' wpm')
 
         lbl_chars = QLabel('Characters')
@@ -84,15 +85,39 @@ class Speeds(QWidget):
         self.spb_words.valueChanged.connect(self.handle_wordspeed_change)
 
     def handle_wordspeed_change(self, word_speed):
-        """Word speed changed."""
+        """Word speed changed.
 
+        Ensure word speed <= char speed.  Bump char speed if necessary.
+        """
+
+        # save changed speed
         self.word_speed = word_speed
+
+        # ensure char >= word speed
+        if self.char_speed < word_speed:
+            self.char_speed = word_speed
+            self.spb_chars.setValue(word_speed)
+            self.update()
+
+        # tell the world there was a change
         self.changed.emit(self.char_speed, self.word_speed)
 
     def handle_charspeed_change(self, char_speed):
-        """Character speed changed."""
+        """Character speed changed.
 
+        Ensure char speed >= word speed.  Bump word speed if necessary.
+        """
+
+        # save changed speed
         self.char_speed = char_speed
+
+        # ensure char >= word speed
+        if char_speed < self.word_speed:
+            self.word_speed = char_speed
+            self.spb_words.setValue(char_speed)
+            self.update()
+
+        # tell the world there was a change
         self.changed.emit(self.char_speed, self.word_speed)
 
     def setState(self, wpm, cwpm=None):
