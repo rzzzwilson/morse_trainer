@@ -182,17 +182,13 @@ class GridSelect(QWidget):
 
         self.inhibit = True
 
+        self.status = status
+
         # set status and state of each button
         for button in self.buttons:
             label = button.text()
-            new_status = False
-            try:
-                new_status = status[label]
-            except KeyError:
-                pass
-            else:
-                button.setChecked(new_status)
-                self.status[label] = new_status
+            button.setChecked(status[label])
+
         self.update()
 
         self.inhibit = False
