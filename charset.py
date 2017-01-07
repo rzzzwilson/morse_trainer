@@ -51,12 +51,11 @@ class Charset(QWidget):
     changed = pyqtSignal(tuple)
 
 
-    def __init__(self, koch_selected=True, koch_num=2, user_charset=None):
+    def __init__(self, koch_selected=True, koch_num=2):
         """Initialize the widget.
 
         koch_selected  True if the Koch suggested characters are to be used
         koch_num       the number of Koch characters being used
-        user_selected  a dict of the selected user-defined characters
         """
 
         super().__init__()
@@ -67,9 +66,7 @@ class Charset(QWidget):
 
         self.koch = koch_selected           # True if we are using Koch
         self.koch_num = koch_num            # the number of Koch characters used
-        if user_charset is None:
-            user_charset = {}
-        self.user_charset = user_charset    # user-selected characters
+        self.user_charset = {ch:False for ch in utils.AllUserChars} # user-selected characters
 
         # set up the UI
         self.initUI()
@@ -77,7 +74,7 @@ class Charset(QWidget):
         # set status of the widget (would signal here if we didn't inhibit)
         self.setKoch(koch_selected)
         self.setKochNumber(koch_num)
-        self.setSelected(user_charset)
+        self.setSelected(self.user_charset)
 
         # tie widgets into change handlers
         self.rb_Koch.clicked.connect(self.changeRBKoch)
