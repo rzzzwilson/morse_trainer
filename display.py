@@ -9,36 +9,17 @@ for individual characters.  Allow outline highlighting for any group
 of two vertical characters.  Allow tooltip text for any group of two
 vertical characters.
 
-display = Display(...)
+display = Display(...)              # constructor
 
-.clear()                # whole display cleared
+display.clear()                     # whole display cleared
 
-.insert_upper(ch, index=None, fg=None)
-.insert_lower(ch, index=None, fg=None)
+display_id = display.insert_upper(ch, fg=None)  # insert char in upper row
+display_id = display.insert_lower(ch, fg=None)  # insert char in lower row
 
-display_id = .set_tooltip(txt, display_id=None)
-.clear_tooltip(display_id)
+display.set_tooltip(text)           # set tooltip at display end
+display.update_tooltip(text)        # change tooltip at display end
 
-.left_scroll(num=None)                      # could be automatic?
-
-.upper_len()
-.lower_len()
-
-.set_highlight(index)
-
-Instance variables
-------------------
-
-Text is always left-justified in the display.
-
-.text_upper         # list of text in the display row
-.text_lower         # a list of (char, colour) tuples
-
-.tooltips_upper     # list of tooltip, None means 'not defined'
-.tooltips_lower
-
-.highlight_index    # index of column being highlighted
-.highlight_colour   # colour of column being highlighted
+display.set_highlight()             # set tooltip on latest column
 """
 
 import platform
@@ -47,6 +28,8 @@ from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
 from PyQt5.QtWidgets import QToolTip
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont, QColor, QPen
+import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class Display(QWidget):
@@ -74,11 +57,11 @@ class Display(QWidget):
         TooltipOffset = 33
         TooltipLineOffset = 13
     elif platform.system() == 'Linux':
-        DefaultWidgetHeight = 70
+        DefaultWidgetHeight = 85
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 34
-        BaselineOffsetLower = 65
-        FontSize = 34
+        BaselineOffsetUpper = 40
+        BaselineOffsetLower = 80
+        FontSize = 40
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
@@ -123,7 +106,8 @@ class Display(QWidget):
 
         # set the widget internal state
         self.setFixedHeight(Display.DefaultWidgetHeight)
-        self.fixed_font = QFont('Courier', Display.FontSize)
+        #self.fixed_font = QFont('Helvetica', Display.FontSize, QFont.DemiBold)
+        self.fixed_font = QFont('Courier', Display.FontSize, QFont.DemiBold)
         self.font_size = Display.FontSize
         self.font = self.fixed_font
 
@@ -162,8 +146,7 @@ class Display(QWidget):
         self.hover_index = index
         if index is not None:
             # if we have tooltip text at this column, flag for display
-            text = self.tooltips[index][1]
-            if text:
+            if self.tooltips[index]:
                 self.hover_rect_bg = True
             self.update()
 
@@ -184,7 +167,7 @@ class Display(QWidget):
             index = self.x2index(e.x())
             if index is not None and index >= 0:
                 try:
-                    (_, text) = self.tooltips[index]
+                    text = self.tooltips[index]
                 except IndexError:
                     text = None
 
@@ -223,10 +206,11 @@ class Display(QWidget):
         # set to the font we use in the widget
         qp.setFont(self.font)
 
-        # calculate with of characters
+        # calculate width of characters
+        # should do this only on resize, but need a drawing context (qp)
         test_str = 'H' * Display.TestStringLength
         str_width = qp.fontMetrics().boundingRect(test_str).width()
-        self.char_width = str_width // Display.TestStringLength
+        self.char_width = str_width // Display.TestStringLength + 4     # add extra spacing
 
         # figure out display size
         window_size = self.size()
@@ -234,8 +218,13 @@ class Display(QWidget):
         height = window_size.height()
         self.display_width = width
 
-        # calc the max # chars we can fit on display
+        # calc the max number of chars we can fit on display
         self.num_columns = (width - Display.TextLeftOffset) // self.char_width
+
+        # figures out if we need to truncate the display to make it fit
+        max_len = max(self.upper_len(), self.lower_len())
+        if max_len > self.num_columns:
+            self.left_scroll(max_len - self.num_columns)
 
         # clear the display area
         qp.setPen(Qt.white)
@@ -245,7 +234,6 @@ class Display(QWidget):
 
         # draw an outline
         qp.setPen(Qt.black)
-#        qp.setBrush(Display.HoverBGNoneColour)
         qp.drawRoundedRect(0, 0, self.display_width, self.display_height,
                            Display.RoundedRadius,
                            Display.RoundedRadius)
@@ -253,11 +241,11 @@ class Display(QWidget):
         # draw any highlights
         if self.highlight_index is not None:
             # calculate pixel offset of X start of highlight
-            hl_x = Display.TextLeftOffset + self.char_width * self.highlight_index
+            hl_x = Display.TextLeftOffset + self.char_width * self.highlight_index - 2
             # draw highlight rectangle
             qp.setPen(Display.HighlightEdgeColour)
             qp.setBrush(Display.HighlightColour)
-            qp.drawRoundedRect(hl_x, 0, self.char_width,
+            qp.drawRoundedRect(hl_x, 1, self.char_width,
                                Display.DefaultWidgetHeight,
                                Display.RoundedRadius,
                                Display.RoundedRadius)
@@ -285,7 +273,7 @@ class Display(QWidget):
         # draw hover selection, if any
         if self.hover_index is not None:
             # calculate pixel offset of X start of hover selection
-            hl_x = Display.TextLeftOffset + self.char_width * self.hover_index
+            hl_x = Display.TextLeftOffset + self.char_width * self.hover_index - 2
             # draw hover selection rectangle
             qp.setPen(Display.HoverColour)
             qp.setBrush(Display.HoverBGNoneColour)
@@ -325,22 +313,31 @@ class Display(QWidget):
     def insert_upper(self, ch, fg=None):
         """Insert char at end of upper row.
 
-        ch     the character to insert
-        fg     foreground colour of char
+        ch  the character to insert
+        fg  foreground colour of char
         """
 
         if fg is None:
             fg = Display.AskTextColour
 
+        # add char to upper row
         self.text_upper.append((ch, fg))
+
+        # if we extended display, add new empty tooltip
         if len(self.text_upper) > len(self.tooltips):
-            self.tooltips.append((self.next_display_id, None))
-            self.next_display_id += 1
+            self.set_tooltip(None)
 
         # decide if we have to scroll
         max_length = max(self.upper_len(), self.lower_len())
         if max_length > self.num_columns:
             self.left_scroll(max_length - self.num_columns)
+
+        # decide if we have to scroll
+        max_length = max(self.upper_len(), self.lower_len())
+        if max_length > self.num_columns:
+            self.left_scroll(max_length - self.num_columns)
+
+        self.update()
 
     def insert_lower(self, ch, fg=None):
         """Insert char at end of lower row.
@@ -352,41 +349,35 @@ class Display(QWidget):
         if fg is None:
             fg = Display.AnsTextGoodColour
 
+        # add char to lower row
         self.text_lower.append((ch, fg))
+
+        # if we extended display, add new empty tooltip
         if len(self.text_lower) > len(self.tooltips):
-            self.tooltips.append((self.next_display_id, None))
-            self.next_display_id += 1
+            self.set_tooltip(None)
 
         # decide if we have to scroll
         max_length = max(self.upper_len(), self.lower_len())
         if max_length > self.num_columns:
             self.left_scroll(max_length - self.num_columns)
 
-    def set_tooltip(self, display_id, text):
-        """"Set tooltip text at a column.
+        self.update()
 
-        display_id  display ID of the tooltip to set
-        text        the new tooltip text
+    def set_tooltip(self, text):
+        """"Add new tooltip at end of display.
+
+        text  the tooltip text
         """
 
-        # calculate index from display ID
-        # subtract display ID of first in tooltips
-        index = display_id - self.tooltips[0][0]
+        self.tooltips.append(text)
 
-        # update tooltip text, catch error if index wrong
-        try:
-            self.tooltips[index] = (display_id, text)
-        except IndexError:
-            raise Exception("Sorry, display ID '%d' not found in .tooltips '%s'"
-                            % (display_id, str(self.tooltips)))
+    def update_tooltip(self, text):
+        """"Change text in tooltip at end of display.
 
-    def clear_tooltip(self, display_id):
-        """"Clear tooltip text at a column.
-
-        display_id  display ID of the tooltip to clear
+        text  the tooltip text
         """
 
-        self.set_tooltip(display_id, None)
+        self.tooltips[-1] = text
 
     def left_scroll(self, num=None):
         """Left scroll display.
@@ -407,25 +398,16 @@ class Display(QWidget):
         self.set_highlight()
         self.update()
 
-    def set_highlight(self, index=None):
-        """Show a highlight at display index position 'index'.
+    def set_highlight(self):
+        """Show a highlight at end of display.
 
-        Throws an IndexError exception if 'index' not within upper text
-        or one position past the right end of the longest text.
+        If lower and upper rows same length, highlight one past end.
         """
 
-        max_length = max(self.upper_len(), self.lower_len())
-        if index is None:
-            index = max_length - 1
+        index = max(self.upper_len(), self.lower_len()) - 1
 
-        if not 0 <= index <= max_length:
-            raise IndexError('Highlight index %d is out of range [0, %d]'
-                             % (index, max_length))
+        if self.upper_len() == self.lower_len():
+            index += 1
 
         self.highlight_index = index
         self.update()
-
-    def get_highlight(self):
-        """Return the current highlight index."""
-
-        return self.highlight_index

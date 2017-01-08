@@ -21,61 +21,53 @@ class DisplayExample(QWidget):
 
     def initUI(self):
         self.display = Display()
-        left_button = QPushButton('Left ⬅', self)
-        right_button = QPushButton('Right ➡', self)
+        button = QPushButton('Next', self)
 
         hbox1 = QHBoxLayout()
         hbox1.addWidget(self.display)
 
         hbox2 = QHBoxLayout()
-        hbox2.addWidget(left_button)
-        hbox2.addWidget(right_button)
+        hbox2.addWidget(button)
 
         vbox = QVBoxLayout()
         vbox.addLayout(hbox1)
         vbox.addLayout(hbox2)
         self.setLayout(vbox)
 
-        left_button.clicked.connect(self.leftButtonClicked)
-        right_button.clicked.connect(self.rightButtonClicked)
+        button.clicked.connect(self.buttonClicked)
 
-        self.setGeometry(100, 100, 800, 200)
+        self.setGeometry(20, 100, 1100, 200)
         self.setWindowTitle('Example of Display widget')
         self.show()
 
         # populate the display widget a bit
-        for index in range(40):
+        for index in range(30):
             if index in (7, 21):
                 self.display.insert_upper('U', fg=Display.AnsTextBadColour)
             else:
                 self.display.insert_upper('U', fg=Display.AskTextColour)
 
-        for index in range(39):
             if index in (5, 19):
                 self.display.insert_lower('L', fg=Display.AnsTextBadColour)
             else:
-                self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
+                if index < 29:
+                    self.display.insert_lower('L', fg=Display.AnsTextGoodColour)
 
-        self.display.set_highlight(39)
+            if index == 0:
+                self.display.update_tooltip("Expected 'A', got 'N'\nweqweqwe")
+            if index == 5:
+                self.display.update_tooltip('Tooltip at index 5, '
+                                            'rewyerewrewtrewtrewtrewtrewrtewi'
+                                            'trewrewtrewtrewtrewtrewtrew')
+            if index == 19:
+                self.display.update_tooltip("Expected 'A', got 'N'\n"
+                                            "weqweqwe\nasdasdadasd\na\na\na\na\na")
 
-        # rely on index being tooltip ID
-        self.display.set_tooltip(0, "Expected 'A', got 'N'\nweqweqwe")
-        self.display.set_tooltip(5, 'Tooltip at index 5, '
-                                     'rewyerewrewtrewtrewtrewtrewrtewi'
-                                     'trewrewtrewtrewtrewtrewtrew')
-        self.display.set_tooltip(19, "Expected 'A', got 'N'\n"
-                                     "weqweqwe\nasdasdadasd\na\na\na\na\na")
 
-    def leftButtonClicked(self):
-        """Move highlight to the left, if possible."""
+        self.display.set_highlight()
 
-        index = self.display.get_highlight()
-        if index is not None:
-            index -= 1
-            if index >= 0:
-                self.display.set_highlight(index)
 
-    def rightButtonClicked(self):
+    def buttonClicked(self):
         """Clear display, reenter new test text.."""
 
         self.display.clear()
@@ -85,8 +77,12 @@ class DisplayExample(QWidget):
                 self.display.insert_upper('1', fg=Display.AnsTextBadColour)
             else:
                 self.display.insert_upper('1', fg=Display.AskTextColour)
-
-        self.display.insert_upper(' ', fg=Display.AskTextColour)
+            if index == 0:
+                self.display.update_tooltip('Tooltip at index 0')
+            if index == 5:
+                self.display.update_tooltip('Tooltip at index 5')
+            if index == 19:
+                self.display.update_tooltip('Tooltip at index 19')
 
         for index in range(24):
             if index in (5, 19):
@@ -94,12 +90,7 @@ class DisplayExample(QWidget):
             else:
                 self.display.insert_lower('8', fg=Display.AnsTextGoodColour)
 
-        self.display.set_highlight(10)
-
-        # rely on index being tooltip ID
-        self.display.set_tooltip(0, 'Tooltip at index 0')
-        self.display.set_tooltip(5, 'Tooltip at index 5')
-        self.display.set_tooltip(19, 'Tooltip at index 19')
+        self.display.set_highlight()
 
 
 app = QApplication(sys.argv)

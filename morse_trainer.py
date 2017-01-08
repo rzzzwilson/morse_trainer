@@ -54,8 +54,8 @@ class MorseTrainer(QTabWidget):
         MinimumWidth = 815
         MinimumHeight = 675
     elif platform.system() == 'Linux':
-        MinimumWidth = 815
-        MinimumHeight = 670
+        MinimumWidth = 850
+        MinimumHeight = 685
     elif platform.system() == 'Darwin':
         MinimumWidth = 815
         MinimumHeight = 675
@@ -223,26 +223,19 @@ class MorseTrainer(QTabWidget):
 
             # change state variables to reflect the stop
             self.processing = False
-            self.keypress_count = 0
         else:
-            # disable the Clear button and speed/grouping/charset
+            # disable the Clear button and speed/grouping/charset, relabel Start button
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
             self.copy_groups.setDisabled(True)
             self.copy_charset.setDisabled(True)
-
             self.btn_copy_start_stop.setText('Pause')
-            self.prev_send_char = None
-            self.send_char = self.get_random_char(self.copy_Koch_list)
-            self.threadCopy = CopyThread(self.send_char, self.send_morse_obj)
 
-            # connect to events from the new thread
-            self.threadCopy.finished.connect(self.send_thread_finished)
-
-            # start the Send thread
+            # start the 'Send' process
+            self.send_pending = []
             self.processing = True
-            self.keypress_count = 0
-            self.threadCopy.start()
+
+            self.send_thread_finished()
 
     def send_thread_finished(self):
         """Catch signal when Send thread finished.
@@ -251,41 +244,44 @@ class MorseTrainer(QTabWidget):
         """
 
         if self.processing:
-            self.keypress_count = 0
-            self.prev_send_char = self.send_char
-            self.send_char = self.get_random_char(self.copy_Koch_list)
-            self.threadCopy = CopyThread(self.send_char, self.send_morse_obj)
+            send_char = utils.get_random_char(self.copy_Koch_list)
+            self.send_pending = (self.send_pending + [send_char])[-2:]
+            self.threadCopy = CopyThread(send_char, self.send_morse_obj)
             self.threadCopy.finished.connect(self.send_thread_finished)
             self.threadCopy.start()
-
-    def get_random_char(self, charset):
-        """Get a random char from the charset sequence."""
-
-        index = randrange(len(charset))
-        return charset[index]
-
 
     def keyPressEvent(self, e):
         """When self.processing is True we handle keypresses."""
 
-        if not self.processing:
+        # ignore anything we aren't interested in
+        key_int = e.key()
+        if not 32 < key_int < 128:
+            return
+        char = chr(key_int)
+        if char not in utils.AllUserChars:
             return
 
-        key_int = e.key()
-        if key_int < 128:
-            char = chr(key_int)
-            if char in utils.Koch:
-                self.keypress_count += 1
-                if self.keypress_count == 1:
-                    print('User guess: %s (%s was sounded)' % (char, self.prev_send_char))
-                elif self.keypress_count == 2:
-                    print('User 2nd guess %s (%s was sounded)' % (char, self.send_char))
-                else:
-                    print('IGNORED guess: %s' % char)
-            else:
-                print('User pressed BAD key: %s' % char)
-        else:
-            print('Unprintable char: %O' % key_int)
+        # if we are sending, handle char
+        if self.processing:
+            if self.send_pending:
+                pending = self.send_pending.pop(0)
+
+                # need some logic here to handle case when user gets behind
+                # if key doesn't match oldest but newest, assume newest
+                if char != pending:
+                    if self.send_pending and char == self.send_pending[0]:
+                        pending = self.send_pending.pop(0)
+
+                self.copy_display.insert_upper(pending, self.send_display.AskTextColour)
+
+                colour = self.send_display.AnsTextGoodColour
+                if pending != char:
+                    colour = self.send_display.AnsTextBadColour
+                    msg = ("Sounded '%s' (%s),\nyou entered '%s' (%s)."
+                            % (pending, utils.char2morse(pending),
+                               char, utils.char2morse(char)))
+                    self.copy_display.update_tooltip(msg)
+                self.copy_display.insert_lower(char, colour)
 
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
@@ -418,8 +414,7 @@ class MorseTrainer(QTabWidget):
 
         # the morse sound object and Send state variables
         self.keypress_count = 0             # keypress counter
-        self.prev_send_char = None          # previous Send char
-        self.send_char = None               # current Send char
+        self.send_pending = ''              # holds last 2 chars sounded
 
         # state variable shows send or copy processing
         self.processing = False
@@ -642,7 +637,13 @@ if __name__ == '__main__':
 
     # start the logging
     log = logger.Log('debug.log', logger.Log.CRITICAL)
-    log('Morse Trainer %s started' % ProgramVersion)
+
+    # announce the start
+    log('* -- --- .-. ... .  - .-. .- .. -. . .-. *')
+    log('*                                        *')
+    log('*      Morse Trainer %3s by VK4FAWR      *' % ProgramVersion)
+    log('*                                        *')
+    log('* -- --- .-. ... .  - .-. .- .. -. . .-. *')
 
     # parse command line options
     argv = sys.argv[1:]

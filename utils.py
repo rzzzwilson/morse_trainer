@@ -7,6 +7,7 @@ Small utility functions.
 
 
 import traceback
+from random import randrange
 
 import logger
 
@@ -19,6 +20,27 @@ AllUserChars = Alphabetics + Numbers + Punctuation
 
 # amalgamated charset in the 'Koch' order
 Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X?():;!"'"""
+
+Char2Morse = {
+              '!': '-.-.--', '"': '.-..-.', '$': '...-..-', '&': '.-...',
+              "'": '.----.', '(': '-.--.', ')': '-.--.-', ',': '--..--',
+              '-': '-....-', '.': '.-.-.-', '/': '-..-.', ':': '---...',
+              ';': '-.-.-.', '=': '-...-', '?': '..--..', '@': '.--.-.',
+              '_': '..--.-', '+': '.-.-.',
+
+              '0': '-----', '1': '.----', '2': '..---', '3': '...--',
+              '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+              '8': '---..', '9': '----.',
+
+              'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..',
+              'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+              'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+              'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+              'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+              'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+              'Y': '-.--', 'Z': '--..'
+             }
+
 
 StyleCSS = """
 /*css stylesheet file that contains all the style information*/
@@ -88,6 +110,17 @@ def morse2display(morse):
             raise Exception("Unrecognized sign in '%s': %s" % (morse, dotdash))
 
     return SIX_PER_EM_SPACE.join(result)
+
+
+def get_random_char(charset):
+    """Get a random char from the charset sequence."""
+
+    return charset[randrange(len(charset))]
+
+def char2morse(char):
+    """Convert a character into a morse string."""
+
+    return morse2display(Char2Morse[char])
 
 
 if __name__ == '__main__':
