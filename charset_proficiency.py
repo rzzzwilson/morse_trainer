@@ -89,11 +89,6 @@ class CharsetProficiency(QWidget):
 
         self.setLayout(layout)
 
-#    def getState(self):
-#        """Not used - widget is write-only."""
-#
-#        pass
-
     def setState(self, data):
         """Update the three sub-widgets with values matching 'data'."""
 

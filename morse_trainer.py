@@ -44,7 +44,7 @@ if ProgName.endswith('.py'):
         ProgName = ProgName[:-3]
 
 ProgramMajor = 0
-ProgramMinor = 1
+ProgramMinor = 2
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 class MorseTrainer(QTabWidget):
@@ -283,10 +283,19 @@ class MorseTrainer(QTabWidget):
                     self.copy_display.update_tooltip(msg)
                 self.copy_display.insert_lower(char, colour)
 
+                # update the character stats
+                (num_chars, num_ok) = self.copy_stats[pending]
+                num_chars += 1
+                if pending == char:
+                    num_ok += 1
+                self.copy_stats[pending] = (num_chars, num_ok)
+
+        # each dictionary contains tuples of (<num_chars>, <num_ok>)
+
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
 
-        pass
+        self.copy_display.clear()
 
     def InitStatsTab(self):
         # create all tab widgets
@@ -335,29 +344,16 @@ class MorseTrainer(QTabWidget):
         self.stats_tab.setLayout(layout)
 
         # connect 'Stats' events to handlers
-        btn_clear.clicked.connect(self.xyzzy)       # DEBUG
+        btn_clear.clicked.connect(self.clear_stats)
 
-    def xyzzy(self):
-        """Fill the send/copy stats display with random data."""
+    def clear_stats(self):
+        """Clear the statistics display."""
 
-        # generate random data for send
-        new = {}
-        for char in self.send_stats:
-            if char in 'A0?':
-                # first in each set is 0.0
-                new[char] = 0.0
-            else:
-                new[char] = randrange(100)/100
-        self.send_status.setState(new)
+        # clear the internal data structure
+        for ch in utils.AllUserChars:
+            self.copy_stats[ch] = (0, 0)
 
-        # generate random data for copy
-        new = {}
-        for char in self.copy_stats:
-            if char in 'A0?':
-                # first in each set is 0.0
-                new[char] = 0.0
-            else:
-                new[char] = randrange(100)/100
+        new = self.stats2percent(self.copy_stats)
         self.copy_status.setState(new)
 
     def update_UI(self):
