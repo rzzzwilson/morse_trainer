@@ -5,24 +5,13 @@
 Class to make morse sounds from English characters.  We use a state
 machine to send well-formed morse code.
 
-morse = SendMorse()
--------------------
+morse = SoundMorse()
 
 morse.set_speeds(chars_per_minute, words_per_minute)
-----------------------------------------------------
-
 (cwpm, wpm) = morse.get_speeds()
--------------------------------
 
 morse.set_volume(volume)
-------------------------
-
 morse.set_frequency(frequency)
-------------------------------
-
-morse.send_morse(string)
-------------------------
-Send a string of characters.
 
 morse.close()
 -------------
@@ -34,8 +23,10 @@ import math
 import numpy as np
 import pyaudio
 
+import utils
 
-class SendMorse:
+
+class SoundMorse:
     """Send well-formed morse code to the speakers."""
 
     # the default settings
@@ -51,31 +42,10 @@ class SendMorse:
     # Words/minute below which we use the Farnsworth timing method
     FarnsworthThreshold = 18
 
-    # dict to translate characters into morse code strings
-    Morse = {
-             '!': '-.-.--', '"': '.-..-.', '$': '...-..-', '&': '.-...',
-             "'": '.----.', '(': '-.--.', ')': '-.--.-', ',': '--..--',
-             '-': '-....-', '.': '.-.-.-', '/': '-..-.', ':': '---...',
-             ';': '-.-.-.', '=': '-...-', '?': '..--..', '@': '.--.-.',
-             '_': '..--.-', '+': '.-.-.',
-
-             '0': '-----', '1': '.----', '2': '..---', '3': '...--',
-             '4': '....-', '5': '.....', '6': '-....', '7': '--...',
-             '8': '---..', '9': '----.',
-
-             'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..',
-             'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
-             'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
-             'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
-             'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
-             'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-             'Y': '-.--', 'Z': '--..'
-            }
-
 
     def __init__(self, volume=DefaultVolume, frequency=DefaultFrequency,
                        cwpm=DefaultCWPM, wpm=DefaultWPM):
-        """Prepare the SendMorse object."""
+        """Prepare the SoundMorse object."""
 
         # set send params to defaults
         self.cwpm = cwpm            # the character word speed
@@ -95,9 +65,9 @@ class SendMorse:
 
         # prepare the audio device
         self.pyaudio = pyaudio.PyAudio()
-        self.stream = self.pyaudio.open(format=SendMorse.Format,
+        self.stream = self.pyaudio.open(format=SoundMorse.Format,
                                         channels=1,
-                                        rate=SendMorse.SampleRate,
+                                        rate=SoundMorse.SampleRate,
                                         output=True)
 
     def close(self):
@@ -118,7 +88,7 @@ class SendMorse:
             return np.sin(np.arange(length) * factor)
 
         chunks = []
-        chunks.append(sine(self.frequency, duration, SendMorse.SampleRate))
+        chunks.append(sine(self.frequency, duration, SoundMorse.SampleRate))
         chunk = np.concatenate(chunks) * volume
         return chunk.astype(np.float32).tostring()
 
@@ -154,7 +124,7 @@ class SendMorse:
             self.cwpm
             self.wpm
             self.frequency
-            SendMorse.SampleRate
+            SoundMorse.SampleRate
         """
 
         # calculate dot and dash times, normal and Farnsworth
@@ -165,7 +135,7 @@ class SendMorse:
         inter_char_time = 3 * dot_time
         inter_word_time = 7 * dot_time
 
-        if self.wpm < SendMorse.FarnsworthThreshold:
+        if self.wpm < SoundMorse.FarnsworthThreshold:
             # if using Farnsworth, stretch inter char/word times
             inter_char_time = 3 * dot_time_f
             inter_word_time = 7 * dot_time_f
@@ -213,8 +183,8 @@ class SendMorse:
             char = char.upper()
             if char == ' ':
                 self.stream.write(self.inter_word_silence)
-            elif char in SendMorse.Morse:
-                code = SendMorse.Morse[char]
+            elif char in utils.Char2Morse:
+                code = utils.Char2Morse[char]
                 for s in code:
                     if s == '.':
                         self.stream.write(self.dot_sound)

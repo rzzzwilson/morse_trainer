@@ -6,6 +6,7 @@ Small utility functions.
 """
 
 
+import sys
 import traceback
 from random import randrange
 
@@ -19,7 +20,15 @@ Punctuation = """?,.!=/()'":;"""
 AllUserChars = Alphabetics + Numbers + Punctuation
 
 # amalgamated charset in the 'Koch' order
-Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X?():;!"'"""
+Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X():;!"'"""
+
+if len(AllUserChars) != len(Koch):
+    print('*'*80)
+    print('* Error in utils.py, Koch and AllUserCharsi are different lengths')
+    print('*     len(Koch)=%d' % len(Koch))
+    print('*     len(AllUserChars)=%d' % len(AllUserChars))
+    print('*'*80)
+    sys.exit(1)
 
 Char2Morse = {
               '!': '-.-.--', '"': '.-..-.', '$': '...-..-', '&': '.-...',

@@ -6,7 +6,7 @@ Morse Trainer is an application to help a user learn to send and copy Morse.
 
 Usage:  morse_trainer [-d <debug>]  [-h]
 
-where  -d <debug>  sets the debug level to the number <debug>
+where  -d <debug>  sets the debug level to the number <debug> [0,50]
 and    -h          prints this help and then stops.
 
 You will need a morse key and Code Practice Oscillator (CPO).
@@ -33,7 +33,7 @@ from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
 from instructions import Instructions
-from send_morse import SendMorse
+from sound_morse import SoundMorse
 import utils
 import logger
 
@@ -46,6 +46,7 @@ if ProgName.endswith('.py'):
 ProgramMajor = 0
 ProgramMinor = 2
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
+
 
 class MorseTrainer(QTabWidget):
 
@@ -63,21 +64,21 @@ class MorseTrainer(QTabWidget):
         raise Exception('Unrecognized platform: %s' % platform.system())
 
     # set default speeds
-    DefaultWordsPerMinute = 10
+    DefaultWordsPerMinute = 15
     DefaultCharWordsPerMinute = 10
 
     # 'enum' constants for the three tabs
-    (SendTab, CopyTab, StatisticsTab) = range(3)
+    (SendTab, CopyTab, StatsTab) = range(3)
 
     # dict to convert tab index to name
-    TabIndex2Name = {SendTab: 'Send',
-                     CopyTab: 'Copy',
-                     StatisticsTab: 'Statistics'}
+    TabEnum2Name = {SendTab: 'Send',
+                    CopyTab: 'Copy',
+                    StatsTab: 'Statistics'}
 
     # name for the state save file
     StateSaveFile = '%s.state' % ProgName
 
-    # define names of the state variables to be saved/restored
+    # define names of the instance variables to be saved/restored
     StateVarNames = ['send_stats', 'copy_stats', 'copy_using_Koch',
                      'copy_Koch_number', 'copy_Koch_list',
                      'copy_User_chars_dict', 'copy_wpm', 'copy_cwpm',
@@ -86,10 +87,11 @@ class MorseTrainer(QTabWidget):
 
 
     def __init__(self, parent = None):
-        super(MorseTrainer, self).__init__(parent)
+        """Create a MorseTrainer object."""
+
+        super().__init__(parent)
 
         # define internal state variables
-        self.send_morse_obj = SendMorse()       # the Send morse object
         self.clear_data()
 
         # define the UI
@@ -98,10 +100,12 @@ class MorseTrainer(QTabWidget):
         # get state from the save file, if any
         self.load_state(MorseTrainer.StateSaveFile)
 
-        # update visible controls with state values
+        # update visible controls with possibly changed state values
         self.update_UI()
 
     def initUI(self):
+        """Start constructing the UI."""
+
         self.send_tab = QWidget()
         self.copy_tab = QWidget()
         self.stats_tab = QWidget()
@@ -121,15 +125,18 @@ class MorseTrainer(QTabWidget):
         # connect 'change tab' event to handler
         self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
 
-        # connect 'Send' events to handlers
-#        self.copy_speeds.changed.connect(self.copy_speeds_changed)
+######
+# All code pertaining to the Send tab
+######
 
     def initSendTab(self):
+        """Layout the Send tab."""
+
         # define widgets on this tab
         self.send_display = Display()
         doc_text = ('Here we test your sending accuracy.  The program will '
                     'print the character you should send in the top row of the '
-                    'display at the top of this tab.  Your job is to send that '
+                    'display above.  Your job is to send that '
                     'character using your key and code practice oscillator.  '
                     'The program will print what it thinks you sent on the '
                     'lower line of the display.')
@@ -161,13 +168,19 @@ class MorseTrainer(QTabWidget):
         layout.addLayout(hbox)
         self.send_tab.setLayout(layout)
 
+######
+# All code pertaining to the Copy tab
+#####
+
     def initCopyTab(self):
+        """Layout the Copy tab."""
+
         # define widgets on this tab
         self.copy_display = Display()
         doc_text = ('Here we test your copying accuracy.  The program '
                     'will sound a random morse character which you should type '
                     'on the keyboard.  The character you typed will appear in '
-                    'the bottom row of the display at the top of this tab, '
+                    'the bottom row of the display above '
                     'along with the character the program actually sent in '
                     'the top row.')
         instructions = Instructions(doc_text)
@@ -232,12 +245,12 @@ class MorseTrainer(QTabWidget):
             self.btn_copy_start_stop.setText('Pause')
 
             # start the 'Send' process
-            self.send_pending = []
+            self.copy_pending = []
             self.processing = True
 
-            self.send_thread_finished()
+            self.copy_thread_finished()
 
-    def send_thread_finished(self):
+    def copy_thread_finished(self):
         """Catch signal when Send thread finished.
 
         If still processing, start new thread.
@@ -245,59 +258,55 @@ class MorseTrainer(QTabWidget):
 
         if self.processing:
             send_char = utils.get_random_char(self.copy_Koch_list)
-            self.send_pending = (self.send_pending + [send_char])[-2:]
-            self.threadCopy = CopyThread(send_char, self.send_morse_obj)
-            self.threadCopy.finished.connect(self.send_thread_finished)
+            self.copy_pending = (self.copy_pending + [send_char])[-2:]
+            self.threadCopy = CopyThread(send_char, self.copy_morse_obj)
+            self.threadCopy.finished.connect(self.copy_thread_finished)
             self.threadCopy.start()
-
-    def keyPressEvent(self, e):
-        """When self.processing is True we handle keypresses."""
-
-        # ignore anything we aren't interested in
-        key_int = e.key()
-        if not 32 < key_int < 128:
-            return
-        char = chr(key_int)
-        if char not in utils.AllUserChars:
-            return
-
-        # if we are sending, handle char
-        if self.processing:
-            if self.send_pending:
-                pending = self.send_pending.pop(0)
-
-                # need some logic here to handle case when user gets behind
-                # if key doesn't match oldest but newest, assume newest
-                if char != pending:
-                    if self.send_pending and char == self.send_pending[0]:
-                        pending = self.send_pending.pop(0)
-
-                self.copy_display.insert_upper(pending, self.send_display.AskTextColour)
-
-                colour = self.send_display.AnsTextGoodColour
-                if pending != char:
-                    colour = self.send_display.AnsTextBadColour
-                    msg = ("Sounded '%s' (%s),\nyou entered '%s' (%s)."
-                            % (pending, utils.char2morse(pending),
-                               char, utils.char2morse(char)))
-                    self.copy_display.update_tooltip(msg)
-                self.copy_display.insert_lower(char, colour)
-
-                # update the character stats
-                (num_chars, num_ok) = self.copy_stats[pending]
-                num_chars += 1
-                if pending == char:
-                    num_ok += 1
-                self.copy_stats[pending] = (num_chars, num_ok)
-
-        # each dictionary contains tuples of (<num_chars>, <num_ok>)
 
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
 
         self.copy_display.clear()
 
+    def copy_speeds_changed(self, cwpm, wpm):
+        """Something in the "copy speed" group changed.
+
+        cwpm  new char speed
+        wpm   new word speed
+        """
+
+        self.copy_cwpm = cwpm
+        self.copy_wpm = wpm
+        self.copy_morse_obj.set_speeds(cwpm, wpm)
+
+    def copy_group_change(self, index):
+        """Copy grouping changed."""
+
+        self.copy_group_index = index
+
+    def copy_charset_change(self, state):
+        """Handle a change in the Copy charset group widget."""
+
+        (self.copy_using_Koch,
+         self.copy_Koch_number,
+         self.copy_User_chars_dict) = state
+
+        # update the Koch test set
+        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
+
+        # update the user test set
+        on = [ch for ch in self.copy_User_chars_dict if self.copy_User_chars_dict[ch]]
+        self.copy_User_sequence = ''.join(on)
+
+        self.update_UI()
+
+######
+# All code pertaining to the Stats tab
+######
+
     def InitStatsTab(self):
+        """Layout the Stats tab."""
+
         # create all tab widgets
         doc_text = ('This shows your sending and receiving proficiency. '
                     'Each bar shows your proficiency for a character.  The '
@@ -307,7 +316,8 @@ class MorseTrainer(QTabWidget):
                     'if all characters in the test set are over the threshold '
                     'the algorithm will add another character to the set you '
                     'are tested with.\n\n'
-                    'Pressing the "Clear" button will clear the statistics.')
+                    'Pressing the "Clear" button will clear the statistics. '
+                    'This is useful when changing test speeds.')
         instructions = Instructions(doc_text)
         self.send_status = CharsetProficiency('Send Proficiency',
                                               utils.Alphabetics,
@@ -349,12 +359,61 @@ class MorseTrainer(QTabWidget):
     def clear_stats(self):
         """Clear the statistics display."""
 
+        # should have a "Are you sure?" dialog here
+
         # clear the internal data structure
         for ch in utils.AllUserChars:
             self.copy_stats[ch] = (0, 0)
 
         new = self.stats2percent(self.copy_stats)
         self.copy_status.setState(new)
+
+######
+# Other code
+######
+
+    def keyPressEvent(self, e):
+        """When self.processing is True we handle keypresses."""
+
+        # ignore anything we aren't interested in
+        key_int = e.key()
+        if not 32 < key_int < 128:
+            return
+        char = chr(key_int)
+        if char not in utils.AllUserChars:
+            return
+
+        if self.processing:
+            if self.copy_pending:
+                # if we are copying, handle char
+                pending = self.copy_pending.pop(0)
+
+                # need some logic here to handle case when user gets behind
+                # if key doesn't match oldest but newest, assume newest
+                if char != pending:
+                    if self.copy_pending and char == self.copy_pending[0]:
+                        pending = self.copy_pending.pop(0)
+
+                self.copy_display.insert_upper(pending, self.send_display.AskTextColour)
+
+                colour = self.send_display.AnsTextGoodColour
+                if pending != char:
+                    colour = self.send_display.AnsTextBadColour
+                    msg = ("Sounded '%s' (%s),\nyou entered '%s' (%s)."
+                            % (pending, utils.char2morse(pending),
+                               char, utils.char2morse(char)))
+                    self.copy_display.update_tooltip(msg)
+                self.copy_display.insert_lower(char, colour)
+
+                # update the character stats
+                (num_chars, num_ok) = self.copy_stats[pending]
+                num_chars += 1
+                if pending == char:
+                    num_ok += 1
+                self.copy_stats[pending] = (num_chars, num_ok)
+#            elif self.send_pending:
+#                # if we are sending, handle here
+#                pass
 
     def update_UI(self):
         """Update controls that show state values."""
@@ -367,38 +426,6 @@ class MorseTrainer(QTabWidget):
                                    self.copy_Koch_number,
                                    self.copy_User_chars_dict)
 
-    def copy_speeds_changed(self, cwpm, wpm):
-        """Something in the "copy speed" group changed.
-
-        cwpm  new char speed
-        wpm   new word speed
-        """
-
-        self.copy_cwpm = cwpm
-        self.copy_wpm = wpm
-        self.send_morse_obj.set_speeds(cwpm, wpm)
-
-    def copy_group_change(self, index):
-        """Copy grouping changed."""
-
-        self.copy_group_index = index
-
-    def copy_charset_change(self, state):
-        """Handle a change in the Copy charset group widget."""
-
-        (self.copy_using_Koch,
-         self.copy_Koch_number,
-         self.copy_User_chars_dict) = state
-
-        # update the Koch test set
-        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
-
-        # update the user test set
-        on = [ch for ch in self.copy_User_chars_dict if self.copy_User_chars_dict[ch]]
-        self.copy_User_sequence = ''.join(on)
-
-        self.update_UI()
-
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
 
@@ -409,8 +436,9 @@ class MorseTrainer(QTabWidget):
         """Define and clear all internal variables."""
 
         # the morse sound object and Send state variables
+        self.copy_morse_obj = SoundMorse()  # the Copy morse thread object
         self.keypress_count = 0             # keypress counter
-        self.send_pending = ''              # holds last 2 chars sounded
+        self.copy_pending = ''              # holds last 2 chars sounded
 
         # state variable shows send or copy processing
         self.processing = False
@@ -483,10 +511,11 @@ class MorseTrainer(QTabWidget):
                                    self.copy_Koch_number,
                                    self.copy_User_chars_dict)
         # update the Send morse sounder object
-        self.send_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
+        self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
 
         # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
+
         self.update()
 
     def save_state(self, filename):
@@ -547,7 +576,7 @@ class MorseTrainer(QTabWidget):
         """
 
         self.current_tab_index = tab_index
-        old_tab = MorseTrainer.TabIndex2Name.get(self.previous_tab_index, str(None))
+        old_tab = MorseTrainer.TabEnum2Name.get(self.previous_tab_index, str(None))
 
         # if we left the "send" tab, turn off action, if any
         if self.previous_tab_index == MorseTrainer.SendTab:
@@ -559,7 +588,7 @@ class MorseTrainer(QTabWidget):
             self.copy_start()       # to set UI state to "not processing"
 
         # if we changed to the "statistics" tab, refresh the stats widget
-        if tab_index == MorseTrainer.StatisticsTab:
+        if tab_index == MorseTrainer.StatsTab:
             percents = self.stats2percent(self.send_stats)
             self.send_status.setState(percents)
 
@@ -574,6 +603,11 @@ class MorseTrainer(QTabWidget):
 
         self.setCurrentIndex(tab_index)
 
+
+######
+# A class to sound one more character.
+# We need a thread for this as we are doing things while the Copy cound is made.
+######
 
 class CopyThread(QThread):
     """A thread to sound a morse character to the speakers.

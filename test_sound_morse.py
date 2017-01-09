@@ -8,7 +8,7 @@ Test the 'send_morse' module.
 import sys
 import os
 import getopt
-from send_morse import SendMorse
+from sound_morse import SoundMorse
 
 
 # get program name from sys.argv
@@ -49,7 +49,7 @@ for (opt, param) in opts:
         cwpm = int(cwpm)
         wpm = int(wpm)
 
-morse = SendMorse()
+morse = SoundMorse()
 morse.set_speeds(cwpm=cwpm, wpm=wpm)
 
 (cwpm, wpm) = morse.get_speeds()
