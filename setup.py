@@ -5,7 +5,6 @@ def readme():
         return f.read()
 
 setup(name='morse_trainer',
-      packages=['morse_trainer'],
       version='0.2',
       description='A program to teach sending and copying Morse code',
       long_description=readme(),
@@ -13,7 +12,7 @@ setup(name='morse_trainer',
       author='Ross Wilson',
       author_email='rzzzwilson@gmail.com',
       license='MIT',
-      install_requires=['python3', 'PyQt5', 'numpy', 'pyaudio'],
+      requires=['python3', 'PyQt5', 'numpy', 'pyaudio'],
       classifiers=['Development Status :: 4 - Beta',
                    'Intended Audience :: End Users/Desktop',
                    'License :: OSI Approved :: MIT License',
@@ -23,6 +22,5 @@ setup(name='morse_trainer',
                    'Topic :: Communications :: Ham Radio',
                    'Topic :: Education :: Computer Aided Instruction (CAI)'],
       keywords='python pyqt5 morse',
-      download_url='https://github.com/rzzzwilson/morse_trainer/releases/tag/0.2',
-      include_package_data=True,
-      zip_safe=False)
+      download_url='https://github.com/rzzzwilson/morse_trainer/releases/tag/0.2'
+     )
