@@ -11,7 +11,7 @@ import platform
 
 import copy_morse
 from display import Display
-from speeds import Speeds
+from send_speeds import Speeds
 from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
@@ -106,24 +106,24 @@ class MorseTrainer(QTabWidget):
         # clear the send/receive statistics
         # each dictionary contains tuples of (<num_chars>, <num_ok>)
         self.send_stats = {}
-        self.receive_stats = {}
+        self.send_stats = {}
         for char in utils.Alphabetics:
             self.send_stats[char] = (0, 0)
-            self.receive_stats[char] = (0, 0)
+            self.send_stats[char] = (0, 0)
         for char in utils.Numbers:
             self.send_stats[char] = (0, 0)
-            self.receive_stats[char] = (0, 0)
+            self.send_stats[char] = (0, 0)
         for char in utils.Punctuation:
             self.send_stats[char] = (0, 0)
-            self.receive_stats[char] = (0, 0)
+            self.send_stats[char] = (0, 0)
 
     def initUI(self):
         self.send_tab = QWidget()
-        self.receive_tab = QWidget()
+        self.send_tab = QWidget()
         self.stats_tab = QWidget()
 
         self.addTab(self.send_tab, 'Send')
-        self.addTab(self.receive_tab, 'Receive')
+        self.addTab(self.send_tab, 'Copy')
         self.addTab(self.stats_tab, 'Status')
         self.initSendTab()
         self.initReceiveTab()
@@ -163,30 +163,30 @@ class MorseTrainer(QTabWidget):
 
     def initReceiveTab(self):
         # define widgets on this tab
-        self.receive_display = Display()
+        self.send_display = Display()
         doc_text = ('Here we test your receiving accuracy.  The program '
                     'will sound a random morse character which you should type '
                     'on the keyboard.  The character you typed will appear in '
                     'the bottom row of the display above, along with the '
                     'character the program actually sent in the top row.')
         instructions = Instructions(doc_text)
-        self.receive_speeds = Speeds()
-        self.receive_groups = Groups()
-        self.receive_charset = Charset()
-        self.btn_receive_start_stop = QPushButton('Start')
-        self.btn_receive_clear = QPushButton('Clear')
+        self.send_speeds = Speeds()
+        self.send_groups = Groups()
+        self.send_charset = Charset()
+        self.btn_send_start_stop = QPushButton('Start')
+        self.btn_send_clear = QPushButton('Clear')
 
         # start layout
         buttons = QVBoxLayout()
         buttons.addStretch()
-        buttons.addWidget(self.btn_receive_start_stop)
+        buttons.addWidget(self.btn_send_start_stop)
         buttons.addItem(QSpacerItem(20, 20))
-        buttons.addWidget(self.btn_receive_clear)
+        buttons.addWidget(self.btn_send_clear)
 
         controls = QVBoxLayout()
-        controls.addWidget(self.receive_speeds)
-        controls.addWidget(self.receive_groups)
-        controls.addWidget(self.receive_charset)
+        controls.addWidget(self.send_speeds)
+        controls.addWidget(self.send_groups)
+        controls.addWidget(self.send_charset)
 
         hbox = QHBoxLayout()
         hbox.addLayout(controls)
@@ -194,10 +194,10 @@ class MorseTrainer(QTabWidget):
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.receive_display)
+        layout.addWidget(self.send_display)
         layout.addWidget(instructions)
         layout.addLayout(hbox)
-        self.receive_tab.setLayout(layout)
+        self.send_tab.setLayout(layout)
 
     def InitStatsTab(self):
         doc_text = ('This shows your sending and receiving accuracy. '
@@ -209,7 +209,7 @@ class MorseTrainer(QTabWidget):
         self.send_status = CharsetProficiency('Send Proficiency',
                                               utils.Alphabetics,
                                               utils.Numbers, utils.Punctuation)
-        self.receive_status = CharsetProficiency('Receive Proficiency',
+        self.send_status = CharsetProficiency('Receive Proficiency',
                                                  utils.Alphabetics,
                                                  utils.Numbers,
                                                  utils.Punctuation)
@@ -223,7 +223,7 @@ class MorseTrainer(QTabWidget):
 
         layout.addWidget(instructions)
         layout.addWidget(self.send_status)
-        layout.addWidget(self.receive_status)
+        layout.addWidget(self.send_status)
         layout.addLayout(hbox)
 
         self.stats_tab.setLayout(layout)

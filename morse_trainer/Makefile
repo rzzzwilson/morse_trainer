@@ -2,7 +2,7 @@
 # Test the code
 #
 
-test:
+run:
 	rm -f *.log
 	python3 morse_trainer.py
 

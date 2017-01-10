@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
 
 import copy_morse
 from display import Display
-from speeds import Speeds
+from copy_speeds import Speeds
 from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
