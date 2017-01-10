@@ -9,6 +9,7 @@ import sys
 from random import randint
 from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton,
                              QHBoxLayout, QVBoxLayout)
+sys.path.append('..')
 from charset_proficiency import CharsetProficiency
 import utils
 

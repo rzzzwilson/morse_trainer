@@ -6,6 +6,7 @@ Test the 'Send speeds' widget.
 """
 
 import sys
+sys.path.append('..')
 from send_speeds import Speeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
 

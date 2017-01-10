@@ -8,6 +8,7 @@ Test the 'grid_display' custom widget used by Morse Trainer.
 import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout,
                              QVBoxLayout, QPushButton)
+sys.path.append('..')
 from grid_select import GridSelect
 import utils
 

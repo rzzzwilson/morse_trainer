@@ -8,6 +8,7 @@ Test the 'send_morse' module.
 import sys
 import os
 import getopt
+sys.path.append('..')
 from sound_morse import SoundMorse
 
 

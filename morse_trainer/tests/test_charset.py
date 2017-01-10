@@ -8,6 +8,7 @@ Test the 'charset' custom widget used by Morse Trainer.
 import sys
 from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout,
                              QVBoxLayout, QPushButton)
+sys.path.append('..')
 from charset import Charset
 
 
@@ -21,8 +22,7 @@ class TestCharset(QWidget):
 
     def initUI(self):
         user_charset = {'A':True, 'B':False, 'C':False, '0':True}
-        self.display = Charset(koch_selected=False, koch_num=2,
-                               user_charset=user_charset)
+        self.display = Charset(koch_selected=False, koch_num=2)
 
         hbox1 = QHBoxLayout()
         hbox1.addWidget(self.display)

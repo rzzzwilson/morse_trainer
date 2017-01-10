@@ -6,6 +6,7 @@ Test code for 'grouping' widget used by Morse Trainer.
 """
 
 import sys
+sys.path.append('..')
 from groups import Groups
 from PyQt5.QtWidgets import (QApplication, QWidget, QHBoxLayout,
                              QVBoxLayout, QPushButton)
