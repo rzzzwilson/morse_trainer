@@ -6,7 +6,7 @@ Test the 'speeds' widget.
 """
 
 import sys
-from speeds import Speeds
+from copy_speeds import Speeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
 
 class SpeedsExample(QWidget):
