@@ -19,7 +19,6 @@ entries for all characters in the alpha, numbwr and punctuation sets.
 """
 
 import platform
-from random import randint
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGroupBox

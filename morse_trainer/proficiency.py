@@ -17,7 +17,6 @@ character to a 'success' percentage.
 """
 
 import platform
-from random import randint
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout
 from PyQt5.QtCore import Qt, pyqtSignal
