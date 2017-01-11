@@ -6,8 +6,10 @@ The 'grouping' widget for Morse Trainer.
 
 grouping = Groups()
 
-group = grouping.get_grouping()
-Return None or a value in [2..8] inclusive.
+grouping.setState(group_index)
+
+group = grouping.getState()
+Return 0 or the size of the grouping.
 
 Raises the '.change' signal when changed.
 """
@@ -87,7 +89,7 @@ class Groups(QWidget):
 
     def setState(self, group):
         """Set the selected grouping.
-        
+
         group  a group number in (0, 3, 4, 5, 6, 7, 8)
         """
 
@@ -98,7 +100,7 @@ class Groups(QWidget):
 
     def getState(self):
         """Return the grouping selected.
-        
+
         Returns either:
             0  no grouping
             3  groups of three

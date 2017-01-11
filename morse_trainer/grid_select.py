@@ -8,16 +8,18 @@ Shows a grid of characters.  The user may select/deselect each character
 and the display shows if the character is selected or deselected.
 
 grid_select = GridSelect(data, max_cols=12)
+where 'data' is a sequence of characters
 
-d = grid_select.get_selection()
-grid_select.set_selection(d)
+grid_select.setState(d)
+d = grid_select.getState()
+The state of the characters is returned (and set) as a dictionary:
+    d = {'A': True, 'B': False, ...}
+The dictionary contains only characters in the GridSelect set.
 
 grid_select.clear()
 
-The state of the characters is returned (and set) as a dictionary:
-    d = {'A': True, 'B': False, ...}
-
-Raises a '.changed' signal on any state change.  Event includes self.status.
+Raises a '.changed' signal on any state change.  Event includes self.status
+which is the iternal dictionary: {'A': True, 'B': False, ...}.
 """
 
 import platform
@@ -178,17 +180,21 @@ class GridSelect(QWidget):
         return self.status
 
     def setState(self, status):
-        """Set widget selection according to status dictionary."""
+        """Set widget selection according to status dictionary.
+
+        We don't assume 'status' contains only keys in the set.
+        """
 
         self.inhibit = True
 
-        self.status = status
 
         # set status and state of each button
+        self.status = {}
         for button in self.buttons:
             label = button.text()
-            button.setChecked(status[label])
-
+            value = status[label]
+            self.status[label] = value
+            button.setChecked(value)
         self.update()
 
         self.inhibit = False

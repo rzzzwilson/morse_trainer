@@ -6,7 +6,7 @@ A PyQt5 custom widget used by Morse Trainer.
 
 Used to select overall word speed for the Send tab only.
 
-speed = Speeds()
+speed = SendSpeeds()
 
 speed.setState(active, wpm)     # sets the use checkbox and speed display
 
@@ -14,7 +14,6 @@ The widget generates a signal '.changed' when some value changes.
 """
 
 import platform
-from random import randint
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox, QCheckBox
@@ -25,7 +24,7 @@ import logger
 log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
-class Speeds(QWidget):
+class SendSpeeds(QWidget):
 
     # signal raised when user changes cwpm
     changed = pyqtSignal(bool, int)
@@ -46,19 +45,18 @@ class Speeds(QWidget):
 
         # define the UI
         self.initUI()
-        self.setWindowTitle('Test Send Speeds widget')
         self.setFixedHeight(80)
         self.show()
 
     def initUI(self):
         # define the widgets we are going to use
-        self.cb_use = QCheckBox('Control speed', self)
+        self.cb_use = QCheckBox('Send speed', self)
         self.cb_use.setChecked(self.use_state)
 
         lbl_speed = QLabel('Speed')
         self.spb_speed = QSpinBox(self)
-        self.spb_speed.setMinimum(Speeds.MinSpeed)
-        self.spb_speed.setMaximum(Speeds.MaxSpeed)
+        self.spb_speed.setMinimum(SendSpeeds.MinSpeed)
+        self.spb_speed.setMaximum(SendSpeeds.MaxSpeed)
         self.spb_speed.setSuffix(' wpm')
         self.spb_speed.setValue(self.speed)
 
@@ -93,6 +91,9 @@ class Speeds(QWidget):
         # save changed speed
         self.use_state = use_state
 
+        # disable the speed spinbox if not obeying speed
+        self.spb_speed.setEnabled(use_state)
+
         # tell the world there was a change
         self.changed.emit(self.use_state, self.speed)
 
@@ -121,7 +122,8 @@ class Speeds(QWidget):
         self.cb_use.setChecked(use_state)
 
         self.speed = wpm
-        self.spb_words.setValue(wpm)
+        self.spb_speed.setValue(wpm)
+        self.spb_speed.setEnabled(use_state)
 
         self.update()
 

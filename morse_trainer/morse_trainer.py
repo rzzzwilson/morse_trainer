@@ -6,7 +6,8 @@ Morse Trainer is an application to help a user learn to send and copy Morse.
 
 Usage:  morse_trainer [-d <debug>]  [-h]
 
-where  -d <debug>  sets the debug level to the number <debug> [0,50]
+where  -d <debug>  sets the debug level to the number <debug> [0,50], output
+                   is written to ./debug.log, smaller number means less debug
 and    -h          prints this help and then stops.
 
 You will need a morse key and Code Practice Oscillator (CPO).
@@ -26,14 +27,15 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
                              QLabel, QCheckBox, QPushButton, QMessageBox,
                              QSpacerItem)
 
-import copy_morse
 from display import Display
-from copy_speeds import Speeds
+from copy_speeds import CopySpeeds
+from send_speeds import SendSpeeds
 from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 from sound_morse import SoundMorse
+from read_morse import ReadMorse
 import utils
 import logger
 
@@ -49,6 +51,7 @@ ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 
 class MorseTrainer(QTabWidget):
+    """Class for the whole application."""
 
     # set platform-dependent sizes
     if platform.system() == 'Windows':
@@ -75,16 +78,24 @@ class MorseTrainer(QTabWidget):
                     CopyTab: 'Copy',
                     StatsTab: 'Statistics'}
 
+    # the default tab showing on startup
+    DefaultStartTab = SendTab
+
     # name for the state save file
     StateSaveFile = '%s.state' % ProgName
 
     # define names of the instance variables to be saved/restored
-    StateVarNames = ['send_stats', 'copy_stats', 'copy_using_Koch',
-                     'copy_Koch_number', 'copy_Koch_list',
-                     'copy_User_chars_dict', 'copy_wpm', 'copy_cwpm',
-                     'copy_group_index', 'send_wpm', 'send_Koch_list',
-                     'current_tab_index']
+    StateVarNames = [
+                     'current_tab_index',
 
+                     'send_using_Koch', 'send_Koch_number', 'send_Koch_list',
+                     'send_User_chars_dict', 'send_wpm', 'send_group_index',
+                     'send_stats',
+
+                     'copy_using_Koch', 'copy_Koch_number', 'copy_Koch_list',
+                     'copy_User_chars_dict', 'copy_wpm', 'copy_cwpm',
+                     'copy_group_index', 'copy_stats',
+                    ]
 
     def __init__(self, parent = None):
         """Create a MorseTrainer object."""
@@ -114,11 +125,13 @@ class MorseTrainer(QTabWidget):
         self.addTab(self.copy_tab, 'Copy')
         self.addTab(self.stats_tab, 'Status')
 
+        # initialize each tab
         self.initSendTab()
         self.initCopyTab()
         self.InitStatsTab()
 
-        self.setMinimumSize(MorseTrainer.MinimumWidth, MorseTrainer.MinimumHeight)
+        self.setMinimumSize(MorseTrainer.MinimumWidth,
+                            MorseTrainer.MinimumHeight)
         self.setMaximumHeight(MorseTrainer.MinimumHeight)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
 
@@ -141,6 +154,9 @@ class MorseTrainer(QTabWidget):
                     'The program will print what it thinks you sent on the '
                     'lower line of the display.')
         instructions = Instructions(doc_text)
+        self.send_speeds = SendSpeeds()
+        self.send_groups = Groups()
+        self.send_charset = Charset(utils.AllUserChars)
         self.btn_send_start_stop = QPushButton('Start')
         self.btn_send_clear = QPushButton('Clear')
 
@@ -153,20 +169,122 @@ class MorseTrainer(QTabWidget):
         buttons.addWidget(self.btn_send_clear)
 
         controls = QVBoxLayout()
-        controls.addItem(QSpacerItem(20, 20))   # empty, for now
+        controls.maximumSize()
+        controls.addWidget(self.send_speeds)
+        controls.addWidget(self.send_groups)
+        controls.addWidget(self.send_charset)
 
         hbox = QHBoxLayout()
+        hbox.maximumSize()
         hbox.addLayout(controls)
-        hbox.addStretch()
-        #hbox.addItem(QSpacerItem(10, 1))
+        buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
+        layout.maximumSize()
         layout.addWidget(self.send_display)
         layout.addWidget(instructions)
         layout.addStretch()
         layout.addLayout(hbox)
         self.send_tab.setLayout(layout)
+
+        # connect 'Send' events to handlers
+        self.send_speeds.changed.connect(self.send_speeds_change)
+        self.send_groups.changed.connect(self.send_group_change)
+        self.send_charset.changed.connect(self.send_charset_change)
+        self.btn_send_start_stop.clicked.connect(self.send_start)
+        self.btn_send_clear.clicked.connect(self.send_clear)
+
+    def send_speeds_change(self, use_speed, speed):
+        """Something changed in the speeds widget."""
+
+        self.send_use_speed = use_speed
+        self.send_wpm = speed
+        self.send_groups.setDisabled(not use_speed)
+
+    def send_group_change(self, group_index):
+        """Something changed in the Send grouping."""
+
+        self.copy_group_index = index
+
+    def send_charset_change(self, state):
+        """Handle a change in the Send charset group widget."""
+
+        (self.send_using_Koch,
+         self.send_Koch_number,
+         self.send_User_chars_dict) = state
+
+        # update the Koch test set
+        self.send_Koch_list = utils.Koch[:self.send_Koch_number]
+
+        # update the user test set
+        on = [ch for ch in self.send_User_chars_dict
+                  if self.send_User_chars_dict[ch]]
+        self.send_User_sequence = ''.join(on)
+
+        # if using the user charset
+        if not self.send_using_Koch:
+            # if no user chars, disable "start" button
+            self.btn_send_start_stop.setDisabled(not on)
+
+        self.update_UI()
+
+    def send_start(self):
+        """The Send 'start/pause' button was clicked."""
+
+        if self.processing:
+            # enable the Clear button and speed/grouping/charset
+            self.btn_send_clear.setDisabled(False)
+            self.send_speeds.setDisabled(False)
+            self.send_groups.setDisabled(False)
+            self.send_charset.setDisabled(False)
+
+            # Pause button label becomes Start
+            self.btn_send_start_stop.setText('Start')
+
+            # change state variables to reflect the stop
+            self.processing = False
+        else:
+            # disable Clear button, speed/grouping/charset, relabel Start button
+            self.btn_send_clear.setDisabled(True)
+            self.send_speeds.setDisabled(True)
+            self.send_groups.setDisabled(True)
+            self.send_charset.setDisabled(True)
+            self.btn_send_start_stop.setText('Pause')
+
+            # start the 'Send' process
+            self.send_pending = []
+            self.processing = True
+
+            self.send_thread_finished()
+
+    def send_thread_finished(self, char=None):
+        """Catch signal when Send thread finished.
+
+        If still processing, start new thread.
+        """
+
+        log('send_thread_finished: called, self.processing=%s'
+            % str(self.processing))
+
+        if self.processing:
+            # decide which charset we are using
+            if self.send_using_Koch:
+                charset = self.send_Koch_list
+            else:
+                charset = ''.join([ch for ch in self.send_User_chars_dict
+                                       if self.send_User_chars_dict[ch]])
+            send_char = utils.get_random_char(charset)
+            self.send_display.insert_upper(send_char)
+#            self.send_pending = (self.send + [send_char])[-2:]
+            self.threadRead = ReadThread(self.send_morse_obj)
+            self.threadRead.finished.connect(self.send_thread_finished)
+            self.threadRead.start()
+
+    def send_clear(self, event):
+        """The Send 'clear' button was clicked."""
+
+        self.send_display.clear()
 
 ######
 # All code pertaining to the Copy tab
@@ -184,7 +302,7 @@ class MorseTrainer(QTabWidget):
                     'along with the character the program actually sent in '
                     'the top row.')
         instructions = Instructions(doc_text)
-        self.copy_speeds = Speeds()
+        self.copy_speeds = CopySpeeds()
         self.copy_groups = Groups()
         self.copy_charset = Charset(utils.AllUserChars)
         self.btn_copy_start_stop = QPushButton('Start')
@@ -192,22 +310,26 @@ class MorseTrainer(QTabWidget):
 
         # start layout
         buttons = QVBoxLayout()
+        buttons.maximumSize()
         buttons.addStretch()
         buttons.addWidget(self.btn_copy_start_stop)
         buttons.addItem(QSpacerItem(20, 20))
         buttons.addWidget(self.btn_copy_clear)
 
         controls = QVBoxLayout()
+        controls.maximumSize()
         controls.addWidget(self.copy_speeds)
         controls.addWidget(self.copy_groups)
         controls.addWidget(self.copy_charset)
 
         hbox = QHBoxLayout()
+        hbox.maximumSize()
         hbox.addLayout(controls)
         buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
+        layout.maximumSize()
         layout.addWidget(self.copy_display)
         layout.addWidget(instructions)
         layout.addStretch()
@@ -335,19 +457,22 @@ class MorseTrainer(QTabWidget):
 
         # lay out the tab
         buttons = QVBoxLayout()
+        buttons.maximumSize()
         buttons.addStretch()
         buttons.addWidget(btn_clear)
 
         controls = QVBoxLayout()
+        controls.maximumSize()
         controls.addWidget(self.send_status)
         controls.addWidget(self.copy_status)
 
         hbox = QHBoxLayout()
+        hbox.maximumSize()
         hbox.addLayout(controls)
-        buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
 
         layout = QVBoxLayout()
+        layout.maximumSize()
         layout.addWidget(instructions)
         layout.addStretch()
         layout.addLayout(hbox)
@@ -435,41 +560,39 @@ class MorseTrainer(QTabWidget):
     def clear_data(self):
         """Define and clear all internal variables."""
 
-        # the morse sound object and Send state variables
-        self.copy_morse_obj = SoundMorse()  # the Copy morse thread object
-        self.keypress_count = 0             # keypress counter
-        self.copy_pending = ''              # holds last 2 chars sounded
+        # the morse objects
+        self.send_morse_obj = ReadMorse()
+        self.copy_morse_obj = SoundMorse()
 
-        # state variable shows send or copy processing
-        self.processing = False
+        # Send variables
+        self.send_using_Koch = True
+        self.send_Koch_number = 2
+        self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
+        self.send_User_chars_dict = {ch:False for ch in utils.AllUserChars}
+        self.send_use_speed = False
+        self.send_wpm = 5
+        # self.send_cwpm not used for Send
+        self.send_group_index = 0
 
-        # clear the send/copy statistics
-        # each dictionary contains tuples of (<num_chars>, <num_ok>)
-        self.send_stats = {}
-        self.copy_stats = {}
-        for char in utils.AllUserChars:
-            self.send_stats[char] = (0, 0)
-            self.copy_stats[char] = (0, 0)
-
-        # the character sets we test on and associated variables
+        # Copy variables
         self.copy_using_Koch = True
         self.copy_Koch_number = 2
         self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
         self.copy_User_chars_dict = {ch:False for ch in utils.AllUserChars}
-
-        self.send_Koch_number = 2
-        self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
-
-        # send and copy speeds
-        self.send_wpm = None        # not used yet
         self.copy_wpm = 5
         self.copy_cwpm = 5
-
-        # the copy grouping
         self.copy_group_index = 0
+        self.copy_pending = ''              # holds last 2 chars sounded
+
+        # the send/copy statistics, tuple is (<num_chars>, <num_ok>)
+        self.send_stats = {ch:(0, 0) for ch in utils.AllUserChars}
+        self.copy_stats = {ch:(0, 0) for ch in utils.AllUserChars}
+
+        # state variable shows send or copy test in progress
+        self.processing = False
 
         # set the current and previous tab indices
-        self.current_tab_index = MorseTrainer.SendTab
+        self.current_tab_index = MorseTrainer.DefaultStartTab
         self.previous_tab_index = None
 
     def load_state(self, filename):
@@ -502,15 +625,20 @@ class MorseTrainer(QTabWidget):
         # now update UI state from state variables
         #####
 
-        # the speed
+        # Send panel
+        self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
+        self.send_groups.setState(self.send_group_index)
+        self.send_charset.setState(self.send_using_Koch,
+                                   self.send_Koch_number,
+                                   self.send_User_chars_dict)
+#        self.send_morse_obj.set_speeds(self.send_wpm)
+
+        # Copy panel
         self.copy_speeds.setState(self.copy_wpm, cwpm=self.copy_cwpm)
-        # the grouping
         self.copy_groups.setState(self.copy_group_index)
-        # the charset used
         self.copy_charset.setState(self.copy_using_Koch,
                                    self.copy_Koch_number,
                                    self.copy_User_chars_dict)
-        # update the Send morse sounder object
         self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
 
         # adjust tabbed view to last view
@@ -603,6 +731,42 @@ class MorseTrainer(QTabWidget):
 
         self.setCurrentIndex(tab_index)
 
+######
+# A class to read one morse character from the microphone.
+# We need a thread for this as we are doing things while the Send test is running.
+######
+
+class ReadThread(QThread):
+    """A thread to read a morse character from the microphone.
+
+    It sends a signal to the main thread when finished.
+    """
+
+    # the signal when finished
+    finished = pyqtSignal(str)
+
+    def __init__(self, sound_object):
+        """Create a thread to read one morse character.
+
+        sound_object  the object that reads morse sounds
+        """
+
+        QThread.__init__(self)
+        self.sound_object = sound_object
+
+    def __del__(self):
+        """Delete the thread."""
+
+        self.wait()
+
+    def run(self):
+        """Sound the character."""
+
+        # make the character sound in morse
+        char = self.sound_object.read()
+
+        # send signal to main thread: finished
+        self.finished.emit(char)
 
 ######
 # A class to sound one more character.

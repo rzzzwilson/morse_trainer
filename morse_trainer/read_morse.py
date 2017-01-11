@@ -8,20 +8,14 @@ a JSON file.  The dynamic parameters (possibly changed) can be save
 back to a file.
 
 morse = ReadMorse()
-----------------
 
 morse.load_params(params_file)
------------------------
 
 morse.save_params(params_file)
------------------------
 
 char = morse.read_morse()
-----------------------
 
 morse.close()
--------------
-
 """
 
 
@@ -204,7 +198,8 @@ class ReadMorse:
         values = []
 
         while True:
-            data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+            #data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+            data = stream.read(ReadMorse.CHUNK)
             data = np.fromstring(data, 'int16')
             data = [abs(x) for x in data]
             value = int(sum(data) // len(data))      # average value
@@ -233,7 +228,7 @@ class ReadMorse:
                     hold = HOLD
                     count += 1
 
-    def read_morse(self):
+    def read(self):
         """Returns one character in morse."""
 
         space_count = 0
