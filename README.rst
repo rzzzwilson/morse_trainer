@@ -12,8 +12,9 @@ can recognize your morse it's probably reasonably well-formed!
 Current Status
 --------------
 
-The UI is mostly complete, barring any unforeseen things.  Next step is to
-start putting code under the UI, probably starting with "copy".
+The UI is mostly complete, barring any unforeseen things.  The "copy" pane is
+working and updating the statistics, though the Koch "increase test charset"
+automation isn't working.  Next is the "send" pane.
 
 Requirements
 ------------
@@ -27,9 +28,10 @@ Requirements
 
 Nice to have:
 
-* Have a "practice communication" mode, computer is other end?
 * Multiple users, each with own history/statistics (so, login)
 * Get text from the 'net as copy practice (news?)
+* Some added noise/fading for realism
+* Try to have a "QSO mode" for even more realism
 
 Implementation
 --------------
@@ -50,18 +52,16 @@ incorrect characters highlighted.
 
 Operations allowed:
 
-* START
-* STOP
-* PAUSE
-* CLEAR (?)
+* START/PAUSE   (button changes label)
+* CLEAR
 
 Parameters that can be changed:
 
 * Characters used
+* Optional minimum speed
 
 Statistics kept:
 
-* % correct, in current test and globally
 * relative error rates by character
 
 **COPY**
@@ -72,9 +72,7 @@ highlighting if incorrect.
 
 Operations allowed:
 
-* START
-* STOP
-* PAUSE
+* START/PAUSE   (button changes label)
 * CLEAR
 
 Parameters that can be changed:
@@ -90,15 +88,12 @@ all selected characters are OK.
 
 Statistics kept:
 
-* % correct, in current test and globally
 * relative error rates by character
 
 **STATUS**
 
 This pane will show the 'percentage correct' values for all characters.
 The percentages for Send and Receive will be kept separate.
-
-The *show_status.py* file contains the code for one status display.
 
 Character Selection
 -------------------
@@ -114,8 +109,6 @@ Selection of characters will be from groups:
 
 The selection of characters will allow one or more  groups, with the user being
 allowed to choose a sub-set of a group.
-
-The *grid_select.py* file contains the code for this.
 
 Sending Selection
 -----------------
