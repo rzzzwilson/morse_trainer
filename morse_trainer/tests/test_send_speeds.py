@@ -7,7 +7,7 @@ Test the 'Send speeds' widget.
 
 import sys
 sys.path.append('..')
-from send_speeds import Speeds
+from send_speeds import SendSpeeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
 
 class SpeedsExample(QWidget):
@@ -18,7 +18,7 @@ class SpeedsExample(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.speed_group = Speeds()
+        self.speed_group = SendSpeeds()
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.speed_group)

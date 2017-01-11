@@ -7,7 +7,7 @@ Test the 'speeds' widget.
 
 import sys
 sys.path.append('..')
-from copy_speeds import Speeds
+from copy_speeds import CopySpeeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
 
 class SpeedsExample(QWidget):
@@ -19,13 +19,13 @@ class SpeedsExample(QWidget):
 
 
     def initUI(self):
-        self.speed_group = Speeds()
+        self.speed_group = CopySpeeds()
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.speed_group)
         self.setLayout(hbox)
 
-        self.setWindowTitle('Example of Speeds widget')
+        self.setWindowTitle('Example of Copy Speeds widget')
         self.setFixedSize(400, 125)
         self.show()
 
