@@ -70,6 +70,9 @@ class MorseTrainer(QTabWidget):
     DefaultWordsPerMinute = 15
     DefaultCharWordsPerMinute = 10
 
+    # name of the 'read morse' parameters file
+    MorseParamsFile = 'read_morse.param'
+
     # 'enum' constants for the three tabs
     (SendTab, CopyTab, StatsTab) = range(3)
 
@@ -253,30 +256,42 @@ class MorseTrainer(QTabWidget):
             self.btn_send_start_stop.setText('Pause')
 
             # start the 'Send' process
-            self.send_pending = []
+            self.send_expected = None
             self.processing = True
+            if self.send_using_Koch:
+                self.send_charset = self.send_Koch_list
+            else:
+                self.send_charset = ''.join([ch for ch in self.send_User_chars_dict
+                                             if self.send_User_chars_dict[ch]])
 
             self.send_thread_finished()
 
     def send_thread_finished(self, char=None):
         """Catch signal when Send thread finished.
 
-        If still processing, start new thread.
+        Compare the char we got (char) with expected (self.send_expected).
+        If still processing, repeat thread.
         """
 
-        log('send_thread_finished: called, self.processing=%s'
-            % str(self.processing))
+        log('send_thread_finished: called, .send_charset=%s, char=%s, self.processing=%s'
+            % (self.send_charset, str(char), str(self.processing)))
+
+        # echo received char, if any
+        if char:
+            if char in utils.AllUserChars:
+                if char == self.send_expected:
+                    self.send_display.insert_lower(char)
+                else:
+                    self.send_display.insert_lower(char, fg=Display.AnsTextBadColour)
+
+                self.send_expected = None
 
         if self.processing:
-            # decide which charset we are using
-            if self.send_using_Koch:
-                charset = self.send_Koch_list
-            else:
-                charset = ''.join([ch for ch in self.send_User_chars_dict
-                                       if self.send_User_chars_dict[ch]])
-            send_char = utils.get_random_char(charset)
-            self.send_display.insert_upper(send_char)
-#            self.send_pending = (self.send + [send_char])[-2:]
+            if self.send_expected is None:
+                send_char = utils.get_random_char(self.send_charset)
+                self.send_display.insert_upper(send_char)
+                self.send_expected = send_char
+
             self.threadRead = ReadThread(self.send_morse_obj)
             self.threadRead.finished.connect(self.send_thread_finished)
             self.threadRead.start()
@@ -562,6 +577,7 @@ class MorseTrainer(QTabWidget):
 
         # the morse objects
         self.send_morse_obj = ReadMorse()
+        self.send_morse_obj.load_params(MorseTrainer.MorseParamsFile)
         self.copy_morse_obj = SoundMorse()
 
         # Send variables
@@ -573,6 +589,8 @@ class MorseTrainer(QTabWidget):
         self.send_wpm = 5
         # self.send_cwpm not used for Send
         self.send_group_index = 0
+        self.send_expected = None
+        self.send_charset = None
 
         # Copy variables
         self.copy_using_Koch = True
@@ -732,14 +750,14 @@ class MorseTrainer(QTabWidget):
         self.setCurrentIndex(tab_index)
 
 ######
-# A class to read one morse character from the microphone.
-# We need a thread for this as we are doing things while the Send test is running.
+# A thread to read one morse character from the microphone.
 ######
 
 class ReadThread(QThread):
     """A thread to read a morse character from the microphone.
 
-    It sends a signal to the main thread when finished.
+    It sends a signal to the main thread when finished.  The signal
+    contains the character read (or None if nothing read).
     """
 
     # the signal when finished
@@ -769,8 +787,7 @@ class ReadThread(QThread):
         self.finished.emit(char)
 
 ######
-# A class to sound one more character.
-# We need a thread for this as we are doing things while the Copy cound is made.
+# A thread to sound one morse character.
 ######
 
 class CopyThread(QThread):

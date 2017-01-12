@@ -19,28 +19,18 @@ morse.close()
 """
 
 
-import_errors = False
-
 import sys
 import json
 
-try:
-    import pyaudio
-except ImportError:
-    print("Can't import 'pyaudio'")
-    import_errors = True
+import pyaudio
+import numpy as np
 
-try:
-    import numpy as np
-except ImportError:
-    print("Can't import 'numpy'")
-    import_errors = True
-
-if import_errors:
-    sys.exit(10)
+import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class ReadMorse:
+    """A class to read and decode morse from the microphone."""
 
     CHUNK = 16
     FORMAT = pyaudio.paInt16
@@ -52,9 +42,9 @@ class ReadMorse:
     LenDash = LenDot * 3
     DotDashThreshold = (LenDot + LenDash)//2       # threshold between dot & dash
 
-    MaxSignal = 30000
+    MaxSignal = 5000
     MinSignal = 500
-    SignalThreshold = 10000
+    SignalThreshold = 3000
 
     # lower sampling rate counters
     CharSpace = 3      # number of silences indicates a space
@@ -344,7 +334,7 @@ if __name__ == '__main__':
 
     while True:
         try:
-            char = morse.read_morse()
+            char = morse.read()
             emit(char)
         except KeyboardInterrupt:
             emit('\nFinished\n')
