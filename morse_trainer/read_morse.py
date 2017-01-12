@@ -96,9 +96,10 @@ class ReadMorse:
                                         frames_per_buffer=ReadMorse.CHUNK)
 
     def close(self):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.pyaudio.terminate()
+        pass
+#        self.stream.stop_stream()
+#        self.stream.close()
+#        self.pyaudio.terminate()
 
     def __del__(self):
         self.close()
