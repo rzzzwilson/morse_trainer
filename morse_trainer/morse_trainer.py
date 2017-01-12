@@ -46,7 +46,7 @@ if ProgName.endswith('.py'):
         ProgName = ProgName[:-3]
 
 ProgramMajor = 0
-ProgramMinor = 2
+ProgramMinor = 3
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 
@@ -259,10 +259,10 @@ class MorseTrainer(QTabWidget):
             self.send_expected = None
             self.processing = True
             if self.send_using_Koch:
-                self.send_charset = self.send_Koch_list
+                self.send_test_charset = self.send_Koch_list
             else:
-                self.send_charset = ''.join([ch for ch in self.send_User_chars_dict
-                                             if self.send_User_chars_dict[ch]])
+                self.send_test_charset = ''.join([ch for ch in self.send_User_chars_dict
+                                                  if self.send_User_chars_dict[ch]])
 
             self.send_thread_finished()
 
@@ -273,22 +273,39 @@ class MorseTrainer(QTabWidget):
         If still processing, repeat thread.
         """
 
-        log('send_thread_finished: called, .send_charset=%s, char=%s, self.processing=%s'
-            % (self.send_charset, str(char), str(self.processing)))
-
         # echo received char, if any
         if char:
             if char in utils.AllUserChars:
+                # update the character stats
+                (num_chars, num_ok) = self.send_stats[self.send_expected]
+                num_chars += 1
+                if char == self.send_expected:
+                    num_ok += 1
+                self.send_stats[self.send_expected] = (num_chars, num_ok)
+
+                # show result in display
                 if char == self.send_expected:
                     self.send_display.insert_lower(char)
                 else:
                     self.send_display.insert_lower(char, fg=Display.AnsTextBadColour)
 
+                # put in a tooltip if char was wrong
+                if char != self.send_expected:
+                    colour = self.send_display.AnsTextBadColour
+                    msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
+                            % (self.send_expected, utils.char2morse(self.send_expected),
+                               char, utils.char2morse(char)))
+                    self.copy_display.update_tooltip(msg)
+
                 self.send_expected = None
+
+        # update the user test set
+        on = [ch for ch in self.send_User_chars_dict if self.copy_User_chars_dict[ch]]
+        self.copy_User_sequence = ''.join(on)
 
         if self.processing:
             if self.send_expected is None:
-                send_char = utils.get_random_char(self.send_charset)
+                send_char = utils.get_random_char(self.send_test_charset)
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
 
@@ -503,7 +520,11 @@ class MorseTrainer(QTabWidget):
 
         # clear the internal data structure
         for ch in utils.AllUserChars:
+            self.send_stats[ch] = (0, 0)
             self.copy_stats[ch] = (0, 0)
+
+        new = self.stats2percent(self.send_stats)
+        self.send_status.setState(new)
 
         new = self.stats2percent(self.copy_stats)
         self.copy_status.setState(new)
@@ -590,7 +611,7 @@ class MorseTrainer(QTabWidget):
         # self.send_cwpm not used for Send
         self.send_group_index = 0
         self.send_expected = None
-        self.send_charset = None
+        self.send_test_charset = None
 
         # Copy variables
         self.copy_using_Koch = True
