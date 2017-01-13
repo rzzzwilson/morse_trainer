@@ -9,9 +9,9 @@ Will be used in its own thread by Morse Trainer.
 
 import platform
 
-import copy_morse
+import read_morse
 from display import Display
-from send_speeds import Speeds
+from send_speeds import SendSpeeds
 from groups import Groups
 from charset import Charset
 from charset_proficiency import CharsetProficiency
@@ -43,17 +43,13 @@ DefaultWordsPerMinute = 10
 DefaultCharWordsPerMinute = 10
 
 
-class Communicate(QObject):
-    """Signal/slot communication class."""
-
-    morse_char = pyqtSignal('QString')       # received morse char
-
-
 class MorseReader(QThread):
     """A class for a morse reader that runs in another thread.
 
     Recognized characters are sent to the main thread by a signal.
     """
+
+    morse_char = pyqtSignal('QString')       # received morse char
 
     def __init__(self, sig_obj, params_file=None):
         """Initialize the reader.
@@ -68,27 +64,27 @@ class MorseReader(QThread):
         self.params_file = params_file
         self.running = False
 
-        self.copy_morse = copy_morse.ReadMorse()
+        self.read_morse = read_morse.ReadMorse()
         if self.params_file:
-            self.copy_morse.load_params(self.params_file)
+            self.read_morse.load_params(self.params_file)
 
     def __del__(self):
         # save updated params
         if self.params_file:
-            self.copy_morse.save_params(self.params_file)
+            self.read_morse.save_params(self.params_file)
         # close morse reader
         self.running = False
         self.wait()
 
     def close(self):
         if self.params_file:
-            self.copy_morse.save_params(self.params_file)
+            self.read_morse.save_params(self.params_file)
         self.running = False
 
     def run(self):
         self.running = True
         while self.running:
-            char = self.copy_morse.read_morse()
+            char = self.read_morse.read_morse()
             if len(char) == 1:
                 self.sig_obj.morse_char.emit(char)
 
@@ -170,7 +166,7 @@ class MorseTrainer(QTabWidget):
                     'the bottom row of the display above, along with the '
                     'character the program actually sent in the top row.')
         instructions = Instructions(doc_text)
-        self.send_speeds = Speeds()
+        self.send_speeds = SendSpeeds()
         self.send_groups = Groups()
         self.send_charset = Charset()
         self.btn_send_start_stop = QPushButton('Start')
