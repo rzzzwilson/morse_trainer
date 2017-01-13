@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Morse Trainer
-Exec=morse_trainer.py
-Terminal=false
-Type=Application
-Icon=
-Comment=
-Path=/home/r-w/git/morse_trainer
-StartupNotify=false
