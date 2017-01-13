@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Morse Trainer
+Version=0.2
+Exec=morse_trainer.py
+Terminal=false
+Type=Application
+Icon=/home/r-w/git/morse_trainer/morse_trainer/icon.png
+Comment=
+Path=/home/r-w/git/morse_trainer/morse_trainer
+StartupNotify=true
+Categories=Utility;Application;
