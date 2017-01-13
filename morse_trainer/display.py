@@ -24,6 +24,8 @@ display.set_highlight()             # set tooltip on latest column
 
 import platform
 
+import utils
+
 from PyQt5.QtWidgets import QWidget, QTableWidget, QPushButton, QMessageBox
 from PyQt5.QtWidgets import QToolTip
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, QPoint
@@ -332,14 +334,7 @@ class Display(QWidget):
         if max_length > self.num_columns:
             self.left_scroll(max_length - self.num_columns)
 
-        # decide if we have to scroll
-        max_length = max(self.upper_len(), self.lower_len())
-        if max_length > self.num_columns:
-            self.left_scroll(max_length - self.num_columns)
-
         self.update()
-
-        log('insert_upper: at end, self.tooltips=%s' % str(self.tooltips))
 
     def insert_lower(self, ch, fg=None):
         """Insert char at end of lower row.
@@ -379,7 +374,6 @@ class Display(QWidget):
         text  the tooltip text
         """
 
-        log('update_tooltip: text=%s, self.tooltips=%s' % (text, str(self.tooltips)))
         self.tooltips[-1] = text
 
     def left_scroll(self, num=None):

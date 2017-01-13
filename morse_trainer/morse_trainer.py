@@ -295,13 +295,13 @@ class MorseTrainer(QTabWidget):
                     msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
                             % (self.send_expected, utils.char2morse(self.send_expected),
                                char, utils.char2morse(char)))
-                    self.copy_display.update_tooltip(msg)
+                    self.send_display.update_tooltip(msg)
 
                 self.send_expected = None
 
         # update the user test set
-        on = [ch for ch in self.send_User_chars_dict if self.copy_User_chars_dict[ch]]
-        self.copy_User_sequence = ''.join(on)
+        on = [ch for ch in self.send_User_chars_dict if self.send_User_chars_dict[ch]]
+        self.send_User_sequence = ''.join(on)
 
         if self.processing:
             if self.send_expected is None:

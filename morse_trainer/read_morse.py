@@ -25,6 +25,7 @@ import json
 import pyaudio
 import numpy as np
 
+import utils
 import logger
 log = logger.Log('debug.log', logger.Log.CRITICAL)
 
@@ -51,7 +52,7 @@ class ReadMorse:
     WordSpace = 9      # number of silences to end word
 
     # the UNICODE character for "unrecognized"
-    NOTHING = u'\u2715'
+    NOTHING = u'\u00bf'     # inverted 'question'
 
 
     def __init__(self):
@@ -141,7 +142,7 @@ class ReadMorse:
         try:
             char = utils.Morse2Char[morse]
         except KeyError:
-            char = NOTHING + '<%s>' % morse
+            char = ReadMorse.NOTHING
         return char
 
     def _get_sample(self, stream):
@@ -282,7 +283,7 @@ if __name__ == '__main__':
               "Usage: morse [-f filename] [-h] [-l] [-s]\n\n"
               "where -f filename  means read params from filename\n"
               "      -h           means print this help and stop\n"
-              "      -l           means don't load any params from file"
+              "      -l           means don't load any params from file\n"
               "      -s           means don't save any params to file")
 
 
