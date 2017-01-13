@@ -485,13 +485,13 @@ class MorseTrainer(QTabWidget):
                                               utils.Punctuation)
         percents = self.stats2percent(self.copy_stats)
         self.copy_status.setState(percents)
-        btn_clear = QPushButton('Clear')
+        self.stats_btn_clear = QPushButton('Clear')
 
         # lay out the tab
         buttons = QVBoxLayout()
         buttons.maximumSize()
         buttons.addStretch()
-        buttons.addWidget(btn_clear)
+        buttons.addWidget(self.stats_btn_clear)
 
         controls = QVBoxLayout()
         controls.maximumSize()
@@ -511,12 +511,17 @@ class MorseTrainer(QTabWidget):
         self.stats_tab.setLayout(layout)
 
         # connect 'Stats' events to handlers
-        btn_clear.clicked.connect(self.clear_stats)
+        self.stats_btn_clear.clicked.connect(self.clear_stats)
 
     def clear_stats(self):
         """Clear the statistics display."""
 
-        # should have a "Are you sure?" dialog here
+        # "Are you sure?" dialog here
+        msg = "Are you sure you want to clear all statistics?"
+        reply = QMessageBox.question(self, 'Clear Statistics"', msg,
+                                     QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
 
         # clear the internal data structure
         for ch in utils.AllUserChars:
@@ -528,6 +533,8 @@ class MorseTrainer(QTabWidget):
 
         new = self.stats2percent(self.copy_stats)
         self.copy_status.setState(new)
+
+        self.stats_btn_clear.setDisabled(True)
 
 ######
 # Other code
@@ -761,6 +768,20 @@ class MorseTrainer(QTabWidget):
 
             percents = self.stats2percent(self.copy_stats)
             self.copy_status.setState(percents)
+
+            # if nothing to clear, disable 'Clear' button
+            # see if statistics are already empty
+            all_clear = True
+            for (k, v) in self.send_stats.items():
+                if v != [0, 0]:
+                    all_clear = False
+                    break
+            if all_clear:
+                for (k, v) in self.copy_stats.items():
+                    if v != [0, 0]:
+                        all_clear = False
+                        break
+            self.stats_btn_clear.setDisabled(all_clear)
 
         # remember the previous tab for NEXT TIME WE CHANGE
         self.previous_tab_index = tab_index
