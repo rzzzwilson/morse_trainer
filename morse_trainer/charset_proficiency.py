@@ -7,11 +7,12 @@ A PyQt5 custom widget used by Morse Trainer.
 Show the proficiency of all chars in the charset:
     alphas, numbers and punctuation.
 
-show_status = CharsetProficiency(alpha_data, number_data, punctuation_data)
+cf = CharsetProficiency(alpha_data, number_data, punctuation_data)
 
 where '*_data' is the string used to establish a GridDisplay.
 
-show_status.refresh(dict)
+cf.setState(dict)
+(alpha, num, punct) = cf.getState()
 
 where 'dict' is a dictionary: {'A':10, 'B':26, ...} that maps each
 character to a 'success' percentage.  Note that the dictioanry contains
@@ -97,8 +98,7 @@ class CharsetProficiency(QWidget):
 
         self.update()
 
-    @property
-    def data(self):
+    def getState(self):
         """Return a list with all three sub-widget's data strings."""
 
         return self.st_alpha.data + self.st_number.data + self.st_punct.data
