@@ -30,6 +30,7 @@ if len(AllUserChars) != len(Koch):
     print('*'*80)
     sys.exit(1)
 
+# map chars to morse strings
 Char2Morse = {
               '!': '-.-.--', '"': '.-..-.', '$': '...-..-', '&': '.-...',
               "'": '.----.', '(': '-.--.', ')': '-.--.-', ',': '--..--',
@@ -50,7 +51,10 @@ Char2Morse = {
               'Y': '-.--', 'Z': '--..'
              }
 
+# invert above dict to create map of morse strings to chars
+Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 
+# stylesheet code for PyQt5
 StyleCSS = """
 /*css stylesheet file that contains all the style information*/
 

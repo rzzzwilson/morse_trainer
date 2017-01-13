@@ -50,26 +50,8 @@ class ReadMorse:
     CharSpace = 3      # number of silences indicates a space
     WordSpace = 9      # number of silences to end word
 
-    # dict to translate morse code strings to characters
-    Morse = {
-             '.-':      'A', '-...':    'B', '-.-.':    'C', '-..':     'D',
-             '.':       'E', '..-.':    'F', '--.':     'G', '....':    'H',
-             '..':      'I', '.---':    'J', '-.-':     'K', '.-..':    'L',
-             '--':      'M', '-.':      'N', '---':     'O', '.--.':    'P',
-             '--.-':    'Q', '.-.':     'R', '...':     'S', '-':       'T',
-             '..-':     'U', '...-':    'V', '.--':     'W', '-..-':    'X',
-             '-.--':    'Y', '--..':    'Z',
-
-             '.----':   '1', '..---':   '2', '...--':   '3', '....-':   '4',
-             '.....':   '5', '-....':   '6', '--...':   '7', '---..':   '8',
-             '----.':   '9', '-----':   '0',
-
-             '.-.-.-':  '.', '--..--':  ',', '..--..':  '?', '.----.':  '\'',
-             '-.-.--':  '!', '-..-.':   '/', '-.--.':   '(', '-.--.-':  ')',
-             '.-...':   '&', '---...':  ':', '-.-.-.':  ';', '-...-':   '=',
-             '-....-':  '-', '..--.-':  '_', '.-..-.':  '"', '...-..-': '$',
-             '.--.-.':  '@',
-            }
+    # the UNICODE character for "unrecognized"
+    NOTHING = u'\u2715'
 
 
     def __init__(self):
@@ -157,9 +139,9 @@ class ReadMorse:
         """
 
         try:
-            char = ReadMorse.Morse[morse]
+            char = utils.Morse2Char[morse]
         except KeyError:
-            char = u'\u00bf' + '<%s>' % morse
+            char = NOTHING + '<%s>' % morse
         return char
 
     def _get_sample(self, stream):
