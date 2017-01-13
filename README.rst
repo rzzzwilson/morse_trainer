@@ -33,7 +33,7 @@ Requirements
     * SEND listens to morse sounds and displays the decoded morse
     * COPY sounds morse and listener types in the received characters
 * Uses both Koch and selectable charset approaches
-* User can vary char and word speeds independently (Farnsworth method)
+* User can vary char and word speeds independently (Farnsworth timing)
 * Program keeps learning statistics for feedback
 
 Nice to have:
