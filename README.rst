@@ -12,9 +12,19 @@ can recognize your morse it's probably reasonably well-formed!
 Current Status
 --------------
 
-The UI is mostly complete, barring any unforeseen things.  The "copy" pane is
-working and updating the statistics, though the Koch "increase test charset"
-automation isn't working.  Next is the "send" pane.
+The UI is mostly complete, barring any unforeseen things.  The 'Send', 'Copy'
+and 'Stats' tabs are all working, with some minor UI bugs, such as buttons
+not beibg disabled when thay should be, etc.
+
+Next we need to get the Koch mechanism working, that is, increasing the size
+of the Koch test charset depending on error rates.  Also consider reducing the
+test charset if error rates increase.
+
+Also need to tweak the stats memory mechanism.  At the moment, we remember all
+attempts to send/copy code.  The stats mechanism should only remember the last 
+N instances of each character.
+
+The code to listen to and decode morse soubds also needs to be made more robust.
 
 Requirements
 ------------
