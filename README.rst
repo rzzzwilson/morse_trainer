@@ -14,7 +14,12 @@ Current Status
 
 The UI is mostly complete, barring any unforeseen things.  The 'Send', 'Copy'
 and 'Stats' tabs are all working, with some minor UI bugs, such as buttons
-not beibg disabled when thay should be, etc.
+not being disabled when thay should be, etc.
+
+Doing "make zip" builds a Linux single-file executable which is supposed to 
+contain the python interpreter and all required modules.  It's 42MB!  Try to
+remove the dependency on numpy which should reduce the size somewhat.  Need to
+actuallt test the Linux executable.
 
 Next we need to get the Koch mechanism working, that is, increasing the size
 of the Koch test charset depending on error rates.  Also consider reducing the
