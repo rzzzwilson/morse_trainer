@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# A bash script to build the standalone executables for morse_trainer.
+#
+# Uses 'pyinstaller' to generate a *.zip file for the architecture
+# it is run on.  Leaves the *.zip in the ./dist directory.
+#
+# Zip files are:
+#     morse_trainer_linux.zip
+#     morse_trainer_macos.zip
+#     morse_trainer_windows.zip
+
+# make the pyinstaller executable directory
+rm -Rf dist build
+pyinstaller -F --noconsole morse_trainer.py
+
+# now rename and move the executable directory
+cd dist
+mv morse_trainer ../morse_trainer_$(uname)
+cd ..
+rm -Rf dist build __pycache__
