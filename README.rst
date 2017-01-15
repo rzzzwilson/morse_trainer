@@ -14,22 +14,24 @@ Current Status
 
 The UI is mostly complete, barring any unforeseen things.  The 'Send', 'Copy'
 and 'Stats' tabs are all working, with some minor UI bugs, such as buttons
-not being disabled when thay should be, etc.
+not being disabled when they should be, etc.
 
 Doing "make zip" builds a Linux single-file executable which is supposed to 
-contain the python interpreter and all required modules.  It's 42MB!  Try to
+contain the python interpreter and all required modules.  It's 41MB!  Try to
 remove the dependency on numpy which should reduce the size somewhat.  Need to
-actuallt test the Linux executable.
+actually test the Linux executable on a vanilla system.  Also need to extend
+(somehow) to build MacOS and Windows versions on those platforms.
 
 Next we need to get the Koch mechanism working, that is, increasing the size
 of the Koch test charset depending on error rates.  Also consider reducing the
-test charset if error rates increase.
+test charset if error rates *increase*.
 
 Also need to tweak the stats memory mechanism.  At the moment, we remember all
 attempts to send/copy code.  The stats mechanism should only remember the last 
 N instances of each character.
 
-The code to listen to and decode morse soubds also needs to be made more robust.
+The code to listen to and decode morse sounds also needs to be made more
+resilient and able to handle wide speed diferences.
 
 Requirements
 ------------
