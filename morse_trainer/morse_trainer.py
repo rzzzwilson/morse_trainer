@@ -43,7 +43,13 @@ import logger
 # get program name and version
 ProgName = sys.argv[0]
 if ProgName.endswith('.py'):
-        ProgName = ProgName[:-3]
+    ProgName = ProgName[:-3]
+    # remove any "_<platform>" suffix
+    if ProgName.endswith('_' + platform.uname().system):
+        parts = ProgName.split('_')
+        ProgName = '_'.join(parts[:-1])
+print(ProgName)
+
 
 ProgramMajor = 0
 ProgramMinor = 3
@@ -226,7 +232,9 @@ class MorseTrainer(QTabWidget):
         self.send_User_sequence = ''.join(on)
 
         # if using the user charset
-        if not self.send_using_Koch:
+        if self.send_using_Koch:
+            self.btn_send_start_stop.setDisabled(False)
+        else:
             # if no user chars, disable "start" button
             self.btn_send_start_stop.setDisabled(not on)
 
