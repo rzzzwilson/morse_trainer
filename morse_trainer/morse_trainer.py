@@ -41,14 +41,14 @@ import logger
 
 
 # get program name and version
+System = platform.system()
 ProgName = sys.argv[0]
 if ProgName.endswith('.py'):
     ProgName = ProgName[:-3]
     # remove any "_<platform>" suffix
-    if ProgName.endswith('_' + platform.uname().system):
+    if ProgName.endswith('_' + System):
         parts = ProgName.split('_')
         ProgName = '_'.join(parts[:-1])
-print(ProgName)
 
 
 ProgramMajor = 0
@@ -60,17 +60,17 @@ class MorseTrainer(QTabWidget):
     """Class for the whole application."""
 
     # set platform-dependent sizes
-    if platform.system() == 'Windows':
+    if System == 'Windows':
         MinimumWidth = 815
         MinimumHeight = 675
-    elif platform.system() == 'Linux':
+    elif System == 'Linux':
         MinimumWidth = 850
         MinimumHeight = 685
-    elif platform.system() == 'Darwin':
+    elif System == 'Darwin':
         MinimumWidth = 815
         MinimumHeight = 675
     else:
-        raise Exception('Unrecognized platform: %s' % platform.system())
+        raise Exception('Unrecognized platform: %s' % System)
 
     # set default speeds
     DefaultWordsPerMinute = 15
@@ -457,8 +457,16 @@ class MorseTrainer(QTabWidget):
         self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
 
         # update the user test set
-        on = [ch for ch in self.copy_User_chars_dict if self.copy_User_chars_dict[ch]]
+        on = [ch for ch in self.copy_User_chars_dict
+                  if self.copy_User_chars_dict[ch]]
         self.copy_User_sequence = ''.join(on)
+
+        # if using the user charset
+        if self.copy_using_Koch:
+            self.btn_copy_start_stop.setDisabled(False)
+        else:
+            # if no user chars, disable "start" button
+            self.btn_copy_start_stop.setDisabled(not on)
 
         self.update_UI()
 
@@ -685,6 +693,9 @@ class MorseTrainer(QTabWidget):
         self.send_charset.setState(self.send_using_Koch,
                                    self.send_Koch_number,
                                    self.send_User_chars_dict)
+        self.send_charset_change((self.send_using_Koch,
+                                  self.send_Koch_number,
+                                  self.send_User_chars_dict))
 #        self.send_morse_obj.set_speeds(self.send_wpm)
 
         # Copy panel
@@ -693,6 +704,9 @@ class MorseTrainer(QTabWidget):
         self.copy_charset.setState(self.copy_using_Koch,
                                    self.copy_Koch_number,
                                    self.copy_User_chars_dict)
+        self.copy_charset_change((self.copy_using_Koch,
+                                  self.copy_Koch_number,
+                                  self.copy_User_chars_dict))
         self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
 
         # adjust tabbed view to last view
@@ -779,17 +793,10 @@ class MorseTrainer(QTabWidget):
 
             # if nothing to clear, disable 'Clear' button
             # see if statistics are already empty
-            all_clear = True
-            for (k, v) in self.send_stats.items():
-                if v != [0, 0]:
-                    all_clear = False
-                    break
-            if all_clear:
-                for (k, v) in self.copy_stats.items():
-                    if v != [0, 0]:
-                        all_clear = False
-                        break
-            self.stats_btn_clear.setDisabled(all_clear)
+            send_sum = sum([v[0] for v in self.send_stats.values()])
+            copy_sum = sum([v[0] for v in self.copy_stats.values()])
+            stats_sum = send_sum + copy_sum
+            self.stats_btn_clear.setDisabled(stats_sum == 0)
 
         # remember the previous tab for NEXT TIME WE CHANGE
         self.previous_tab_index = tab_index
