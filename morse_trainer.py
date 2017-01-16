@@ -40,7 +40,7 @@ import utils
 import logger
 
 
-# get program name and version
+# get program name and version numbers
 System = platform.system()
 ProgName = sys.argv[0]
 if ProgName.endswith('.py'):
@@ -49,7 +49,6 @@ if ProgName.endswith('.py'):
     if ProgName.endswith('_' + System):
         parts = ProgName.split('_')
         ProgName = '_'.join(parts[:-1])
-
 
 ProgramMajor = 0
 ProgramMinor = 3
@@ -71,6 +70,12 @@ class MorseTrainer(QTabWidget):
         MinimumHeight = 675
     else:
         raise Exception('Unrecognized platform: %s' % System)
+
+    # set the threshold when we increase the Koch test charset
+    KochThreshold = 90  # percent
+
+    # set the max number of results we keep for each character
+    KochMaxHistory = 50
 
     # set default speeds
     DefaultWordsPerMinute = 15
@@ -269,8 +274,9 @@ class MorseTrainer(QTabWidget):
             if self.send_using_Koch:
                 self.send_test_charset = self.send_Koch_list
             else:
-                self.send_test_charset = ''.join([ch for ch in self.send_User_chars_dict
-                                                  if self.send_User_chars_dict[ch]])
+                self.send_test_charset = ''.join([ch for ch
+                                                    in self.send_User_chars_dict
+                                                    if self.send_User_chars_dict[ch]])
 
             self.send_thread_finished()
 
@@ -285,23 +291,22 @@ class MorseTrainer(QTabWidget):
         if char:
             if char in utils.AllUserChars:
                 # update the character stats
-                (num_chars, num_ok) = self.send_stats[self.send_expected]
-                num_chars += 1
-                if char == self.send_expected:
-                    num_ok += 1
-                self.send_stats[self.send_expected] = (num_chars, num_ok)
+                self.update_stats(self.send_stats,
+                                  self.send_expected, char==self.send_expected)
 
                 # show result in display
                 if char == self.send_expected:
                     self.send_display.insert_lower(char)
                 else:
-                    self.send_display.insert_lower(char, fg=Display.AnsTextBadColour)
+                    self.send_display.insert_lower(char,
+                                                   fg=Display.AnsTextBadColour)
 
                 # put in a tooltip if char was wrong
                 if char != self.send_expected:
                     colour = self.send_display.AnsTextBadColour
                     msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
-                            % (self.send_expected, utils.char2morse(self.send_expected),
+                            % (self.send_expected,
+                               utils.char2morse(self.send_expected),
                                char, utils.char2morse(char)))
                     self.send_display.update_tooltip(msg)
 
@@ -541,8 +546,8 @@ class MorseTrainer(QTabWidget):
 
         # clear the internal data structure
         for ch in utils.AllUserChars:
-            self.send_stats[ch] = (0, 0)
-            self.copy_stats[ch] = (0, 0)
+            self.send_stats[ch] = []
+            self.copy_stats[ch] = []
 
         new = self.stats2percent(self.send_stats)
         self.send_status.setState(new)
@@ -557,7 +562,10 @@ class MorseTrainer(QTabWidget):
 ######
 
     def keyPressEvent(self, e):
-        """When self.processing is True we handle keypresses."""
+        """When self.processing is True we handle keypresses.
+
+        This should only be true during Copy processing.
+        """
 
         # ignore anything we aren't interested in
         key_int = e.key()
@@ -590,14 +598,25 @@ class MorseTrainer(QTabWidget):
                 self.copy_display.insert_lower(char, colour)
 
                 # update the character stats
-                (num_chars, num_ok) = self.copy_stats[pending]
-                num_chars += 1
-                if pending == char:
-                    num_ok += 1
-                self.copy_stats[pending] = (num_chars, num_ok)
+                self.update_stats(self.copy_stats, pending, pending==char)
 #            elif self.send_pending:
 #                # if we are sending, handle here
 #                pass
+
+    def update_stats(self, stats, char, result):
+        """Update a stats dictionary.
+
+        stats   the stats dictionary to update
+        char    the character being tested
+        result  True or False
+        """
+
+        log('update_stats: before, stats=%s, char=%s, result=%s' % (str(stats), char, str(result)))
+
+        stats[char].append(result)
+        stats[char] = stats[char][:self.KochMaxHistory]
+
+        log('update_stats: after, stats=%s' % str(stats))
 
     def update_UI(self):
         """Update controls that show state values."""
@@ -646,9 +665,10 @@ class MorseTrainer(QTabWidget):
         self.copy_group_index = 0
         self.copy_pending = ''              # holds last 2 chars sounded
 
-        # the send/copy statistics, tuple is (<num_chars>, <num_ok>)
-        self.send_stats = {ch:(0, 0) for ch in utils.AllUserChars}
-        self.copy_stats = {ch:(0, 0) for ch in utils.AllUserChars}
+        # the send/copy statistics
+        # each 'char':value is a list of last N results, True or False
+        self.send_stats = {ch:[] for ch in utils.AllUserChars}
+        self.copy_stats = {ch:[] for ch in utils.AllUserChars}
 
         # state variable shows send or copy test in progress
         self.processing = False
@@ -734,36 +754,26 @@ class MorseTrainer(QTabWidget):
     def stats2percent(self, stats):
         """Convert stats data into a fraction dictionary.
 
-        The 'stats' data has the form {'A':(100,50), ...} where
-        the tuple contains (<num tested>, <num OK>).
+        The 'stats' data has the form {'A':[T,F,T], ...} where
+        the list contains the last N results (True or False).
 
         The resultant fraction dictionary has the form:
             {'A': 0.50, ...}
         """
 
         results = {}
-        for (char, (num_tested, num_ok)) in stats.items():
-            if num_tested == 0:
+
+        for (char, result_list) in stats.items():
+            if not result_list:
                 fraction = 0.0
             else:
-                fraction = num_ok / num_tested
+                try:
+                    fraction = result_list.count(True) / len(result_list)
+                except ZeroDivisionError:
+                    fraction = 0.0
             results[char] = fraction
 
         return results
-
-    def update_stats(self, stats_dict, char, ok):
-        """Update the stats for a single character.
-
-        stats_dict  a reference to the stats dictionary to update
-        char        the character that was tested
-        ok          True if test was good, else False
-        """
-
-        (num_tests, num_ok) = stats_dict[char]
-        num_tests += 1
-        if ok:
-            num_ok += 1
-        stats_dict[char] = (num_tests, num_ok)
 
     def tab_change(self, tab_index):
         """Handler when a tab is changed.
@@ -793,8 +803,8 @@ class MorseTrainer(QTabWidget):
 
             # if nothing to clear, disable 'Clear' button
             # see if statistics are already empty
-            send_sum = sum([v[0] for v in self.send_stats.values()])
-            copy_sum = sum([v[0] for v in self.copy_stats.values()])
+            send_sum = sum([len(v) for v in self.send_stats.values()])
+            copy_sum = sum([len(v) for v in self.copy_stats.values()])
             stats_sum = send_sum + copy_sum
             self.stats_btn_clear.setDisabled(stats_sum == 0)
 
