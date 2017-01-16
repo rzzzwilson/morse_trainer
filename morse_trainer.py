@@ -71,8 +71,11 @@ class MorseTrainer(QTabWidget):
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
-    # set the threshold when we increase the Koch test charset
-    KochThreshold = 90  # percent
+    # set the thresholds when we increase the Koch test charset
+    KochSendThreshold = 0.95  # fraction
+    KochSendCount = 50
+    KochCopyThreshold = 0.95  # fraction
+    KochCopyCount = 50
 
     # set the max number of results we keep for each character
     KochMaxHistory = 50
@@ -280,11 +283,15 @@ class MorseTrainer(QTabWidget):
 
             self.send_thread_finished()
 
-    def send_thread_finished(self, char=None):
+    def send_thread_finished(self, char=None, count=0):
         """Catch signal when Send thread finished.
 
         Compare the char we got (char) with expected (self.send_expected).
         If still processing, repeat thread.
+
+        The 'count' param is a loop counter so we can do things like
+        occassionally check is the Koch threshold has been exceeded
+        and we can therefore increase the Koch test charset.
         """
 
         # echo received char, if any
@@ -322,14 +329,55 @@ class MorseTrainer(QTabWidget):
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
 
-            self.threadRead = ReadThread(self.send_morse_obj)
-            self.threadRead.finished.connect(self.send_thread_finished)
-            self.threadRead.start()
+            # update send count, maybe increase Koch charset
+            count += 1
+            if count >= self.KochSendCount:
+                count = 0
+                if self.all_send_chars_ok():
+                    self.increase_send_Koch()
+
+            self.threadSend = SendThread(self.send_morse_obj, count=count)
+            self.threadSend.finished.connect(self.send_thread_finished)
+            self.threadSend.start()
 
     def send_clear(self, event):
         """The Send 'clear' button was clicked."""
 
         self.send_display.clear()
+
+    def all_send_chars_ok(self):
+        """See if all Koch chars are over threshold.
+
+        Return True if so.
+        """
+
+        if self.send_using_Koch:
+            # if we ARE using Koch for Send check all results for charset
+            # note that we may have REDUCED the KOch charset, so active charset
+            # may not contain chars for which we have results
+            for char in self.send_Koch_list:
+                result_list = self.send_stats[char]
+                try:
+                    fraction = result_list.count(True) / len(result_list)
+                except ZeroDivisionError:
+                    fraction = 0.0
+                if fraction < self.KochSendThreshold:
+                    return False
+
+        return True
+
+    def increase_send_Koch(self):
+        """Increase the Koch send charset, if possible."""
+
+        if self.send_using_Koch:
+            # if we ARE using Koch for Send
+            if self.send_Koch_number < len(utils.Koch):
+                # we CAN increase the Send Koch charset
+                self.send_Koch_number += 1
+                self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
+
+                # update the Send UI
+                self.update_UI()
 
 ######
 # All code pertaining to the Copy tab
@@ -417,16 +465,23 @@ class MorseTrainer(QTabWidget):
 
             self.copy_thread_finished()
 
-    def copy_thread_finished(self):
+    def copy_thread_finished(self, count=0):
         """Catch signal when Send thread finished.
 
         If still processing, start new thread.
         """
 
         if self.processing:
+            # update copy count, maybe increase Koch charset
+            count += 1
+            if count >= self.KochCopyCount:
+                count = 0
+                if self.all_copy_chars_ok():
+                    self.increase_copy_Koch()
+
             send_char = utils.get_random_char(self.copy_Koch_list)
             self.copy_pending = (self.copy_pending + [send_char])[-2:]
-            self.threadCopy = CopyThread(send_char, self.copy_morse_obj)
+            self.threadCopy = CopyThread(send_char, self.copy_morse_obj, count)
             self.threadCopy.finished.connect(self.copy_thread_finished)
             self.threadCopy.start()
 
@@ -434,6 +489,40 @@ class MorseTrainer(QTabWidget):
         """The Copy 'clear' button was clicked."""
 
         self.copy_display.clear()
+
+    def all_copy_chars_ok(self):
+        """See if all Koch chars are over threshold.
+
+        Return True if so.
+        """
+
+        if self.copy_using_Koch:
+            # if we ARE using Koch for Copy check all results for charset
+            # note that we may have REDUCED the Koch charset, so active charset
+            # may not contain chars for which we have results
+            for char in self.copy_Koch_list:
+                result_list = self.copy_stats[char]
+                try:
+                    fraction = result_list.count(True) / len(result_list)
+                except ZeroDivisionError:
+                    fraction = 0.0
+                if fraction < self.KochCopyThreshold:
+                    return False
+
+        return True
+
+    def increase_copy_Koch(self):
+        """Increase the Koch copy charset, if possible."""
+
+        if self.copy_using_Koch:
+            # if we ARE using Koch for Copy
+            if self.copy_Koch_number < len(utils.Koch):
+                # we CAN increase the Copy Koch charset
+                self.copy_Koch_number += 1
+                self.copy_Koch_list = [ch for ch in utils.Koch[:self.copy_Koch_number]]
+
+                # update the Send UI
+                self.update_UI()
 
     def copy_speeds_changed(self, cwpm, wpm):
         """Something in the "copy speed" group changed.
@@ -611,15 +700,19 @@ class MorseTrainer(QTabWidget):
         result  True or False
         """
 
-        log('update_stats: before, stats=%s, char=%s, result=%s' % (str(stats), char, str(result)))
-
         stats[char].append(result)
         stats[char] = stats[char][:self.KochMaxHistory]
 
-        log('update_stats: after, stats=%s' % str(stats))
-
     def update_UI(self):
         """Update controls that show state values."""
+
+        # the send speeds
+        self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
+
+        # the send test sets (Koch and user-selected)
+        self.send_charset.setState(self.send_using_Koch,
+                                   self.send_Koch_number,
+                                   self.send_User_chars_dict)
 
         # the copy speeds
         self.copy_speeds.setState(self.copy_wpm)
@@ -820,7 +913,7 @@ class MorseTrainer(QTabWidget):
 # A thread to read one morse character from the microphone.
 ######
 
-class ReadThread(QThread):
+class SendThread(QThread):
     """A thread to read a morse character from the microphone.
 
     It sends a signal to the main thread when finished.  The signal
@@ -828,16 +921,18 @@ class ReadThread(QThread):
     """
 
     # the signal when finished
-    finished = pyqtSignal(str)
+    finished = pyqtSignal(str, int)
 
-    def __init__(self, sound_object):
+    def __init__(self, sound_object, count):
         """Create a thread to read one morse character.
 
         sound_object  the object that reads morse sounds
+        count         times we've run the thread, returned in 'finished' event
         """
 
         QThread.__init__(self)
         self.sound_object = sound_object
+        self.count = count
 
     def __del__(self):
         """Delete the thread."""
@@ -851,7 +946,7 @@ class ReadThread(QThread):
         char = self.sound_object.read()
 
         # send signal to main thread: finished
-        self.finished.emit(char)
+        self.finished.emit(char, count)
 
 ######
 # A thread to sound one morse character.
@@ -864,18 +959,20 @@ class CopyThread(QThread):
     """
 
     # the signal when finished
-    finished = pyqtSignal()
+    finished = pyqtSignal(int)
 
-    def __init__(self, char, sound_object):
+    def __init__(self, char, sound_object, count):
         """Create a thread to sound one morse character.
 
-        char         the character to sound
+        char          the character to sound
         sound_object  the object that makes morse sounds
+        count         number of times the thread has run
         """
 
         QThread.__init__(self)
         self.char = char
         self.sound_object = sound_object
+        self.count = count
 
     def __del__(self):
         """Delete the thread."""
@@ -889,7 +986,7 @@ class CopyThread(QThread):
         self.sound_object.send(self.char)
 
         # send signal to main thread: finished
-        self.finished.emit()
+        self.finished.emit(self.count)
 
 
 if __name__ == '__main__':
