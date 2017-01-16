@@ -22,16 +22,12 @@ remove the dependency on numpy which should reduce the size somewhat.  Need to
 actually test the Linux executable on a vanilla system.  Also need to extend
 (somehow) to build MacOS and Windows versions on those platforms.
 
-Next we need to get the Koch mechanism working, that is, increasing the size
-of the Koch test charset depending on error rates.  Also consider reducing the
-test charset if error rates *increase*.
-
-Also need to tweak the stats memory mechanism.  At the moment, we remember all
-attempts to send/copy code.  The stats mechanism should only remember the last 
-N instances of each character.
+Also consider reducing the test charset if error rates *increase*.
 
 The code to listen to and decode morse sounds also needs to be made more
 resilient and able to handle wide speed diferences.
+
+Started using issues.  Look there for future changes.
 
 Requirements
 ------------
