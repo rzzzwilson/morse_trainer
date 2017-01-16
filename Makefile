@@ -3,9 +3,13 @@
 #
 
 run:
-	python morse_trainer.py
-	#python -Qwarnall morse_trainer.py
+	rm -f *.log
+	python3 morse_trainer.py
+
+exe:
+	bash build_executable
 
 clean:
-	rm -Rf __pycache__ *.log
-	(cd morse_trainer; rm -Rf __pycache__ *.log)
+	rm -Rf __pycache__
+	rm -f *.log
+
