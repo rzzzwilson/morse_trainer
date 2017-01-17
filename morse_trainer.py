@@ -237,7 +237,7 @@ class MorseTrainer(QTabWidget):
          self.send_User_chars_dict) = state
 
         # update the Koch test set
-        self.send_Koch_list = utils.Koch[:self.send_Koch_number]
+        self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
 
         # update the user test set
         on = [ch for ch in self.send_User_chars_dict
@@ -280,7 +280,7 @@ class MorseTrainer(QTabWidget):
             self.send_expected = None
             self.processing = True
             if self.send_using_Koch:
-                self.send_test_charset = self.send_Koch_list
+                self.send_test_charset = self.send_Koch_charset
             else:
                 self.send_test_charset = ''.join([ch for ch
                                                     in self.send_User_chars_dict
@@ -360,7 +360,7 @@ class MorseTrainer(QTabWidget):
             # if we ARE using Koch for Send check all results for charset
             # note that we may have REDUCED the KOch charset, so active charset
             # may not contain chars for which we have results
-            for char in self.send_Koch_list:
+            for char in self.send_Koch_charset:
                 result_list = self.send_stats[char]
                 try:
                     fraction = result_list.count(True) / len(result_list)
@@ -379,7 +379,7 @@ class MorseTrainer(QTabWidget):
             if self.send_Koch_number < len(utils.Koch):
                 # we CAN increase the Send Koch charset
                 self.send_Koch_number += 1
-                self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
+                self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
 
                 # update the Send UI
                 self.update_UI()
@@ -484,7 +484,7 @@ class MorseTrainer(QTabWidget):
                 if self.all_copy_chars_ok():
                     self.increase_copy_Koch()
 
-            send_char = utils.get_random_char(self.copy_Koch_list)
+            send_char = utils.get_random_char(self.copy_Koch_charset)
             self.copy_pending = (self.copy_pending + [send_char])[-2:]
             self.threadCopy = CopyThread(send_char, self.copy_morse_obj, count)
             self.threadCopy.finished.connect(self.copy_thread_finished)
@@ -505,7 +505,7 @@ class MorseTrainer(QTabWidget):
             # if we ARE using Koch for Copy check all results for charset
             # note that we may have REDUCED the Koch charset, so active charset
             # may not contain chars for which we have results
-            for char in self.copy_Koch_list:
+            for char in self.copy_Koch_charset:
                 result_list = self.copy_stats[char]
                 try:
                     fraction = result_list.count(True) / len(result_list)
@@ -524,7 +524,7 @@ class MorseTrainer(QTabWidget):
             if self.copy_Koch_number < len(utils.Koch):
                 # we CAN increase the Copy Koch charset
                 self.copy_Koch_number += 1
-                self.copy_Koch_list = [ch for ch in utils.Koch[:self.copy_Koch_number]]
+                self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
 
                 # update the Send UI
                 self.update_UI()
@@ -553,7 +553,7 @@ class MorseTrainer(QTabWidget):
          self.copy_User_chars_dict) = state
 
         # update the Koch test set
-        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
+        self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
 
         # update the user test set
         on = [ch for ch in self.copy_User_chars_dict
@@ -744,7 +744,7 @@ class MorseTrainer(QTabWidget):
         # Send variables
         self.send_using_Koch = True
         self.send_Koch_number = 2
-        self.send_Koch_list = [ch for ch in utils.Koch[:self.send_Koch_number]]
+        self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
         self.send_User_chars_dict = {ch:False for ch in utils.AllUserChars}
         self.send_use_speed = False
         self.send_wpm = 5
@@ -756,7 +756,7 @@ class MorseTrainer(QTabWidget):
         # Copy variables
         self.copy_using_Koch = True
         self.copy_Koch_number = 2
-        self.copy_Koch_list = utils.Koch[:self.copy_Koch_number]
+        self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
         self.copy_User_chars_dict = {ch:False for ch in utils.AllUserChars}
         self.copy_wpm = 5
         self.copy_cwpm = 5
@@ -956,7 +956,7 @@ class SendThread(QThread):
         char = self.sound_object.read()
 
         # send signal to main thread: finished
-        self.finished.emit(char, count)
+        self.finished.emit(char, self.count)
 
 ######
 # A thread to sound one morse character.
