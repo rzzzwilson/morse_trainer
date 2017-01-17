@@ -1031,7 +1031,7 @@ if __name__ == '__main__':
     morse_signon = 'Morse Trainer %s' % ProgramVersion
     log(morse_version)
     log(morse_signon.center(morse_width))
-    log('VK4FAWR'.center(morse_width))
+    log('VK4FAWR/M'.center(morse_width))
     log(morse_version)
 
     # parse command line options
