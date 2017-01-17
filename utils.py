@@ -48,7 +48,9 @@ Char2Morse = {
               'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
               'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
               'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-              'Y': '-.--', 'Z': '--..'
+              'Y': '-.--', 'Z': '--..',
+
+              ' ': ' '
              }
 
 # invert above dict to create map of morse strings to chars
@@ -133,7 +135,15 @@ def get_random_char(charset):
 def char2morse(char):
     """Convert a character into a morse string."""
 
-    return morse2display(Char2Morse[char])
+    return morse2display(Char2Morse[char.upper()])
+
+def str2morse(string):
+    """Convert a string into a morse string.
+
+    Spaces are inserted between each character in morse.
+    """
+
+    return ' '.join([Char2Morse[ch] for ch in string.upper()])
 
 
 if __name__ == '__main__':

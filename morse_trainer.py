@@ -51,7 +51,7 @@ if ProgName.endswith('.py'):
         ProgName = '_'.join(parts[:-1])
 
 ProgramMajor = 0
-ProgramMinor = 3
+ProgramMinor = 4
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 
@@ -103,6 +103,8 @@ class MorseTrainer(QTabWidget):
 
     # define names of the instance variables to be saved/restored
     StateVarNames = [
+                     'program_version',
+
                      'current_tab_index',
 
                      'send_using_Koch', 'send_Koch_number', 'send_Koch_list',
@@ -118,6 +120,9 @@ class MorseTrainer(QTabWidget):
         """Create a MorseTrainer object."""
 
         super().__init__(parent)
+
+        # get the program version internal to the instance
+        self.program_version = ProgramVersion
 
         # define internal state variables
         self.clear_data()
@@ -785,6 +790,11 @@ class MorseTrainer(QTabWidget):
             log.info("load_state: state file '%s' not found" % filename)
             return
 
+        # check version of loaded data, modify load data if necessary
+        loaded_version = data['program_version']
+        log.info("load_state: loaded version='%s', this program is '%s'"
+                 % (loaded_version, ProgramVersion))
+
         # get data from the restore dictionary, if possible
         for var_name in MorseTrainer.StateVarNames:
             try:
@@ -1014,11 +1024,13 @@ if __name__ == '__main__':
     log = logger.Log('debug.log', logger.Log.CRITICAL)
 
     # announce the start
-    log('* -- --- .-. ... .  - .-. .- .. -. . .-. *')
-    log('*                                        *')
-    log('*      Morse Trainer %3s by VK4FAWR      *' % ProgramVersion)
-    log('*                                        *')
-    log('* -- --- .-. ... .  - .-. .- .. -. . .-. *')
+    morse_version = utils.str2morse('morse trainer %s' % ProgramVersion)
+    morse_width = len(morse_version)
+    morse_signon = 'Morse Trainer %s' % ProgramVersion
+    log(morse_version)
+    log(morse_signon.center(morse_width))
+    log('VK4FAWR'.center(morse_width))
+    log(morse_version)
 
     # parse command line options
     argv = sys.argv[1:]
