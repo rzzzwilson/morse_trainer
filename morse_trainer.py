@@ -54,6 +54,8 @@ ProgramMajor = 0
 ProgramMinor = 4
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
+ProgramStateExtension = 'state'
+
 
 class MorseTrainer(QTabWidget):
     """Class for the whole application."""
@@ -99,7 +101,7 @@ class MorseTrainer(QTabWidget):
     DefaultStartTab = SendTab
 
     # name for the state save file
-    StateSaveFile = '%s.state' % ProgName
+    StateSaveFile = '%s.%s' % (ProgName, ProgramStateExtension)
 
     # define names of the instance variables to be saved/restored
     StateVarNames = [
