@@ -387,18 +387,20 @@ class MorseTrainer(QTabWidget):
         if self.send_using_Koch:
             # if we ARE using Koch for Send
             if self.send_Koch_number < len(utils.Koch):
-                log('Increasing Send charset')
                 # we CAN increase the Send Koch charset
                 self.send_Koch_number += 1
                 self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
 
                 # let user know what is happening
                 new_char = self.send_Koch_charset[-1]
-                msg = ("Added new send character: '%s'\n\n"
-                       "The morse code for this character is %s"
+                msg = ("<font size = 16>"
+                       "Adding a new send character to the test set: '%s'\n\n"
+                       "The morse code for this character is '%s'"
+                       "</font>"
                        % (new_char,
                           utils.morse2display(utils.Char2Morse[new_char])))
-                QMessageBox.question(self, 'Send promotion', msg, QMessageBox.Yes)
+                QMessageBox.information(self, 'Send promotion',
+                                        msg, QMessageBox.Yes)
 
                 # update the Send UI
                 self.update_UI()
@@ -498,7 +500,6 @@ class MorseTrainer(QTabWidget):
         if self.processing:
             # update copy count, maybe increase Koch charset
             count += 1
-            log('copy_thread_finished: count=%d, self.KochCopyCount=%d' % (count, self.KochCopyCount))
             if count >= self.KochCopyCount:
                 count = 0
                 if self.all_copy_chars_ok():
@@ -531,7 +532,6 @@ class MorseTrainer(QTabWidget):
 
                 # all samples must be over count threshold
                 if num_samples < self.KochCopyCount:
-                    log('all_copy_chars_ok: returning False for %s, small sample' % char)
                     return False
 
                 try:
@@ -539,10 +539,7 @@ class MorseTrainer(QTabWidget):
                 except ZeroDivisionError:
                     fraction = 0.0
                 if fraction < self.KochCopyThreshold:
-                    log('all_copy_chars_ok: returning False for %s, bad proficiency' % char)
                     return False
-
-        log('all_copy_chars_ok: returning True')
 
         return True
 
@@ -558,11 +555,14 @@ class MorseTrainer(QTabWidget):
 
                 # let user know what is happening
                 new_char = self.copy_Koch_charset[-1]
-                msg = ("Added new copy character: '%s'\n\n"
-                       "The morse code for this character is %s"
+                msg = ("<font size = 16>"
+                       "Adding a new copy character to the test set: '%s'.\n\n"
+                       "The morse code for this character is '%s'."
+                       "</font>"
                        % (new_char,
                           utils.morse2display(utils.Char2Morse[new_char])))
-                QMessageBox.question(self, 'Copy promotion', msg, QMessageBox.Yes)
+                QMessageBox.information(self, 'Copy promotion',
+                                        msg, QMessageBox.Yes)
 
                 # update the Send UI
                 self.update_UI()
@@ -874,7 +874,7 @@ class MorseTrainer(QTabWidget):
         self.copy_charset_change((self.copy_using_Koch,
                                   self.copy_Koch_number,
                                   self.copy_User_chars_dict))
-        self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
+        self.copy_morse_obj.set_speeds(self.copy_wpm, self.copy_cwpm)
 
         # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
