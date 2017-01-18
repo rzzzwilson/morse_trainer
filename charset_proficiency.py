@@ -44,13 +44,14 @@ class CharsetProficiency(QWidget):
         raise Exception('Unrecognized platform: %s' % platform.system())
 
 
-    def __init__(self, gbox_name, alpha, number, punct):
+    def __init__(self, gbox_name, alpha, number, punct, threshold):
         """Initialize the widget.
 
         gbox_name  string to label groupbox with
         alpha      string of alphabetic characters
         number     string of number characters
         punct      string of punctuation characters
+        threshold  the Koch count threshold for the dataset
         """
 
         super().__init__()
@@ -60,6 +61,7 @@ class CharsetProficiency(QWidget):
         self.number = number        # the numeric characters 
         self.punct = punct          # the punctuation characters
         self.gbox_name = gbox_name  # label of the surrounding groupbox
+        self.threshold = threshold  # the Koch count threshold
 
         # set up the UI
         self.initUI()
@@ -68,9 +70,9 @@ class CharsetProficiency(QWidget):
         """Set up the UI."""
 
         # create all sub-widgets
-        self.st_alpha = Proficiency(self.alpha)
-        self.st_number = Proficiency(self.number)
-        self.st_punct = Proficiency(self.punct)
+        self.st_alpha = Proficiency(self.alpha, self.threshold)
+        self.st_number = Proficiency(self.number, self.threshold)
+        self.st_punct = Proficiency(self.punct, self.threshold)
 
         # layout the widget
         layout = QVBoxLayout()

@@ -587,20 +587,26 @@ class MorseTrainer(QTabWidget):
                     'if all characters in the test set are over the threshold '
                     'the algorithm will add another character to the set you '
                     'are tested with.\n\n'
+                    'The colour of the bar indicates how many times that '
+                    'character has been tested relative to a threshold '
+                    'count.  The bar is green if the sample is valid, blue if '
+                    'it close to valid and red if it is far from valid.\n\n'
                     'Pressing the "Clear" button will clear the statistics. '
                     'This is useful when changing test speeds.')
         instructions = Instructions(doc_text)
         self.send_status = CharsetProficiency('Send Proficiency',
                                               utils.Alphabetics,
                                               utils.Numbers,
-                                              utils.Punctuation)
-        percents = self.stats2percent(self.send_stats)
+                                              utils.Punctuation,
+                                              self.KochSendThreshold)
+        percents = self.stats2percent(self.send_stats, self.KochSendCount)
         self.send_status.setState(percents)
         self.copy_status = CharsetProficiency('Copy Proficiency',
                                               utils.Alphabetics,
                                               utils.Numbers,
-                                              utils.Punctuation)
-        percents = self.stats2percent(self.copy_stats)
+                                              utils.Punctuation,
+                                              self.KochCopyThreshold)
+        percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
         self.copy_status.setState(percents)
         self.stats_btn_clear = QPushButton('Clear')
 
@@ -645,10 +651,10 @@ class MorseTrainer(QTabWidget):
             self.send_stats[ch] = []
             self.copy_stats[ch] = []
 
-        new = self.stats2percent(self.send_stats)
+        new = self.stats2percent(self.send_stats, self.KochSendCount)
         self.send_status.setState(new)
 
-        new = self.stats2percent(self.copy_stats)
+        new = self.stats2percent(self.copy_stats, self.KochCopyCount)
         self.copy_status.setState(new)
 
         self.stats_btn_clear.setDisabled(True)
@@ -856,14 +862,20 @@ class MorseTrainer(QTabWidget):
         with open(filename, 'w') as fd:
             fd.write(json_str + '\n')
 
-    def stats2percent(self, stats):
+    def stats2percent(self, stats, threshold):
         """Convert stats data into a fraction dictionary.
+
+        stats      dictionary holding statistics data
+        threshold  the number of samples before Koch promotion
 
         The 'stats' data has the form {'A':[T,F,T], ...} where
         the list contains the last N results (True or False).
 
         The resultant fraction dictionary has the form:
-            {'A': 0.50, ...}
+            {'A': (fraction, sample_size, threshold), ...}
+
+        We pass 'threshold' through despite the redundancy since the
+        widget module knows nothing of the Koch threshold.
         """
 
         results = {}
@@ -871,12 +883,14 @@ class MorseTrainer(QTabWidget):
         for (char, result_list) in stats.items():
             if not result_list:
                 fraction = 0.0
+                sample_size = 0
             else:
+                sample_size = len(result_list)
                 try:
-                    fraction = result_list.count(True) / len(result_list)
+                    fraction = result_list.count(True) / sample_size
                 except ZeroDivisionError:
                     fraction = 0.0
-            results[char] = fraction
+            results[char] = (fraction, sample_size, threshold)
 
         return results
 
@@ -900,10 +914,10 @@ class MorseTrainer(QTabWidget):
 
         # if we changed to the "statistics" tab, refresh the stats widget
         if tab_index == MorseTrainer.StatsTab:
-            percents = self.stats2percent(self.send_stats)
+            percents = self.stats2percent(self.send_stats, self.KochSendCount)
             self.send_status.setState(percents)
 
-            percents = self.stats2percent(self.copy_stats)
+            percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
             self.copy_status.setState(percents)
 
             # if nothing to clear, disable 'Clear' button

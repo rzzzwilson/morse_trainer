@@ -6,11 +6,12 @@ A PyQt5 custom widget used by Morse Trainer.
 
 Proficiency shows the proficiency for a GridDisplay data set.
 
-show_status = Proficiency(data)
+proficiency = Proficiency(data)
 
 where 'data' is the string used to establish a GridDisplay.
 
-show_status.refresh(dict)
+proficiency.setState(data):
+where 'data' a dict of {char: percent} values
 
 where 'dict' is a dictionary: {'A':10, 'B':26, ...} that maps the
 character to a 'success' percentage.
@@ -21,6 +22,9 @@ import platform
 from PyQt5.QtWidgets import QWidget, QPushButton, QGridLayout
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont
+
+import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class Proficiency(QWidget):
@@ -70,11 +74,11 @@ class Proficiency(QWidget):
     KochThreshold = 0.9
 
 
-    def __init__(self, data, threshold=KochThreshold):
+    def __init__(self, data, threshold):
         """Initialize the widget.
 
         data       a string of characters to be displayed in the widget
-        threshold  the fraction at which the Koch system adds a character
+        threshold  the Koch count threshold for the dataset
 
         The widget figures out how many bars there are from 'data'.
         """
@@ -83,8 +87,8 @@ class Proficiency(QWidget):
 
         # declare state variables here so we know what they all are
         self.data = data            # the characters to display (in order)
-        self.fraction = None        # list of fractions matching self.data
-        self.threshold = threshold  # where we draw the threshold line
+        self.threshold = threshold  # Koch count threshold for the dataset
+        self.fraction = []          # list of tuples (char, percent, colour)
         self.font = None            # the font used
         self.font_size = None       # size of font
         self.widget_width = None    # set in initUI()
@@ -146,38 +150,74 @@ class Proficiency(QWidget):
             x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
         # draw the percentage bar
-        if self.fraction:
-            x = Proficiency.LeftMargin
-            y = Proficiency.TopMargin
-            qp.setBrush(Qt.blue)
-            for (char, percent) in zip(self.data, self.fraction):
-                pct_height = int(Proficiency.BarHeight * percent)
-                if pct_height == 0:     # force *some* display if 0
-                    pct_height = 1
-                top_height = Proficiency.BarHeight - pct_height
-                qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
-                x += Proficiency.BarWidth + Proficiency.InterBarMargin
+        x = Proficiency.LeftMargin
+        y = Proficiency.TopMargin
+        log('Qt.red=%d, Qt.green=%d, Qt.blue=%d' % (Qt.red, Qt.green, Qt.blue))
+        log('draw: self.fraction=%s' % str(self.fraction))
+        for (char, percent, colour) in self.fraction:
+            qp.setBrush(colour)
+            pct_height = int(Proficiency.BarHeight * percent)
+            if pct_height == 0:     # force *some* display if 0
+                pct_height = 1
+            top_height = Proficiency.BarHeight - pct_height
+            qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
+            x += Proficiency.BarWidth + Proficiency.InterBarMargin
+
+#        if self.fraction:
+#            x = Proficiency.LeftMargin
+#            y = Proficiency.TopMargin
+#            qp.setBrush(Qt.blue)
+#            for (char, percent) in zip(self.data, self.fraction):
+#                pct_height = int(Proficiency.BarHeight * percent)
+#                if pct_height == 0:     # force *some* display if 0
+#                    pct_height = 1
+#                top_height = Proficiency.BarHeight - pct_height
+#                qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
+#                x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
         # draw column 'footer' header
         x = Proficiency.LabelLeftMargin
         y = self.widget_height - Proficiency.LabelBottomMargin
         qp.setPen(Qt.black)
-        for char in self.data:
+        for (char, _, _) in self.fraction:
             qp.drawText(x, y, char)
             x += Proficiency.BarWidth + Proficiency.InterBarMargin
+
+#        for char in self.data:
+#            qp.drawText(x, y, char)
+#            x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
     def setState(self, data):
         """Update self.fraction with values matching 'data'.
 
-        data  a dict of {char: percent} values
+        data  a dict of {char: (percent, sample_size, threshold), ...} values
+
+        where threshold is the char count before Koch promotion can occur.
         """
+
+        log('setState: data=%s' % str(data))
 
         self.fraction = []
         for char in self.data:
+            # get all pertinent for each character
+            (percent, sample_size, threshold) = data[char]
             try:
-                value = data[char]
+                (percent, sample_size, threshold) = data[char]
             except KeyError:
-                value = 0
-            self.fraction.append(value)
+                percent = 0
+                sample_size = 0
+                threshold = 100
 
-        self.update()
+            # figure out what colour we are using
+            colour = Qt.green
+            if sample_size >= threshold:
+                colour = Qt.blue
+            elif sample_size < threshold * 0.80:
+                colour = Qt.red
+            self.fraction.append((char, percent, colour))
+            log('char=%s, percent=%s, sample_size=%s, threshold=%s, colour=%s'
+                    % (char, str(percent), str(sample_size), str(threshold), str(colour)))
+
+#        log('setState: .fraction=%s' % str(self.fraction))
+
+        self.update()   # triggers a 'paint' event
