@@ -402,6 +402,9 @@ class MorseTrainer(QTabWidget):
                 QMessageBox.information(self, 'Send promotion',
                                         msg, QMessageBox.Yes)
 
+                # force a "pause"
+                self.send_start()
+
                 # update the Send UI
                 self.update_UI()
 
@@ -563,6 +566,9 @@ class MorseTrainer(QTabWidget):
                           utils.morse2display(utils.Char2Morse[new_char])))
                 QMessageBox.information(self, 'Copy promotion',
                                         msg, QMessageBox.Yes)
+
+                # force a pause
+                self.copy_start()
 
                 # update the Send UI
                 self.update_UI()
@@ -996,10 +1002,10 @@ class SendThread(QThread):
         self.sound_object = sound_object
         self.count = count
 
-    def __del__(self):
-        """Delete the thread."""
-
-        self.wait()
+#    def __del__(self):
+#        """Delete the thread."""
+#
+#        self.wait()
 
     def run(self):
         """Sound the character."""
@@ -1036,10 +1042,10 @@ class CopyThread(QThread):
         self.sound_object = sound_object
         self.count = count
 
-    def __del__(self):
-        """Delete the thread."""
-
-        self.wait()
+#    def __del__(self):
+#        """Delete the thread."""
+#
+#        self.wait()
 
     def run(self):
         """Sound the character."""
