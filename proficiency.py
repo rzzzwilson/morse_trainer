@@ -11,10 +11,7 @@ proficiency = Proficiency(data)
 where 'data' is the string used to establish a GridDisplay.
 
 proficiency.setState(data):
-where 'data' a dict of {char: percent} values
-
-where 'dict' is a dictionary: {'A':10, 'B':26, ...} that maps the
-character to a 'success' percentage.
+where 'data' a dict of {char: (fraction, sample_size, threshold), ...} values
 """
 
 import platform
@@ -161,18 +158,6 @@ class Proficiency(QWidget):
             qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
             x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
-#        if self.fraction:
-#            x = Proficiency.LeftMargin
-#            y = Proficiency.TopMargin
-#            qp.setBrush(Qt.blue)
-#            for (char, percent) in zip(self.data, self.fraction):
-#                pct_height = int(Proficiency.BarHeight * percent)
-#                if pct_height == 0:     # force *some* display if 0
-#                    pct_height = 1
-#                top_height = Proficiency.BarHeight - pct_height
-#                qp.drawRect(x, y+top_height, Proficiency.BarWidth, pct_height)
-#                x += Proficiency.BarWidth + Proficiency.InterBarMargin
-
         # draw column 'footer' header
         x = Proficiency.LabelLeftMargin
         y = self.widget_height - Proficiency.LabelBottomMargin
@@ -181,35 +166,33 @@ class Proficiency(QWidget):
             qp.drawText(x, y, char)
             x += Proficiency.BarWidth + Proficiency.InterBarMargin
 
-#        for char in self.data:
-#            qp.drawText(x, y, char)
-#            x += Proficiency.BarWidth + Proficiency.InterBarMargin
-
     def setState(self, data):
         """Update self.fraction with values matching 'data'.
 
-        data  a dict of {char: (percent, sample_size, threshold), ...} values
+        data  a dict of {char: (fraction, sample_size, threshold), ...} values
 
         where threshold is the char count before Koch promotion can occur.
         """
 
+        log('setState: data=%s' % str(data))
+
         self.fraction = []
         for char in self.data:
             # get all pertinent for each character
-            (percent, sample_size, threshold) = data[char]
+            (fraction, sample_size, threshold) = data[char]
             try:
-                (percent, sample_size, threshold) = data[char]
+                (fraction, sample_size, threshold) = data[char]
             except KeyError:
-                percent = 0
+                fraction = 0
                 sample_size = 0
                 threshold = 100
 
             # figure out what colour we are using
-            colour = Qt.green
+            colour = Qt.blue
             if sample_size >= threshold:
-                colour = Qt.blue
+                colour = Qt.green
             elif sample_size < threshold * 0.80:
                 colour = Qt.red
-            self.fraction.append((char, percent, colour))
+            self.fraction.append((char, fraction, colour))
 
         self.update()   # triggers a 'paint' event

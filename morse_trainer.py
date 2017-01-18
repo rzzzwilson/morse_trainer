@@ -74,9 +74,9 @@ class MorseTrainer(QTabWidget):
         raise Exception('Unrecognized platform: %s' % System)
 
     # set the thresholds when we increase the Koch test charset
-    KochSendThreshold = 0.90  # fraction
+    KochSendThreshold = 0.95  # fraction
     KochSendCount = 20
-    KochCopyThreshold = 0.90  # fraction
+    KochCopyThreshold = 0.95  # fraction
     KochCopyCount = 20
 
     # set the max number of results we keep for each character
@@ -911,7 +911,7 @@ class MorseTrainer(QTabWidget):
             {'A': (fraction, sample_size, threshold), ...}
 
         We pass 'threshold' through despite the redundancy since the
-        widget module knows nothing of the Koch threshold.
+        widget module knows nothing of the Koch count threshold.
         """
 
         results = {}
