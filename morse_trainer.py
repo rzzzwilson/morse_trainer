@@ -74,10 +74,10 @@ class MorseTrainer(QTabWidget):
         raise Exception('Unrecognized platform: %s' % System)
 
     # set the thresholds when we increase the Koch test charset
-    KochSendThreshold = 0.95  # fraction
-    KochSendCount = 50
-    KochCopyThreshold = 0.95  # fraction
-    KochCopyCount = 50
+    KochSendThreshold = 0.90  # fraction
+    KochSendCount = 20
+    KochCopyThreshold = 0.90  # fraction
+    KochCopyCount = 20
 
     # set the max number of results we keep for each character
     KochMaxHistory = 50
@@ -524,7 +524,7 @@ class MorseTrainer(QTabWidget):
                     return False
 
                 try:
-                    fraction = result_list.count(True) / len(result_list)
+                    fraction = result_list.count(True) / num_samples
                 except ZeroDivisionError:
                     fraction = 0.0
                 if fraction < self.KochCopyThreshold:
