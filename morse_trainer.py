@@ -353,17 +353,25 @@ class MorseTrainer(QTabWidget):
         self.send_display.clear()
 
     def all_send_chars_ok(self):
-        """See if all Koch chars are over threshold.
+        """See if all Send Koch chars are over threshold.
 
         Return True if so.
+
+        Note that we return False if *any* char is below the Koch count.
         """
 
         if self.send_using_Koch:
             # if we ARE using Koch for Send check all results for charset
-            # note that we may have REDUCED the KOch charset, so active charset
+            # note that we may have REDUCED the Koch charset, so active charset
             # may not contain chars for which we have results
             for char in self.send_Koch_charset:
                 result_list = self.send_stats[char]
+                num_samples = len(result_list)
+
+                # all samples must be over Koch count threshold
+                if num_samples < self.KochSendCount:
+                    return False
+
                 try:
                     fraction = result_list.count(True) / len(result_list)
                 except ZeroDivisionError:
@@ -509,6 +517,12 @@ class MorseTrainer(QTabWidget):
             # may not contain chars for which we have results
             for char in self.copy_Koch_charset:
                 result_list = self.copy_stats[char]
+                num_samples = len(result_list)
+
+                # all samples must be over count threshold
+                if num_samples < self.KochCopyCount:
+                    return False
+
                 try:
                     fraction = result_list.count(True) / len(result_list)
                 except ZeroDivisionError:
