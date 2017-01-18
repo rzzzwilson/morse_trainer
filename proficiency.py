@@ -174,8 +174,6 @@ class Proficiency(QWidget):
         where threshold is the char count before Koch promotion can occur.
         """
 
-        log('setState: data=%s' % str(data))
-
         self.fraction = []
         for char in self.data:
             # get all pertinent for each character
