@@ -152,8 +152,6 @@ class Proficiency(QWidget):
         # draw the percentage bar
         x = Proficiency.LeftMargin
         y = Proficiency.TopMargin
-        log('Qt.red=%d, Qt.green=%d, Qt.blue=%d' % (Qt.red, Qt.green, Qt.blue))
-        log('draw: self.fraction=%s' % str(self.fraction))
         for (char, percent, colour) in self.fraction:
             qp.setBrush(colour)
             pct_height = int(Proficiency.BarHeight * percent)
@@ -195,8 +193,6 @@ class Proficiency(QWidget):
         where threshold is the char count before Koch promotion can occur.
         """
 
-        log('setState: data=%s' % str(data))
-
         self.fraction = []
         for char in self.data:
             # get all pertinent for each character
@@ -215,9 +211,5 @@ class Proficiency(QWidget):
             elif sample_size < threshold * 0.80:
                 colour = Qt.red
             self.fraction.append((char, percent, colour))
-            log('char=%s, percent=%s, sample_size=%s, threshold=%s, colour=%s'
-                    % (char, str(percent), str(sample_size), str(threshold), str(colour)))
-
-#        log('setState: .fraction=%s' % str(self.fraction))
 
         self.update()   # triggers a 'paint' event
