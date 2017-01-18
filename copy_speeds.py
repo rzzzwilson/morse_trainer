@@ -36,10 +36,12 @@ class CopySpeeds(QWidget):
 
     def __init__(self, char_speed=MinSpeed, word_speed=MaxSpeed):
         QWidget.__init__(self)
+        self.inhibit = True
         self.initUI(char_speed, word_speed)
         self.setWindowTitle('Test Copy Speeds widget')
         self.setFixedHeight(80)
         self.show()
+        self.inhibit = False
 
         # define state variables
         self.char_speed = char_speed
@@ -99,7 +101,8 @@ class CopySpeeds(QWidget):
             self.update()
 
         # tell the world there was a change
-        self.changed.emit(self.char_speed, self.word_speed)
+        if not self.inhibit:
+            self.changed.emit(self.char_speed, self.word_speed)
 
     def handle_charspeed_change(self, char_speed):
         """Character speed changed.
@@ -117,7 +120,8 @@ class CopySpeeds(QWidget):
             self.update()
 
         # tell the world there was a change
-        self.changed.emit(self.char_speed, self.word_speed)
+        if not self.inhibit:
+            self.changed.emit(self.char_speed, self.word_speed)
 
     def setState(self, wpm, cwpm=None):
         """Set the overall wpm speed.
@@ -126,12 +130,14 @@ class CopySpeeds(QWidget):
         cwpm  the character speed in words per minute (integer)
         """
 
+        self.inhibit = True
         self.word_speed = wpm
         self.spb_words.setValue(wpm)
 
         if cwpm is not None:
             self.char_speed = cwpm
             self.spb_chars.setValue(cwpm)
+        self.inhibit = False
 
         self.update()
 

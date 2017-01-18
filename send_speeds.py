@@ -40,6 +40,7 @@ class SendSpeeds(QWidget):
         QWidget.__init__(self)
 
         # define state variables
+        self.inhibit = True
         self.use_state = use_state
         self.speed = speed
 
@@ -47,6 +48,7 @@ class SendSpeeds(QWidget):
         self.initUI()
         self.setFixedHeight(80)
         self.show()
+        self.inhibit = True
 
     def initUI(self):
         # define the widgets we are going to use
@@ -95,7 +97,8 @@ class SendSpeeds(QWidget):
         self.spb_speed.setEnabled(use_state)
 
         # tell the world there was a change
-        self.changed.emit(self.use_state, self.speed)
+        if not self.inhibit:
+            self.changed.emit(self.use_state, self.speed)
 
     def handle_speed_change(self, word_speed):
         """The widget speed changed.
@@ -109,7 +112,8 @@ class SendSpeeds(QWidget):
         self.speed = word_speed
 
         # tell the world there was a change
-        self.changed.emit(self.use_state, self.speed)
+        if not self.inhibit:
+            self.changed.emit(self.use_state, self.speed)
 
     def setState(self, use_state, wpm):
         """Set the overall widget state.
@@ -118,12 +122,14 @@ class SendSpeeds(QWidget):
         wpm        the speed in words per minute (integer)
         """
 
+        self.inhibit = True
         self.use_state = use_state
         self.cb_use.setChecked(use_state)
 
         self.speed = wpm
         self.spb_speed.setValue(wpm)
         self.spb_speed.setEnabled(use_state)
+        self.inhibit = False
 
         self.update()
 
