@@ -18,4 +18,4 @@ pyinstaller -F --noconsole morse_trainer.py
 cd dist
 mv morse_trainer ../morse_trainer_$(uname)
 cd ..
-rm -Rf dist build __pycache__
+rm -Rf dist build __pycache__ *.spec
