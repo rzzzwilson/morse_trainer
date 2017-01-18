@@ -51,7 +51,7 @@ if ProgName.endswith('.py'):
         ProgName = '_'.join(parts[:-1])
 
 ProgramMajor = 0
-ProgramMinor = 4
+ProgramMinor = 5
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 ProgramStateExtension = 'state'
