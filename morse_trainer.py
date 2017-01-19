@@ -13,6 +13,7 @@ and    -h          prints this help and then stops.
 You will need a morse key and Code Practice Oscillator (CPO).
 """
 
+import os
 import sys
 import json
 import time
@@ -42,13 +43,13 @@ import logger
 
 # get program name and version numbers
 System = platform.system()
-ProgName = sys.argv[0]
+ProgName = os.path.basename(sys.argv[0])
 if ProgName.endswith('.py'):
     ProgName = ProgName[:-3]
-    # remove any "_<platform>" suffix
-    if ProgName.endswith('_' + System):
-        parts = ProgName.split('_')
-        ProgName = '_'.join(parts[:-1])
+# remove any "_<platform>" suffix
+if ProgName.endswith('_' + System):
+    parts = ProgName.split('_')
+    ProgName = '_'.join(parts[:-1])
 
 ProgramMajor = 0
 ProgramMinor = 5
