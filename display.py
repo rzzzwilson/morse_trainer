@@ -178,7 +178,7 @@ class Display(QWidget):
                     offset = (Display.TooltipOffset +
                               Display.TooltipLineOffset*num_newlines)
                     posn = e.globalPos() + QPoint(0, -offset)
-                    QToolTip.showText(posn, text)
+                    QToolTip.showText(posn, '<font size=12>%s</font>' % text)
 
     def x2index(self, x):
         """Convert widget x coordinate to column index.

@@ -393,8 +393,8 @@ class MorseTrainer(QTabWidget):
 
                 # let user know what is happening
                 new_char = self.send_Koch_charset[-1]
-                msg = ("<font size = 16>"
-                       "Adding a new send character to the test set: '%s'\n\n"
+                msg = ("<font size = 12>"
+                       "Adding a new character to the test set: '%s'<br><br>"
                        "The morse code for this character is '%s'"
                        "</font>"
                        % (new_char,
@@ -558,7 +558,7 @@ class MorseTrainer(QTabWidget):
 
                 # let user know what is happening
                 new_char = self.copy_Koch_charset[-1]
-                msg = ("<font size = 16>"
+                msg = ("<font size = 12>"
                        "Adding a new copy character to the test set: '%s'.\n\n"
                        "The morse code for this character is '%s'."
                        "</font>"
@@ -735,7 +735,8 @@ class MorseTrainer(QTabWidget):
                 colour = self.send_display.AnsTextGoodColour
                 if pending != char:
                     colour = self.send_display.AnsTextBadColour
-                    msg = ("Sounded '%s' (%s),\nyou entered '%s' (%s)."
+                    msg = ("Sent '%s' (%s),<br>"
+                           "got '%s' (%s)."
                             % (pending, utils.char2morse(pending),
                                char, utils.char2morse(char)))
                     self.copy_display.update_tooltip(msg)
@@ -743,9 +744,9 @@ class MorseTrainer(QTabWidget):
 
                 # update the character stats
                 self.update_stats(self.copy_stats, pending, pending==char)
-#            elif self.send_pending:
-#                # if we are sending, handle here
-#                pass
+            else:
+                log.critical("Shouldn't see this!?")
+                print("Shouldn't see this!?")
 
     def update_stats(self, stats, char, result):
         """Update a stats dictionary.
