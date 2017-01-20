@@ -109,6 +109,8 @@ class ReadMorse:
         with open(filename, 'w') as fd:
             fd.write(json_str + '\n')
 
+        log('Wrote morse params file %s, .signal_threshold=%d' % (filename, self.signal_threshold))
+
     def load_params(self, filename):
         """Load recognition params from file, if it exists."""
 
@@ -146,11 +148,12 @@ class ReadMorse:
         return char
 
     def _get_sample(self, stream):
-        """Return a sample number that indicates sound or silence.
+        """Return a sample tuple that indicates sound or silence.
 
-        Returned values are:
-            -N  silence for N samples
-            N   N samples of sound (terminated by silence)
+        Returned values are a tuple: (N, average) where
+             -N       silence for N samples
+             N        N samples of sound (terminated by silence)
+        and  average  is the average sound value in the sample.
         """
 
         # state values
@@ -172,8 +175,8 @@ class ReadMorse:
         values = []
 
         while True:
-            data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
-            #data = stream.read(ReadMorse.CHUNK)
+            #data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+            data = stream.read(ReadMorse.CHUNK)
             data = np.fromstring(data, 'int16')
             data = [abs(x) for x in data]
             value = int(sum(data) // len(data))      # average value
@@ -184,12 +187,13 @@ class ReadMorse:
                 if value < self.signal_threshold:
                     count += 1
                     if count >= SILENCE:
+                        log('return silence: (%d, %d)' % (-count, sum(values) // len(values)))
                         return (-count, sum(values) // len(values))
                 else:
                     # we have a signal, change to SOUND state
                     state = S_SOUND
-                    count = 0
-                    values = []     # start value samples fresh
+                    count = 1
+                    values = [value]     # start value samples fresh
             else:
                 # in SOUND state
                 if value < self.signal_threshold:
@@ -197,6 +201,7 @@ class ReadMorse:
                     if hold <= 0:
                         # silence at the end of a SOUND period
                         # return SOUND result
+                        log('return sound: (%d, %d)' % (count, sum(values) // len(values)))
                         return (count, sum(values) // len(values))
                 else:
                     hold = HOLD
