@@ -20,10 +20,12 @@ morse.close()
 
 import sys
 import math
-import numpy as np
+import struct
 import pyaudio
 
 import utils
+import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 class SoundMorse:
@@ -33,11 +35,11 @@ class SoundMorse:
     DefaultCWPM = 10            # character speed (characters per minute)
     DefaultWPM = 5              # word speed (words per minute)
     DefaultVolume = 0.7         # in range [0.0, 1.0]
-    DefaultFrequency = 750      # hertz
+    DefaultFrequency = 700      # hertz
 
     # internal settings
-    SampleRate = 44000          # samples per second
-    Format = pyaudio.paFloat32  # sample must be in range [0.0, 1.0]
+    SampleRate = 14400          # samples per second
+    Format = pyaudio.paInt8     # 8 bit audio
 
     # Words/minute below which we use the Farnsworth timing method
     FarnsworthThreshold = 18
@@ -78,19 +80,60 @@ class SoundMorse:
     def make_tone(self, duration, volume):
         """Create a string full of sinewave data.
 
-        Code modified from:
-            http://milkandtang.com/blog/2013/02/16/making-noise-in-python/
+        duration  time duration of string
+        volume    volume when string played
+
+        Result is a string of byte data.
         """
 
-        def sine(frequency, duration, sample_rate):
-            length = int(duration * sample_rate)
-            factor = float(frequency) * (math.pi * 2) / sample_rate
-            return np.sin(np.arange(length) * factor)
+        MaxValue = 2**7 // 2
+        LeadInOutCycles = 3
 
-        chunks = []
-        chunks.append(sine(self.frequency, duration, SoundMorse.SampleRate))
-        chunk = np.concatenate(chunks) * volume
-        return chunk.astype(np.float32).tostring()
+        # get number of samples in one tone cycle, create one cycle of sound
+        num_cycle_samples = SoundMorse.SampleRate // self.frequency
+        cycle = []
+        for n in range(num_cycle_samples):
+            value = int((math.sin(2*math.pi*n/num_cycle_samples)*MaxValue + MaxValue) * volume)
+            cycle.append(value)
+
+        # make complete tone
+        data = []
+        for _ in range(int(self.frequency * duration)):
+            data.extend(cycle)
+
+        # add lead-in and lead-out
+        lead_samples = num_cycle_samples*LeadInOutCycles
+        for i in range(lead_samples):
+            data[i] = int(data[i] * i/lead_samples)
+            data[-i] = int(data[-i] * i/lead_samples)
+
+        return bytes(bytearray(data))
+
+    def Xmake_tone(self, duration, volume):
+        """Create a string full of sinewave data.
+
+        duration  time duration of string
+        volume    volume when string played
+
+        Result is a string of byte data.
+        """
+
+        # calculate length of one cycle at rquired frequency
+        cycle_len = SoundMorse.SampleRate // self.frequency
+        num_cycles = int((duration * SoundMorse.SampleRate) // cycle_len)
+
+        # create one cycle at required frequency+volume
+        cycle_data = []
+        for t in range(cycle_len):
+            cycle_data.append(chr(int((math.sin(t*2*math.pi/cycle_len)*127+128)*volume)))
+
+        # add cycles until required duration is reached
+        result = []
+        for _ in range(num_cycles):
+            result.extend(cycle_data)
+
+        result = ''.join(result)
+        return result
 
     def farnsworth_times(self, cwpm, wpm):
         """Calculate Farnsworth spacing.

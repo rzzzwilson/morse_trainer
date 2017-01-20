@@ -745,9 +745,9 @@ class MorseTrainer(QTabWidget):
 
                 # update the character stats
                 self.update_stats(self.copy_stats, pending, pending==char)
-            else:
-                log.critical("Shouldn't see this!?")
-                print("Shouldn't see this!?")
+#            else:
+#                log.critical("Shouldn't see this!?")
+#                print("Shouldn't see this!?")
 
     def update_stats(self, stats, char, result):
         """Update a stats dictionary.
