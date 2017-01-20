@@ -784,6 +784,7 @@ class MorseTrainer(QTabWidget):
 
         super().closeEvent(*args, **kwargs)
         self.save_state(MorseTrainer.StateSaveFile)
+        self.send_morse_obj.save_params(MorseTrainer.MorseParamsFile)
 
     def clear_data(self):
         """Define and clear all internal variables."""
