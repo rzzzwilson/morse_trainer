@@ -109,8 +109,6 @@ class ReadMorse:
         with open(filename, 'w') as fd:
             fd.write(json_str + '\n')
 
-        log('Wrote morse params file %s, .signal_threshold=%d' % (filename, self.signal_threshold))
-
     def load_params(self, filename):
         """Load recognition params from file, if it exists."""
 
@@ -187,7 +185,6 @@ class ReadMorse:
                 if value < self.signal_threshold:
                     count += 1
                     if count >= SILENCE:
-                        log('return silence: (%d, %d)' % (-count, sum(values) // len(values)))
                         return (-count, sum(values) // len(values))
                 else:
                     # we have a signal, change to SOUND state
@@ -201,7 +198,6 @@ class ReadMorse:
                     if hold <= 0:
                         # silence at the end of a SOUND period
                         # return SOUND result
-                        log('return sound: (%d, %d)' % (count, sum(values) // len(values)))
                         return (count, sum(values) // len(values))
                 else:
                     hold = HOLD
