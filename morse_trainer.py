@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
                              QTabWidget, QFormLayout, QLineEdit, QRadioButton,
                              QLabel, QCheckBox, QPushButton, QMessageBox,
                              QSpacerItem)
+from PyQt5.QtGui import QIcon
 
 from display import Display
 from copy_speeds import CopySpeeds
@@ -75,9 +76,9 @@ class MorseTrainer(QTabWidget):
         raise Exception('Unrecognized platform: %s' % System)
 
     # set the thresholds when we increase the Koch test charset
-    KochSendThreshold = 0.95  # fraction
+    KochSendThreshold = 0.90  # fraction
     KochSendCount = 20
-    KochCopyThreshold = 0.95  # fraction
+    KochCopyThreshold = 0.90  # fraction
     KochCopyCount = 20
 
     # set the max number of results we keep for each character
@@ -159,6 +160,7 @@ class MorseTrainer(QTabWidget):
                             MorseTrainer.MinimumHeight)
         self.setMaximumHeight(MorseTrainer.MinimumHeight)
         self.setWindowTitle('Morse Trainer %s' % ProgramVersion)
+        self.setWindowIcon(QIcon('icon.png'))
 
         # connect 'change tab' event to handler
         self.currentChanged.connect(self.tab_change)    # QTabWidget tab changed
@@ -302,6 +304,8 @@ class MorseTrainer(QTabWidget):
         and we can therefore increase the Koch test charset.
         """
 
+        log('send_thread_finished: char=%s, count=%d' % (str(char), count))
+
         # echo received char, if any
         if char:
             if char in utils.AllUserChars:
@@ -394,6 +398,7 @@ class MorseTrainer(QTabWidget):
 
                 # let user know what is happening
                 new_char = self.send_Koch_charset[-1]
+
                 msg = ("<font size = 12>"
                        "Adding a new character to the test set: '%s'<br><br>"
                        "The morse code for this character is '%s'"
