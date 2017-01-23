@@ -64,14 +64,14 @@ class MorseTrainer(QTabWidget):
 
     # set platform-dependent sizes
     if System == 'Windows':
-        MinimumWidth = 815
-        MinimumHeight = 675
+        MinimumWidth = 850
+        MinimumHeight = 685
     elif System == 'Linux':
         MinimumWidth = 850
         MinimumHeight = 685
     elif System == 'Darwin':
-        MinimumWidth = 815
-        MinimumHeight = 675
+        MinimumWidth = 900
+        MinimumHeight = 685
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
