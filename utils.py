@@ -60,6 +60,11 @@ Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 StyleCSS = """
 /*css stylesheet file that contains all the style information*/
 
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
 QGroupBox {
     border: 1px solid black;
     border-radius: 3px;
