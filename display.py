@@ -58,6 +58,7 @@ class Display(QWidget):
         RoundedRadius = 3.0
         TooltipOffset = 33
         TooltipLineOffset = 13
+        DisplayFont = 'Courier'
     elif platform.system() == 'Linux':
         DefaultWidgetHeight = 85
         DefaultWidgetWidth = 600
@@ -68,6 +69,7 @@ class Display(QWidget):
         RoundedRadius = 3.0
         TooltipOffset = 33
         TooltipLineOffset = 13
+        DisplayFont = 'Courier'
     elif platform.system() == 'Darwin':
         DefaultWidgetHeight = 55
         DefaultWidgetWidth = 600
@@ -78,6 +80,7 @@ class Display(QWidget):
         RoundedRadius = 3.0
         TooltipOffset = 33
         TooltipLineOffset = 13
+        DisplayFont = 'Courier'
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
@@ -108,8 +111,7 @@ class Display(QWidget):
 
         # set the widget internal state
         self.setFixedHeight(Display.DefaultWidgetHeight)
-        #self.fixed_font = QFont('Helvetica', Display.FontSize, QFont.DemiBold)
-        self.fixed_font = QFont('Courier', Display.FontSize, QFont.DemiBold)
+        self.fixed_font = QFont(Display.DisplayFont, Display.FontSize, QFont.DemiBold)
         self.font_size = Display.FontSize
         self.font = self.fixed_font
 
