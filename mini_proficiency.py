@@ -1,0 +1,196 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+A PyQt5 custom widget used by Morse Trainer.
+
+Mini-MiniProficiency shows the proficiency for the Koch test charset
+in a space-efficient way.
+
+proficiency = MiniProficiency(data)
+
+where 'data' is the string of characters in the test set.
+
+proficiency.setState(in_use, data):
+
+where 'in_use'  is the number of characters of the dataset in use, and
+      'data'    a dict of {char: (fraction, sample_size, threshold), ...} values.
+"""
+
+import platform
+
+from PyQt5.QtWidgets import QWidget, QGridLayout
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QPainter, QFont
+
+import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
+
+
+class MiniProficiency(QWidget):
+    """Display the Koch charset proficiency in a space-efficient way."""
+
+    # set platform-dependent sizes
+    if platform.system() == 'Linux':
+        Font = 'Courier'            # the font to use
+        FontSize = 12               # font size
+        TopMargin = 10              # top margin
+        LeftMargin = 5              # left margin
+        RightMargin = 5             # right margin
+        BottomMargin = 10           # bottom margin
+        CharWidth = 7               # character spacing
+        CharHeight = 10             # character 'height'
+    elif platform.system() == 'Darwin':
+        Font = 'Courier'
+        FontSize = 12
+        TopMargin = 10
+        LeftMargin = 5
+        RightMargin = 5
+        BottomMargin = 10
+        CharWidth = 8
+        CharHeight = 10
+    elif platform.system() == 'Windows':
+        Font = 'Courier'
+        FontSize = 12
+        TopMargin = 10
+        LeftMargin = 5
+        RightMargin = 5
+        BottomMargin = 10
+        CharWidth = 8
+        CharHeight = 10
+    else:
+        raise Exception('Unrecognized platform: %s' % platform.system())
+
+    # define the colours used in characters
+    ColourNoSamples = Qt.black      # not enough samples
+    ColourOKErrors = Qt.blue        # sample good, OK error rate
+    ColourBadErrors = Qt.red        # sample good, too many errors
+    ColourNotInUse = Qt.lightGray   # not in use
+
+    def __init__(self, data):
+        """Initialize the widget.
+
+        data       a string of characters to be displayed in the widget
+        """
+
+        super().__init__()
+
+        log('__init__: data=%s' % data)
+
+        # declare state variables here so we know what they all are
+        self.data = data            # the characters to display (in order)
+        self.in_use = 0             # the number of chars in self.data in use
+        self.display_list = []      # list of tuples (char, colour)
+        self.font = None            # the font used
+        self.font_size = None       # size of font
+        self.widget_width = None    # set in initUI()
+        self.widget_height = None   # set in initUI()
+
+        # set up the UI
+        self.initUI()
+
+    def initUI(self):
+        """Set up the UI."""
+
+        # calculate the number of characters we will have
+        num_chars = len(self.data)
+
+        # figure out the widget size
+        widget_width = (MiniProficiency.LeftMargin
+                        + (num_chars-1)*MiniProficiency.CharWidth
+                        + MiniProficiency.RightMargin)
+        widget_height = (MiniProficiency.TopMargin
+                         + MiniProficiency.CharHeight
+                         + MiniProficiency.BottomMargin)
+
+        self.setFixedWidth(widget_width)
+        self.setFixedHeight(widget_height)
+        self.setMinimumSize(widget_width, widget_height)
+
+        self.widget_width = widget_width
+        self.widget_height = widget_height
+
+        # set the widget internal state
+        self.font = QFont(MiniProficiency.Font, MiniProficiency.FontSize)
+        self.font_size = MiniProficiency.FontSize
+
+        # set a tooltip on this custom widget
+        self.setToolTip('<font size=4>'
+                        'This shows the Koch test with colours showing usage:<br>'
+                        '<table fontsize="4" border="1">'
+                        '<tr><td>gray</td><td>not in use</td></tr>'
+                        '<tr><td>black</td><td>not enough samples of character</td></tr>'
+                        '<tr><td>red</td><td>enough samples, but too many errors</td></tr>'
+                        '<tr><td>blue</td><td>ready for promotion.</td></tr>'
+                        '</table>'
+                        '</font>'
+                        )
+
+    def paintEvent(self, e):
+        """Prepare to draw the widget."""
+
+        log('paintEvent: called')
+
+        qp = QPainter()
+        qp.begin(self)
+        self.drawWidget(qp)
+        qp.end()
+
+    def drawWidget(self, qp):
+        """Draw the widget from internal state."""
+
+        log('drawWidget: .display_list=%s' % str(self.display_list))
+
+        # set to the font we use in the widget
+        qp.setFont(self.font)
+
+        # draw characters with colour coding
+        x = MiniProficiency.LeftMargin
+        y = MiniProficiency.TopMargin
+        qp.setBrush(Qt.green)
+        for (char, colour) in self.display_list:
+            qp.setPen(colour)
+            qp.drawText(x, y, char)
+            x += MiniProficiency.CharWidth
+
+    def setState(self, in_use, data, threshold, sample_size):
+        """Update self.display_list with values matching 'data'.
+
+        in_use  the number of characters in the test set in use
+        data    a dict of {char: (fraction, sample_size), ...} values
+                where fraction    is the measure of number right (float, [0.0,1.0]),
+                      sample_size is the number of samples of character, and
+        threshold    is the char count before Koch promotion can occur.
+        sample_size  the required minimum sample size before measured
+        """
+
+        self.in_use = in_use
+
+        self.display_list = []
+        for (i, char) in enumerate(self.data):
+            if i < in_use:
+                # get all data pertinent for each character
+                try:
+                    (fraction, sample_size) = data[char]
+                except KeyError:
+                    fraction = 0.0
+                    sample_size = 0
+
+                # figure out what colour we are using
+                if sample_size < threshold:
+                    # not enough samples
+                    colour = MiniProficiency.ColourNoSamples
+                else:
+                    if fraction >= threshold:
+                        # sample good, OK error rate
+                        colour = MiniProficiency.ColourOKErrors
+                    else:
+                        # sample good, too many errors
+                        colour = MiniProficiency.ColourBadErrors
+            else:
+                # not in use
+                colour = MiniProficiency.ColourNotInUse
+
+            self.display_list.append((char, colour))
+
+        self.update()   # redraw the widget
