@@ -48,8 +48,8 @@ class TestMiniCharset(QWidget):
         new = {}
         for char in utils.Koch:
             new[char] = (randint(0,100)/100, randint(0,51))
-           # redisplay
-            self.display.setState(in_use, new, 0.95, 50)
+        # redisplay
+        self.display.setState(in_use, new, 0.95, 50)
 
 
 
