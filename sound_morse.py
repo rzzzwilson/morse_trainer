@@ -20,7 +20,7 @@ morse.close()
 
 import sys
 import math
-import struct
+import audioop
 import pyaudio
 
 import utils
@@ -78,7 +78,7 @@ class SoundMorse:
         self.pyaudio.terminate()
 
     def make_tone(self, duration, volume):
-        """Create a string full of sinewave data.
+        """Create a bytes sequence full of sinewave data.
 
         duration  time duration of string
         volume    volume when string played
@@ -107,7 +107,7 @@ class SoundMorse:
             data[i] = int(data[i] * i/lead_samples)
             data[-i] = int(data[-i] * i/lead_samples)
 
-        return bytes(bytearray(data))
+        return bytes(data)
 
     def Xmake_tone(self, duration, volume):
         """Create a string full of sinewave data.
