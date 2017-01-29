@@ -32,8 +32,8 @@ from PyQt5.QtGui import QIcon
 from display import Display
 from copy_speeds import CopySpeeds
 from send_speeds import SendSpeeds
-from groups import Groups
-from charset import Charset
+#from groups import Groups
+from mini_charset import MiniCharset
 from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 from sound_morse import SoundMorse
@@ -65,13 +65,13 @@ class MorseTrainer(QTabWidget):
     # set platform-dependent sizes
     if System == 'Windows':
         MinimumWidth = 850
-        MinimumHeight = 685
+        MinimumHeight = 435
     elif System == 'Linux':
         MinimumWidth = 850
-        MinimumHeight = 685
+        MinimumHeight = 435
     elif System == 'Darwin':
         MinimumWidth = 900
-        MinimumHeight = 685
+        MinimumHeight = 435
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
@@ -145,16 +145,13 @@ class MorseTrainer(QTabWidget):
 
         self.send_tab = QWidget()
         self.copy_tab = QWidget()
-        self.stats_tab = QWidget()
 
         self.addTab(self.send_tab, 'Send')
         self.addTab(self.copy_tab, 'Copy')
-        self.addTab(self.stats_tab, 'Status')
 
         # initialize each tab
         self.initSendTab()
         self.initCopyTab()
-        self.InitStatsTab()
 
         self.setMinimumSize(MorseTrainer.MinimumWidth,
                             MorseTrainer.MinimumHeight)
@@ -182,8 +179,7 @@ class MorseTrainer(QTabWidget):
                     'lower line of the display.')
         instructions = Instructions(doc_text)
         self.send_speeds = SendSpeeds()
-        self.send_groups = Groups()
-        self.send_charset = Charset(utils.AllUserChars)
+        self.send_charset = MiniCharset(utils.Koch)
         self.btn_send_start_stop = QPushButton('Start')
         self.btn_send_clear = QPushButton('Clear')
 
@@ -198,7 +194,6 @@ class MorseTrainer(QTabWidget):
         controls = QVBoxLayout()
         controls.maximumSize()
         controls.addWidget(self.send_speeds)
-        controls.addWidget(self.send_groups)
         controls.addWidget(self.send_charset)
 
         hbox = QHBoxLayout()
@@ -217,8 +212,6 @@ class MorseTrainer(QTabWidget):
 
         # connect 'Send' events to handlers
         self.send_speeds.changed.connect(self.send_speeds_change)
-        self.send_groups.changed.connect(self.send_group_change)
-        self.send_charset.changed.connect(self.send_charset_change)
         self.btn_send_start_stop.clicked.connect(self.send_start)
         self.btn_send_clear.clicked.connect(self.send_clear)
 
@@ -227,7 +220,6 @@ class MorseTrainer(QTabWidget):
 
         self.send_use_speed = use_speed
         self.send_wpm = speed
-        self.send_groups.setDisabled(not use_speed)
 
     def send_group_change(self, group_index):
         """Something changed in the Send grouping."""
@@ -265,7 +257,6 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_send_clear.setDisabled(False)
             self.send_speeds.setDisabled(False)
-            self.send_groups.setDisabled(False)
             self.send_charset.setDisabled(False)
 
             # Pause button label becomes Start
@@ -277,7 +268,6 @@ class MorseTrainer(QTabWidget):
             # disable Clear button, speed/grouping/charset, relabel Start button
             self.btn_send_clear.setDisabled(True)
             self.send_speeds.setDisabled(True)
-            self.send_groups.setDisabled(True)
             self.send_charset.setDisabled(True)
             self.btn_send_start_stop.setText('Pause')
 
@@ -431,8 +421,7 @@ class MorseTrainer(QTabWidget):
                     'the top row.')
         instructions = Instructions(doc_text)
         self.copy_speeds = CopySpeeds()
-        self.copy_groups = Groups()
-        self.copy_charset = Charset(utils.AllUserChars)
+        self.copy_charset = MiniCharset(utils.Koch)
         self.btn_copy_start_stop = QPushButton('Start')
         self.btn_copy_clear = QPushButton('Clear')
 
@@ -447,7 +436,6 @@ class MorseTrainer(QTabWidget):
         controls = QVBoxLayout()
         controls.maximumSize()
         controls.addWidget(self.copy_speeds)
-        controls.addWidget(self.copy_groups)
         controls.addWidget(self.copy_charset)
 
         hbox = QHBoxLayout()
@@ -466,8 +454,6 @@ class MorseTrainer(QTabWidget):
 
         # connect 'Copy' events to handlers
         self.copy_speeds.changed.connect(self.copy_speeds_changed)
-        self.copy_groups.changed.connect(self.copy_group_change)
-        self.copy_charset.changed.connect(self.copy_charset_change)
         self.btn_copy_start_stop.clicked.connect(self.copy_start)
         self.btn_copy_clear.clicked.connect(self.copy_clear)
 
@@ -478,7 +464,6 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(False)
             self.copy_speeds.setDisabled(False)
-            self.copy_groups.setDisabled(False)
             self.copy_charset.setDisabled(False)
 
             # Pause button label becomes Start
@@ -490,7 +475,6 @@ class MorseTrainer(QTabWidget):
             # disable the Clear button and speed/grouping/charset, relabel Start button
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
-            self.copy_groups.setDisabled(True)
             self.copy_charset.setDisabled(True)
             self.btn_copy_start_stop.setText('Pause')
 
@@ -771,18 +755,22 @@ class MorseTrainer(QTabWidget):
         # the send speeds
         self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
 
-        # the send test sets (Koch and user-selected)
-        self.send_charset.setState(self.send_using_Koch,
-                                   self.send_Koch_number,
-                                   self.send_User_chars_dict)
+        # the send test sets
+        data = self.stats2percent(self.send_User_chars_dict,
+                                  MorseTrainer.KochSendThreshold)
+        self.send_charset.setState(self.send_Koch_number, data,
+                                   MorseTrainer.KochSendThreshold,
+                                   MorseTrainer.KochSendCount)
 
         # the copy speeds
         self.copy_speeds.setState(self.copy_wpm)
 
-        # the copy test sets (Koch and user-selected)
-        self.copy_charset.setState(self.copy_using_Koch,
-                                   self.copy_Koch_number,
-                                   self.copy_User_chars_dict)
+        # the copy test sets
+        data = self.stats2percent(self.send_User_chars_dict,
+                                  MorseTrainer.KochSendThreshold)
+        self.send_charset.setState(self.send_Koch_number, data,
+                                   MorseTrainer.KochSendThreshold,
+                                   MorseTrainer.KochSendCount)
 
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
@@ -870,21 +858,19 @@ class MorseTrainer(QTabWidget):
 
         # Send panel
         self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
-        self.send_groups.setState(self.send_group_index)
-        self.send_charset.setState(self.send_using_Koch,
-                                   self.send_Koch_number,
-                                   self.send_User_chars_dict)
-        self.send_charset_change((self.send_using_Koch,
-                                  self.send_Koch_number,
-                                  self.send_User_chars_dict))
-#        self.send_morse_obj.set_speeds(self.send_wpm)
+        data = self.stats2percent(self.send_User_chars_dict,
+                                  MorseTrainer.KochSendThreshold)
+        self.send_charset.setState(self.send_Koch_number, data,
+                                   MorseTrainer.KochSendThreshold,
+                                   MorseTrainer.KochSendCount)
 
         # Copy panel
         self.copy_speeds.setState(self.copy_wpm, cwpm=self.copy_cwpm)
-        self.copy_groups.setState(self.copy_group_index)
-        self.copy_charset.setState(self.copy_using_Koch,
-                                   self.copy_Koch_number,
-                                   self.copy_User_chars_dict)
+        data = self.stats2percent(self.copy_User_chars_dict,
+                                  MorseTrainer.KochCopyThreshold)
+        self.copy_charset.setState(self.copy_Koch_number, data,
+                                   MorseTrainer.KochCopyThreshold,
+                                   MorseTrainer.KochCopyCount)
         self.copy_charset_change((self.copy_using_Koch,
                                   self.copy_Koch_number,
                                   self.copy_User_chars_dict))
@@ -922,7 +908,7 @@ class MorseTrainer(QTabWidget):
         the list contains the last N results (True or False).
 
         The resultant fraction dictionary has the form:
-            {'A': (fraction, sample_size, threshold), ...}
+            {'A': (fraction, sample_size), ...}
 
         We pass 'threshold' through despite the redundancy since the
         widget module knows nothing of the Koch count threshold.
@@ -940,7 +926,7 @@ class MorseTrainer(QTabWidget):
                     fraction = result_list.count(True) / sample_size
                 except ZeroDivisionError:
                     fraction = 0.0
-            results[char] = (fraction, sample_size, threshold)
+            results[char] = (fraction, sample_size)
 
         return results
 
