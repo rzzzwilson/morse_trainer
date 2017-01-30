@@ -19,8 +19,8 @@ class MiniProficiencyExample(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.toggle = False     # toggle between random/ordered test state
         self.initUI()
-
 
     def initUI(self):
         self.mini_proficiency = MiniProficiency(utils.Koch)
@@ -47,14 +47,31 @@ class MiniProficiencyExample(QWidget):
     def redisplayButtonClicked(self):
         """Regenerate some data (random) and display it."""
 
-        in_use = randint(2, len(utils.Koch))
-
-        # generate random data
-        new = {}
-        for char in self.mini_proficiency.data:
-            new[char] = (randint(0,100)/100, randint(0,51))
+        if self.toggle:
+            # generate random data
+            in_use = randint(2, len(utils.Koch))
+            new = {}
+            for char in self.mini_proficiency.data:
+                new[char] = (randint(0,100)/100, randint(0,51))
+        else:
+            # set a fixed state
+            in_use = 5
+            new = {}
+            for (n, char) in enumerate(self.mini_proficiency.data):
+                if n == 0:
+                    new[char] = (0.98, 50)
+                elif n == 1:
+                    new[char] = (0.98, 40)
+                elif n == 2:
+                    new[char] = (0.88, 40)
+                else:
+                    new[char] = (randint(0,100)/100, randint(0,51))
         # redisplay
         self.mini_proficiency.setState(in_use, new, 0.95, 50)
+
+        # toggle to other state
+        self.toggle = not self.toggle
+
 
 
 app = QApplication(sys.argv)

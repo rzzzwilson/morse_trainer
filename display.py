@@ -71,11 +71,11 @@ class Display(QWidget):
         TooltipLineOffset = 13
         DisplayFont = 'Courier'
     elif platform.system() == 'Darwin':
-        DefaultWidgetHeight = 55
+        DefaultWidgetHeight = 60
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 24
-        BaselineOffsetLower = 48
-        FontSize = 30
+        BaselineOffsetUpper = 28
+        BaselineOffsetLower = 56
+        FontSize = 40
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
@@ -242,7 +242,7 @@ class Display(QWidget):
                            Display.RoundedRadius,
                            Display.RoundedRadius)
 
-        # draw any highlights
+        # draw any highlight
         if self.highlight_index is not None:
             # calculate pixel offset of X start of highlight
             hl_x = Display.TextLeftOffset + self.char_width * self.highlight_index - 2
@@ -250,7 +250,7 @@ class Display(QWidget):
             qp.setPen(Display.HighlightEdgeColour)
             qp.setBrush(Display.HighlightColour)
             qp.drawRoundedRect(hl_x, 1, self.char_width,
-                               Display.DefaultWidgetHeight,
+                               Display.DefaultWidgetHeight-2,
                                Display.RoundedRadius,
                                Display.RoundedRadius)
 

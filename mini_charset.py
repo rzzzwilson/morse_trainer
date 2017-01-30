@@ -89,20 +89,21 @@ class MiniCharset(QWidget):
         grid.setVerticalSpacing(1)
 
         row = 0
-        grid.addWidget(self.lbl_Charset, row, 0,
-                       alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.mpr_proficiency, row, 1,
-                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
-        grid.addWidget(lbl_using, row, 2,
-                       alignment=Qt.AlignRight|Qt.AlignVCenter)
-        grid.addWidget(self.lbl_UsedNumber, row, 3,
-                       alignment=Qt.AlignVCenter)
-        grid.addWidget(lbl_chars, row, 4,
-                       alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        #grid.addWidget(self.lbl_Charset, row, 0, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        #grid.addWidget(self.mpr_proficiency, row, 1, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+        #grid.addWidget(lbl_using, row, 2, alignment=Qt.AlignRight|Qt.AlignVCenter)
+        #grid.addWidget(self.lbl_UsedNumber, row, 3, alignment=Qt.AlignVCenter)
+        #grid.addWidget(lbl_chars, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
+
+        grid.addWidget(self.lbl_Charset, row, 0)
+        grid.addWidget(self.mpr_proficiency, row, 1)
+        grid.addWidget(lbl_using, row, 2)
+        grid.addWidget(self.lbl_UsedNumber, row, 3)
+        grid.addWidget(lbl_chars, row, 4)
 
         # add empty column that stretches
-        grid.addItem(QSpacerItem(1,1), row, 4)
-        grid.setColumnStretch(4, 1)
+        grid.addItem(QSpacerItem(1,1), row, 5)
+        grid.setColumnStretch(5, 1)
 
         groupbox.setLayout(grid)
         self.setLayout(layout)
@@ -122,8 +123,8 @@ class MiniCharset(QWidget):
 
         num_used     number of characters being used
         data         the data describing the charset used
-        threshold    required proficinecy before promotion
-        sample_size  need this number of samples before w ecare about proficiency
+        threshold    required proficiency before promotion
+        sample_size  need this number of samples before we care about proficiency
         """
 
         self.num_used = num_used

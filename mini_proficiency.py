@@ -37,25 +37,25 @@ class MiniProficiency(QWidget):
         TopMargin = 10              # top margin
         LeftMargin = 5              # left margin
         RightMargin = 5             # right margin
-        BottomMargin = 10           # bottom margin
+        BottomMargin = 3            # bottom margin
         CharWidth = 7               # character spacing
         CharHeight = 10             # character 'height'
     elif platform.system() == 'Darwin':
         Font = 'Courier'
-        FontSize = 12
+        FontSize = 13
         TopMargin = 10
         LeftMargin = 5
-        RightMargin = 5
-        BottomMargin = 10
+        RightMargin = 3
+        BottomMargin = 0
         CharWidth = 8
-        CharHeight = 10
+        CharHeight = 8
     elif platform.system() == 'Windows':
         Font = 'Courier'
         FontSize = 12
         TopMargin = 10
         LeftMargin = 5
         RightMargin = 5
-        BottomMargin = 10
+        BottomMargin = 3
         CharWidth = 8
         CharHeight = 10
     else:
@@ -97,7 +97,7 @@ class MiniProficiency(QWidget):
 
         # figure out the widget size
         widget_width = (MiniProficiency.LeftMargin
-                        + (num_chars-1)*MiniProficiency.CharWidth
+                        + num_chars*MiniProficiency.CharWidth
                         + MiniProficiency.RightMargin)
         widget_height = (MiniProficiency.TopMargin
                          + MiniProficiency.CharHeight
@@ -144,24 +144,29 @@ class MiniProficiency(QWidget):
         # set to the font we use in the widget
         qp.setFont(self.font)
 
+        # clear the display area
+        qp.setPen(Qt.white)
+        qp.setBrush(Qt.white)
+        qp.drawRoundedRect(0, 0, self.widget_width, self.widget_height, 3, 3)
+
         # draw characters with colour coding
         x = MiniProficiency.LeftMargin
-        y = MiniProficiency.TopMargin
+        y = MiniProficiency.TopMargin + 3
         qp.setBrush(Qt.green)
         for (char, colour) in self.display_list:
             qp.setPen(colour)
             qp.drawText(x, y, char)
             x += MiniProficiency.CharWidth
 
-    def setState(self, in_use, data, threshold, sample_size):
+    def setState(self, in_use, data, threshold, min_sample):
         """Update self.display_list with values matching 'data'.
 
-        in_use  the number of characters in the test set in use
-        data    a dict of {char: (fraction, sample_size), ...} values
-                where fraction    is the measure of number right (float, [0.0,1.0]),
-                      sample_size is the number of samples of character, and
+        in_use       the number of characters in the test set in use
+        data         a dict of {char: (fraction, sample_size), ...} values
+                     where fraction    is the measure of number right (float, [0.0,1.0]),
+                           sample_size is the number of samples of character, and
         threshold    is the char count before Koch promotion can occur.
-        sample_size  the required minimum sample size before measured
+        min_sample    the required minimum sample size before measured
         """
 
         self.in_use = in_use
@@ -177,7 +182,7 @@ class MiniProficiency(QWidget):
                     sample_size = 0
 
                 # figure out what colour we are using
-                if sample_size < threshold:
+                if sample_size < min_sample:
                     # not enough samples
                     colour = MiniProficiency.ColourNoSamples
                 else:
