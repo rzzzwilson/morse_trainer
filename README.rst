@@ -12,20 +12,8 @@ can recognize your morse it's probably reasonably well-formed!
 Current Status
 --------------
 
-The UI is mostly complete, barring any unforeseen things.  The 'Send', 'Copy'
-and 'Stats' tabs are all working, with some minor UI bugs, such as buttons
-not being disabled when they should be, etc.
-
-Doing "make zip" builds a Linux single-file executable which is supposed to 
-contain the python interpreter and all required modules.  It's 41MB!  Try to
-remove the dependency on numpy which should reduce the size somewhat.  Need to
-actually test the Linux executable on a vanilla system.  Also need to extend
-(somehow) to build MacOS and Windows versions on those platforms.
-
-Also consider reducing the test charset if error rates *increase*.
-
-The code to listen to and decode morse sounds also needs to be made more
-resilient and able to handle wide speed diferences.
+The UI will be reduced in scope for the 1.0 release.  Remove the 'Stats' tab
+and simplify the test charset selection.
 
 Started using issues.  Look there for future changes.
 
