@@ -75,8 +75,6 @@ class MiniProficiency(QWidget):
 
         super().__init__()
 
-        log('__init__: data=%s' % data)
-
         # declare state variables here so we know what they all are
         self.data = data            # the characters to display (in order)
         self.in_use = 0             # the number of chars in self.data in use
@@ -129,8 +127,6 @@ class MiniProficiency(QWidget):
     def paintEvent(self, e):
         """Prepare to draw the widget."""
 
-        log('paintEvent: called')
-
         qp = QPainter()
         qp.begin(self)
         self.drawWidget(qp)
@@ -138,8 +134,6 @@ class MiniProficiency(QWidget):
 
     def drawWidget(self, qp):
         """Draw the widget from internal state."""
-
-        log('drawWidget: .display_list=%s' % str(self.display_list))
 
         # set to the font we use in the widget
         qp.setFont(self.font)

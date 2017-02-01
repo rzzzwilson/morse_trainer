@@ -52,8 +52,6 @@ class MiniCharset(QWidget):
         num_used  the number of characters being used
         """
 
-        log('__init__: charset=%s, num_used=%d' % (str(charset), num_used))
-
         super().__init__()
 
         # declare state variables here so we know what they all are
@@ -74,7 +72,6 @@ class MiniCharset(QWidget):
         lbl_chars = QLabel('characters')
         self.lbl_UsedNumber = QLabel(str(self.num_used))
         self.lbl_Charset = QLabel('Charset:')
-        log('creating MiniProficiency with charset=%s' % str(self.charset))
         self.mpr_proficiency = MiniProficiency(self.charset)
 
         layout = QVBoxLayout()
