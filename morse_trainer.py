@@ -32,7 +32,6 @@ from PyQt5.QtGui import QIcon
 from display import Display
 from copy_speeds import CopySpeeds
 from send_speeds import SendSpeeds
-#from groups import Groups
 from mini_charset import MiniCharset
 from charset_proficiency import CharsetProficiency
 from instructions import Instructions
@@ -994,7 +993,7 @@ class SendThread(QThread):
         count         times we've run the thread, returned in 'finished' event
         """
 
-        QThread.__init__(self)
+        super().__init__()
         self.sound_object = sound_object
         self.count = count
 
@@ -1033,7 +1032,7 @@ class CopyThread(QThread):
         count         number of times the thread has run
         """
 
-        QThread.__init__(self)
+        super().__init__()
         self.char = char
         self.sound_object = sound_object
         self.count = count
