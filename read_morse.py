@@ -90,6 +90,8 @@ class ReadMorse:
     def save_params(self, filename):
         """Save recognition params to file."""
 
+        log('Saving params to %s' % filename)
+
         if filename is None:
             return
 
@@ -111,6 +113,8 @@ class ReadMorse:
 
     def load_params(self, filename):
         """Load recognition params from file, if it exists."""
+
+        log('Reading params from %s' % filename)
 
         if filename is None:
             return
@@ -134,10 +138,9 @@ class ReadMorse:
             raise Exception('Invalid data in JSON file %s' % filename)
 
     def _decode_morse(self, morse):
-        """Decode morse code and send character to output.
+        """Decode morse code character."""
 
-        Also return the decode character.
-        """
+        log('_decode_morse: morse=%s' % str(morse))
 
         try:
             char = utils.Morse2Char[morse]
@@ -173,9 +176,9 @@ class ReadMorse:
         values = []
 
         while True:
-            #data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
-            data = stream.read(ReadMorse.CHUNK)
-            data = np.fromstring(data, 'int16')
+            data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+            #data = np.fromstring(data, 'int16')
+            data = np.fromstring(data, dtype=np.uint16)
             data = [abs(x) for x in data]
             value = int(sum(data) // len(data))      # average value
             values.append(value)
@@ -212,6 +215,8 @@ class ReadMorse:
 
         while True:
             (count, level) = self._get_sample(self.stream)
+
+            log('got: (%s, %s) #############' % (str(count), str(level)))
 
             if count > 0:
                 # got a sound
@@ -256,6 +261,7 @@ class ReadMorse:
 
             # set new signal threshold
             self.signal_threshold = (self.min_signal + 2*self.max_signal)//3
+            log('new .signal_threshold=%d' % self.signal_threshold)
 
 
 if __name__ == '__main__':
