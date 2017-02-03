@@ -75,6 +75,8 @@ class MorseTrainer(QTabWidget):
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
+    MsgBoxFontSize = 10
+
     # set the thresholds when we increase the Koch test charset
     KochSendThreshold = 0.90  # fraction
     KochSendCount = 20
@@ -389,11 +391,11 @@ class MorseTrainer(QTabWidget):
                 # let user know what is happening
                 new_char = self.send_Koch_charset[-1]
 
-                msg = ("<font size = 12>"
-                       "Adding a new character to the test set: '%s'<br><br>"
+                msg = ("<font size=%d>"
+                       "Adding a new character to the test set: '%s'<br>&nbsp;<br>"
                        "The morse code for this character is '%s'"
                        "</font>"
-                       % (new_char,
+                       % (MorseTrainer.MsgBoxFontSize, new_char,
                           utils.morse2display(utils.Char2Morse[new_char])))
                 QMessageBox.information(self, 'Send promotion',
                                         msg, QMessageBox.Yes)
@@ -548,11 +550,11 @@ class MorseTrainer(QTabWidget):
 
                 # let user know what is happening
                 new_char = self.copy_Koch_charset[-1]
-                msg = ("<font size = 12>"
+                msg = ("<font size=%d>"
                        "Adding a new copy character to the test set: '%s'.\n\n"
                        "The morse code for this character is '%s'."
                        "</font>"
-                       % (new_char,
+                       % (MorseTrainer.MsgBoxFontSize, new_char,
                           utils.morse2display(utils.Char2Morse[new_char])))
                 QMessageBox.information(self, 'Copy promotion',
                                         msg, QMessageBox.Yes)
