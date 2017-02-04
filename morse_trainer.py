@@ -282,7 +282,7 @@ class MorseTrainer(QTabWidget):
                                                     in self.send_User_chars_dict
                                                     if self.send_User_chars_dict[ch]])
 
-            self.send_thread_finished()
+            self.send_thread_finished() # start the process
 
     def send_thread_finished(self, char=None, count=0):
         """Catch signal when Send thread finished.
@@ -467,6 +467,7 @@ class MorseTrainer(QTabWidget):
 
             # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
+            self.btn_copy_start_stop.update()
 
             # change state variables to reflect the stop
             self.processing = False
@@ -940,27 +941,13 @@ class MorseTrainer(QTabWidget):
 
         # if we left the "send" tab, turn off action, if any
         if self.previous_tab_index == MorseTrainer.SendTab:
-            pass
+            self.processing = True
+            self.send_start()       # to set UI state to "not processing"
 
         # if we left the "copy" tab, turn off action, if any
         if self.previous_tab_index == MorseTrainer.CopyTab:
             self.processing = True
             self.copy_start()       # to set UI state to "not processing"
-
-        # if we changed to the "statistics" tab, refresh the stats widget
-        if tab_index == MorseTrainer.StatsTab:
-            percents = self.stats2percent(self.send_stats, self.KochSendCount)
-            self.send_status.setState(percents)
-
-            percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
-            self.copy_status.setState(percents)
-
-            # if nothing to clear, disable 'Clear' button
-            # see if statistics are already empty
-            send_sum = sum([len(v) for v in self.send_stats.values()])
-            copy_sum = sum([len(v) for v in self.copy_stats.values()])
-            stats_sum = send_sum + copy_sum
-            self.stats_btn_clear.setDisabled(stats_sum == 0)
 
         # remember the previous tab for NEXT TIME WE CHANGE
         self.previous_tab_index = tab_index
@@ -995,10 +982,11 @@ class SendThread(QThread):
         self.sound_object = sound_object
         self.count = count
 
-    def __del__(self):
-        """Delete the thread."""
-
-        self.wait()
+# This is supposed to be what we do, but we get errors!?
+#    def __del__(self):
+#        """Delete the thread."""
+#
+#        self.wait()
 
     def run(self):
         """Sound the character."""
@@ -1035,10 +1023,11 @@ class CopyThread(QThread):
         self.sound_object = sound_object
         self.count = count
 
-    def __del__(self):
-        """Delete the thread."""
-
-        self.wait()
+# This is supposed to be what we do, but we get errors!?
+#    def __del__(self):
+#        """Delete the thread."""
+#
+#        self.wait()
 
     def run(self):
         """Sound the character."""
