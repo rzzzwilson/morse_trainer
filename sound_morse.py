@@ -93,7 +93,8 @@ class SoundMorse:
         num_cycle_samples = SoundMorse.SampleRate // self.frequency
         cycle = []
         for n in range(num_cycle_samples):
-            value = int((math.sin(2*math.pi*n/num_cycle_samples)*MaxValue + MaxValue) * volume)
+            value = int((math.sin(2*math.pi*n/num_cycle_samples)*MaxValue
+                                  + MaxValue) * volume)
             cycle.append(value)
 
         # make complete tone
@@ -217,11 +218,16 @@ class SoundMorse:
     def send(self, code):
         """Send characters in 'code' to speakers as morse."""
 
+# TODO
+# Look at reorganizing this.  Each element (dot or dash) should have a trailing
+# inter-element silence.  Should add inter-character and inter-word silences when
+# appropriate.
+
         # if, by some mischance we haven't created the sounds, do it now
         if self.dot_sound is None:
             self.create_sounds()
 
-       # send the morse
+        # send the morse
         for char in code:
             char = char.upper()
             if char == ' ':
