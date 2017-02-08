@@ -13,7 +13,9 @@ morse.load_params(params_file)
 
 morse.save_params(params_file)
 
-char = morse.read_morse()
+value = morse.average_stream()
+
+char = morse.read()
 
 morse.close()
 """
@@ -79,18 +81,18 @@ class ReadMorse:
                                         frames_per_buffer=ReadMorse.CHUNK)
 
     def close(self):
-        pass
-#        self.stream.stop_stream()
-#        self.stream.close()
-#        self.pyaudio.terminate()
+        self.stream.stop_stream()
+        self.stream.close()
+        self.pyaudio.terminate()
 
-    def __del__(self):
-        self.close()
+# seems to cause problems
+#    def __del__(self):
+#        self.close()
 
     def save_params(self, filename):
         """Save recognition params to file."""
 
-        log('Saving params to %s' % filename)
+        log.debug('Saving params to %s' % filename)
 
         if filename is None:
             return
@@ -114,7 +116,7 @@ class ReadMorse:
     def load_params(self, filename):
         """Load recognition params from file, if it exists."""
 
-        log('Reading params from %s' % filename)
+        log.debug('Reading params from %s' % filename)
 
         if filename is None:
             return
@@ -140,15 +142,25 @@ class ReadMorse:
     def _decode_morse(self, morse):
         """Decode morse code character."""
 
-        log('_decode_morse: morse=%s' % str(morse))
-
         try:
             char = utils.Morse2Char[morse]
         except KeyError:
             char = ReadMorse.NOTHING
         return char
 
-    def _get_sample(self, stream):
+    def average_stream(self):
+        """Get one average sample from the audio stream.
+
+        Returns a single integer that is the average signal of one 'sample'.
+        The average is taken from ReadMorse.CHUNK audio samples.
+        """
+
+        data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+        data = np.fromstring(data, 'int16')
+        data = [abs(x) for x in data]
+        return int(sum(data) // len(data))      # average value
+
+    def _get_sample(self):
         """Return a sample tuple that indicates sound or silence.
 
         Returned values are a tuple: (N, average) where
@@ -176,11 +188,7 @@ class ReadMorse:
         values = []
 
         while True:
-            data = stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
-            #data = np.fromstring(data, 'int16')
-            data = np.fromstring(data, dtype=np.uint16)
-            data = [abs(x) for x in data]
-            value = int(sum(data) // len(data))      # average value
+            value = self.average_stream()
             values.append(value)
 
             if state == S_SILENCE:
@@ -214,9 +222,9 @@ class ReadMorse:
         morse = ''
 
         while True:
-            (count, level) = self._get_sample(self.stream)
+            (count, level) = self._get_sample()
 
-            log('got: (%s, %s) #############' % (str(count), str(level)))
+            log.debug('got: (%s, %s) #############' % (str(count), str(level)))
 
             if count > 0:
                 # got a sound
@@ -261,7 +269,7 @@ class ReadMorse:
 
             # set new signal threshold
             self.signal_threshold = (self.min_signal + 2*self.max_signal)//3
-            log('new .signal_threshold=%d' % self.signal_threshold)
+            log.debug('new .signal_threshold=%d' % self.signal_threshold)
 
 
 if __name__ == '__main__':
