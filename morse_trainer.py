@@ -1032,11 +1032,17 @@ class CopyThread(QThread):
     def run(self):
         """Sound the character."""
 
+        log.debug('CopyThread.run: char=%s' % self.char)
+
         # make the character sound in morse
         self.sound_object.send(self.char)
 
+        log.debug('CopyThread.run: signalling main thread we are done')
+
         # send signal to main thread: finished
         self.copy_finished.emit(self.count)
+
+        log.debug('CopyThread.run: finished')
 
 
 if __name__ == '__main__':
@@ -1069,7 +1075,7 @@ if __name__ == '__main__':
     morse_signon = 'Morse Trainer %s' % ProgramVersion
     log(morse_version)
     log(morse_signon.center(morse_width))
-    log('VK4FAWR/M'.center(morse_width))
+    log('VK4FAWR/M NK98'.center(morse_width))
     log(morse_version)
 
     # parse command line options
