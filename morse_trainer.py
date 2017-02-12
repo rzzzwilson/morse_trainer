@@ -33,7 +33,7 @@ from display import Display
 from copy_speeds import CopySpeeds
 from send_speeds import SendSpeeds
 from mini_charset import MiniCharset
-from charset_proficiency import CharsetProficiency
+#from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 from sound_morse import SoundMorse
 from read_morse import ReadMorse
@@ -300,7 +300,8 @@ class MorseTrainer(QTabWidget):
             if char in utils.AllUserChars:
                 # update the character stats
                 self.update_stats(self.send_stats,
-                                  self.send_expected, char==self.send_expected)
+                                  self.send_expected,
+                                  char==self.send_expected)
 
                 # show result in display
                 if char == self.send_expected:
@@ -308,6 +309,12 @@ class MorseTrainer(QTabWidget):
                 else:
                     self.send_display.insert_lower(char,
                                                    fg=Display.AnsTextBadColour)
+                new = self.stats2percent(self.send_stats,
+                                         MorseTrainer.KochSendThreshold)
+                self.send_charset.setState(self.send_Koch_number, new,
+                                           MorseTrainer.KochSendThreshold,
+                                           MorseTrainer.KochSendCount)
+            else:
 
                 # put in a tooltip if char was wrong
                 if char != self.send_expected:
@@ -463,7 +470,7 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(False)
             self.copy_speeds.setDisabled(False)
-            self.copy_charset.setDisabled(False)
+            #self.copy_charset.setDisabled(False)
 
             # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
@@ -475,7 +482,7 @@ class MorseTrainer(QTabWidget):
             # disable the Clear button and speed/grouping/charset, relabel Start button
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
-            self.copy_charset.setDisabled(True)
+            #self.copy_charset.setDisabled(True)
             self.btn_copy_start_stop.setText('Pause')
 
             # start the 'Send' process
@@ -607,89 +614,89 @@ class MorseTrainer(QTabWidget):
 # All code pertaining to the Stats tab
 ######
 
-    def InitStatsTab(self):
-        """Layout the Stats tab."""
-
-        # create all tab widgets
-        doc_text = ('This shows your sending and receiving proficiency. '
-                    'Each bar shows your proficiency for a character.  The '
-                    'taller the bar the better.  You need to practice the '
-                    'characters with shorter bars.\n\n'
-                    'The red line shows the Koch threshold.  In Koch mode '
-                    'if all characters in the test set are over the threshold '
-                    'the algorithm will add another character to the set you '
-                    'are tested with.\n\n'
-                    'The colour of the bar indicates how many times that '
-                    'character has been tested relative to a threshold '
-                    'count.  The bar is green if the sample is valid, blue if '
-                    'it close to valid and red if it is far from valid.\n\n'
-                    'Pressing the "Clear" button will clear the statistics. '
-                    'This is useful when changing test speeds.')
-        instructions = Instructions(doc_text)
-        self.send_status = CharsetProficiency('Send Proficiency',
-                                              utils.Alphabetics,
-                                              utils.Numbers,
-                                              utils.Punctuation,
-                                              self.KochSendThreshold)
-        percents = self.stats2percent(self.send_stats, self.KochSendCount)
-        self.send_status.setState(percents)
-        self.copy_status = CharsetProficiency('Copy Proficiency',
-                                              utils.Alphabetics,
-                                              utils.Numbers,
-                                              utils.Punctuation,
-                                              self.KochCopyThreshold)
-        percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
-        self.copy_status.setState(percents)
-        self.stats_btn_clear = QPushButton('Clear')
-
-        # lay out the tab
-        buttons = QVBoxLayout()
-        buttons.maximumSize()
-        buttons.addStretch()
-        buttons.addWidget(self.stats_btn_clear)
-
-        controls = QVBoxLayout()
-        controls.maximumSize()
-        controls.addWidget(self.send_status)
-        controls.addWidget(self.copy_status)
-
-        hbox = QHBoxLayout()
-        hbox.maximumSize()
-        hbox.addLayout(controls)
-        hbox.addLayout(buttons)
-
-        layout = QVBoxLayout()
-        layout.maximumSize()
-        layout.addWidget(instructions)
-        layout.addStretch()
-        layout.addLayout(hbox)
-        self.stats_tab.setLayout(layout)
-
-        # connect 'Stats' events to handlers
-        self.stats_btn_clear.clicked.connect(self.clear_stats)
-
-    def clear_stats(self):
-        """Clear the statistics display."""
-
-        # "Are you sure?" dialog here
-        msg = "Are you sure you want to clear all statistics?"
-        reply = QMessageBox.question(self, 'Clear Statistics?', msg,
-                                     QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.No:
-            return
-
-        # clear the internal data structure
-        for ch in utils.AllUserChars:
-            self.send_stats[ch] = []
-            self.copy_stats[ch] = []
-
-        new = self.stats2percent(self.send_stats, self.KochSendCount)
-        self.send_status.setState(new)
-
-        new = self.stats2percent(self.copy_stats, self.KochCopyCount)
-        self.copy_status.setState(new)
-
-        self.stats_btn_clear.setDisabled(True)
+#    def InitStatsTab(self):
+#        """Layout the Stats tab."""
+#
+#        # create all tab widgets
+#        doc_text = ('This shows your sending and receiving proficiency. '
+#                    'Each bar shows your proficiency for a character.  The '
+#                    'taller the bar the better.  You need to practice the '
+#                    'characters with shorter bars.\n\n'
+#                    'The red line shows the Koch threshold.  In Koch mode '
+#                    'if all characters in the test set are over the threshold '
+#                    'the algorithm will add another character to the set you '
+#                    'are tested with.\n\n'
+#                    'The colour of the bar indicates how many times that '
+#                    'character has been tested relative to a threshold '
+#                    'count.  The bar is green if the sample is valid, blue if '
+#                    'it close to valid and red if it is far from valid.\n\n'
+#                    'Pressing the "Clear" button will clear the statistics. '
+#                    'This is useful when changing test speeds.')
+#        instructions = Instructions(doc_text)
+#        self.send_status = CharsetProficiency('Send Proficiency',
+#                                              utils.Alphabetics,
+#                                              utils.Numbers,
+#                                              utils.Punctuation,
+#                                              self.KochSendThreshold)
+#        percents = self.stats2percent(self.send_stats, self.KochSendCount)
+#        self.send_status.setState(percents)
+#        self.copy_status = CharsetProficiency('Copy Proficiency',
+#                                              utils.Alphabetics,
+#                                              utils.Numbers,
+#                                              utils.Punctuation,
+#                                              self.KochCopyThreshold)
+#        percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
+#        self.copy_status.setState(percents)
+#        self.stats_btn_clear = QPushButton('Clear')
+#
+#        # lay out the tab
+#        buttons = QVBoxLayout()
+#        buttons.maximumSize()
+#        buttons.addStretch()
+#        buttons.addWidget(self.stats_btn_clear)
+#
+#        controls = QVBoxLayout()
+#        controls.maximumSize()
+#        controls.addWidget(self.send_status)
+#        controls.addWidget(self.copy_status)
+#
+#        hbox = QHBoxLayout()
+#        hbox.maximumSize()
+#        hbox.addLayout(controls)
+#        hbox.addLayout(buttons)
+#
+#        layout = QVBoxLayout()
+#        layout.maximumSize()
+#        layout.addWidget(instructions)
+#        layout.addStretch()
+#        layout.addLayout(hbox)
+#        self.stats_tab.setLayout(layout)
+#
+#        # connect 'Stats' events to handlers
+#        self.stats_btn_clear.clicked.connect(self.clear_stats)
+#
+#    def clear_stats(self):
+#        """Clear the statistics display."""
+#
+#        # "Are you sure?" dialog here
+#        msg = "Are you sure you want to clear all statistics?"
+#        reply = QMessageBox.question(self, 'Clear Statistics?', msg,
+#                                     QMessageBox.Yes, QMessageBox.No)
+#        if reply == QMessageBox.No:
+#            return
+#
+#        # clear the internal data structure
+#        for ch in utils.AllUserChars:
+#            self.send_stats[ch] = []
+#            self.copy_stats[ch] = []
+#
+#        new = self.stats2percent(self.send_stats, self.KochSendCount)
+#        self.send_status.setState(new)
+#
+#        new = self.stats2percent(self.copy_stats, self.KochCopyCount)
+#        self.copy_status.setState(new)
+#
+#        self.stats_btn_clear.setDisabled(True)
 
 ######
 # Other code
@@ -732,20 +739,27 @@ class MorseTrainer(QTabWidget):
                     self.copy_display.update_tooltip(msg)
                 self.copy_display.insert_lower(char, colour)
 
-                # update the character stats
+                # update the character stats and display
                 self.update_stats(self.copy_stats, pending, pending==char)
-#            else:
-#                log.critical("Shouldn't see this!?")
-#                print("Shouldn't see this!?")
+
+                data = self.stats2percent(self.copy_stats,
+                                          MorseTrainer.KochCopyThreshold)
+                self.copy_charset.setState(self.copy_Koch_number, data,
+                                           MorseTrainer.KochCopyThreshold,
+                                           MorseTrainer.KochCopyCount)
+            else:
+                log.critical("Shouldn't see this!?")
+                print("Shouldn't see this!?  See log.")
 
     def update_stats(self, stats, char, result):
-        """Update a stats dictionary.
+        """Update internal character statistics.
 
         stats   the stats dictionary to update
         char    the character being tested
         result  True or False
         """
 
+        # update history list for char, limit list length
         stats[char].append(result)
         stats[char] = stats[char][:self.KochMaxHistory]
 
@@ -756,7 +770,7 @@ class MorseTrainer(QTabWidget):
         self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
 
         # the send test sets
-        data = self.stats2percent(self.send_User_chars_dict,
+        data = self.stats2percent(self.send_stats,
                                   MorseTrainer.KochSendThreshold)
         self.send_charset.setState(self.send_Koch_number, data,
                                    MorseTrainer.KochSendThreshold,
@@ -766,7 +780,8 @@ class MorseTrainer(QTabWidget):
         self.copy_speeds.setState(self.copy_wpm)
 
         # the copy test sets
-        data = self.stats2percent(self.send_User_chars_dict,
+        #data = self.stats2percent(self.send_User_chars_dict,
+        data = self.stats2percent(self.send_stats,
                                   MorseTrainer.KochSendThreshold)
         self.send_charset.setState(self.send_Koch_number, data,
                                    MorseTrainer.KochSendThreshold,
@@ -858,7 +873,7 @@ class MorseTrainer(QTabWidget):
 
         # Send panel
         self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
-        data = self.stats2percent(self.send_User_chars_dict,
+        data = self.stats2percent(self.send_stats,
                                   MorseTrainer.KochSendThreshold)
         self.send_charset.setState(self.send_Koch_number, data,
                                    MorseTrainer.KochSendThreshold,
@@ -866,7 +881,7 @@ class MorseTrainer(QTabWidget):
 
         # Copy panel
         self.copy_speeds.setState(self.copy_wpm, cwpm=self.copy_cwpm)
-        data = self.stats2percent(self.copy_User_chars_dict,
+        data = self.stats2percent(self.copy_stats,
                                   MorseTrainer.KochCopyThreshold)
         self.copy_charset.setState(self.copy_Koch_number, data,
                                    MorseTrainer.KochCopyThreshold,
@@ -914,9 +929,13 @@ class MorseTrainer(QTabWidget):
         widget module knows nothing of the Koch count threshold.
         """
 
+        log('stats2percent: stats=%s, threshold=%d' % (str(stats), threshold))
+
         results = {}
 
         for (char, result_list) in stats.items():
+            log('top: char=%s, result_list=%s' % (char, str(result_list)))
+
             if not result_list:
                 fraction = 0.0
                 sample_size = 0
@@ -926,6 +945,9 @@ class MorseTrainer(QTabWidget):
                     fraction = result_list.count(True) / sample_size
                 except ZeroDivisionError:
                     fraction = 0.0
+
+            log('stats2percent: fraction=%f, sample_size=%d' % (fraction, sample_size))
+
             results[char] = (fraction, sample_size)
 
         return results

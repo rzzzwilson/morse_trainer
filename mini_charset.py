@@ -119,9 +119,11 @@ class MiniCharset(QWidget):
         """Update internal values and redraw.
 
         num_used     number of characters being used
-        data         the data describing the charset used
+        data         a dict of {char: (fraction, sample_size), ...} values
+                         where fraction    is the measure of number right (float, [0.0,1.0]),
+                               sample_size is the number of samples of character, and
         threshold    required proficiency before promotion
-        sample_size  need this number of samples before we care about proficiency
+        sample_size  need this number of samples before we can promote
         """
 
         self.num_used = num_used

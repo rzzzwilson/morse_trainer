@@ -14,7 +14,7 @@ where 'data' is the string of characters in the test set.
 proficiency.setState(in_use, data):
 
 where 'in_use'  is the number of characters of the dataset in use, and
-      'data'    a dict of {char: (fraction, sample_size, threshold), ...} values.
+      'data'    a dict of {char: (fraction, sample_size), ...} values.
 """
 
 import platform
@@ -155,12 +155,12 @@ class MiniProficiency(QWidget):
     def setState(self, in_use, data, threshold, min_sample):
         """Update self.display_list with values matching 'data'.
 
-        in_use       the number of characters in the test set in use
-        data         a dict of {char: (fraction, sample_size), ...} values
-                     where fraction    is the measure of number right (float, [0.0,1.0]),
-                           sample_size is the number of samples of character, and
-        threshold    is the char count before Koch promotion can occur.
-        min_sample    the required minimum sample size before measured
+        in_use      the number of characters in the test set in use
+        data        a dict of {char: (fraction, sample_size), ...} values
+                    where fraction    is the measure of number right (float, [0.0,1.0]),
+                          sample_size is the number of samples of character, and
+        threshold   required proficiency before Koch promotion can occur
+        min_sample  the required minimum sample size before promotion
         """
 
         self.in_use = in_use
