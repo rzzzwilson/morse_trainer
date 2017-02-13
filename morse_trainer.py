@@ -52,7 +52,7 @@ if ProgName.endswith('_' + System):
     ProgName = '_'.join(parts[:-1])
 
 ProgramMajor = 0
-ProgramMinor = 5
+ProgramMinor = 9
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 ProgramStateExtension = 'state'
@@ -93,7 +93,7 @@ class MorseTrainer(QTabWidget):
     MorseParamsFile = 'read_morse.param'
 
     # 'enum' constants for the three tabs
-    (SendTab, CopyTab, StatsTab) = range(3)
+    (SendTab, CopyTab) = range(2)
 
     # dict to convert tab index to name
     TabEnum2Name = {SendTab: 'Send',
@@ -116,7 +116,7 @@ class MorseTrainer(QTabWidget):
 
                      'copy_Koch_number', 'copy_Koch_charset',
                      'copy_wpm', 'copy_cwpm',
-                     'copy_group_index', 'copy_stats',
+                     'copy_stats',
                     ]
 
     # error symbol, if needed
@@ -221,11 +221,6 @@ class MorseTrainer(QTabWidget):
         """Something changed in the speeds widget."""
 
         self.send_wpm = speed
-
-    def send_group_change(self, group_index):
-        """Something changed in the Send grouping."""
-
-        self.copy_group_index = index
 
     def send_start(self):
         """The Send 'start/pause' button was clicked."""
@@ -551,11 +546,6 @@ class MorseTrainer(QTabWidget):
         self.copy_wpm = wpm
         self.copy_morse_obj.set_speeds(cwpm, wpm)
 
-    def copy_group_change(self, index):
-        """Copy grouping changed."""
-
-        self.copy_group_index = index
-
 ######
 # Other code
 ######
@@ -672,7 +662,6 @@ class MorseTrainer(QTabWidget):
         self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
         self.copy_wpm = 5
         self.copy_cwpm = 5
-        self.copy_group_index = 0
         self.copy_pending = ''              # holds last 2 chars sounded
 
         # the send/copy statistics
