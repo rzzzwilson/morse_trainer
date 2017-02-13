@@ -19,14 +19,19 @@ Numbers = '0123456789'
 Punctuation = """?,.!=/()'":;"""
 AllUserChars = Alphabetics + Numbers + Punctuation
 
-# amalgamated charset in the 'Koch' order
+# all user chars in the 'Koch' order
 Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X():;!"'"""
 
-if len(AllUserChars) != len(Koch):
+# ensure Koch is same as AllUserChars
+auc_sorted = ''.join(sorted(AllUserChars))
+koch_sorted = ''.join(sorted(Koch))
+if auc_sorted != koch_sorted:
     print('*'*80)
-    print('* Error in utils.py, Koch and AllUserCharsi are different lengths')
+    print('* Error in utils.py, Koch and AllUserChars are different')
     print('*     len(Koch)=%d' % len(Koch))
     print('*     len(AllUserChars)=%d' % len(AllUserChars))
+    print('*     auc_sorted= %s' % auc_sorted)
+    print('*     koch_sorted=%s' % koch_sorted)
     print('*'*80)
     sys.exit(1)
 
