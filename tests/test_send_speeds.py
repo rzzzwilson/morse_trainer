@@ -31,8 +31,7 @@ class SpeedsExample(QWidget):
         # connect the widget to '.changed' event handler
         self.speed_group.changed.connect(self.speed_changed)
 
-    def speed_changed(self, use_state, speed):
-        print('Changed state=%s' % str(use_state))
+    def speed_changed(self, speed):
         print('Changed speed=%d' % speed)
 
 
