@@ -51,6 +51,6 @@ def main():
     except KeyboardInterrupt:
         print('')
 
-    in_stream.save_params('xyzzy.params')
+    in_stream.save_params('xyzzy.param')
 
 main()
