@@ -20,6 +20,7 @@ import time
 import getopt
 import platform
 import traceback
+from queue import Queue
 from random import randrange
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
@@ -33,7 +34,6 @@ from display import Display
 from copy_speeds import CopySpeeds
 from send_speeds import SendSpeeds
 from mini_charset import MiniCharset
-#from charset_proficiency import CharsetProficiency
 from instructions import Instructions
 from sound_morse import SoundMorse
 from read_morse import ReadMorse
@@ -97,8 +97,7 @@ class MorseTrainer(QTabWidget):
 
     # dict to convert tab index to name
     TabEnum2Name = {SendTab: 'Send',
-                    CopyTab: 'Copy',
-                    StatsTab: 'Statistics'}
+                    CopyTab: 'Copy'}
 
     # the default tab showing on startup
     DefaultStartTab = SendTab
@@ -112,14 +111,16 @@ class MorseTrainer(QTabWidget):
 
                      'current_tab_index',
 
-                     'send_using_Koch', 'send_Koch_number', 'send_Koch_charset',
-                     'send_User_chars_dict', 'send_wpm', 'send_group_index',
-                     'send_stats',
+                     'send_Koch_number', 'send_Koch_charset',
+                     'send_wpm', 'send_stats',
 
-                     'copy_using_Koch', 'copy_Koch_number', 'copy_Koch_charset',
-                     'copy_User_chars_dict', 'copy_wpm', 'copy_cwpm',
+                     'copy_Koch_number', 'copy_Koch_charset',
+                     'copy_wpm', 'copy_cwpm',
                      'copy_group_index', 'copy_stats',
                     ]
+
+    # error symbol, if needed
+    ErrorSymbol = '☒'
 
     def __init__(self, parent = None):
         """Create a MorseTrainer object."""
@@ -216,40 +217,15 @@ class MorseTrainer(QTabWidget):
         self.btn_send_start_stop.clicked.connect(self.send_start)
         self.btn_send_clear.clicked.connect(self.send_clear)
 
-    def send_speeds_change(self, use_speed, speed):
+    def send_speeds_change(self, speed):
         """Something changed in the speeds widget."""
 
-        self.send_use_speed = use_speed
         self.send_wpm = speed
 
     def send_group_change(self, group_index):
         """Something changed in the Send grouping."""
 
         self.copy_group_index = index
-
-    def send_charset_change(self, state):
-        """Handle a change in the Send charset group widget."""
-
-        (self.send_using_Koch,
-         self.send_Koch_number,
-         self.send_User_chars_dict) = state
-
-        # update the Koch test set
-        self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
-
-        # update the user test set
-        on = [ch for ch in self.send_User_chars_dict
-                  if self.send_User_chars_dict[ch]]
-        self.send_User_sequence = ''.join(on)
-
-        # if using the user charset
-        if self.send_using_Koch:
-            self.btn_send_start_stop.setDisabled(False)
-        else:
-            # if no user chars, disable "start" button
-            self.btn_send_start_stop.setDisabled(not on)
-
-        self.update_UI()
 
     def send_start(self):
         """The Send 'start/pause' button was clicked."""
@@ -275,77 +251,76 @@ class MorseTrainer(QTabWidget):
             # start the 'Send' process
             self.send_expected = None
             self.processing = True
-            if self.send_using_Koch:
-                self.send_test_charset = self.send_Koch_charset
-            else:
-                self.send_test_charset = ''.join([ch for ch
-                                                    in self.send_User_chars_dict
-                                                    if self.send_User_chars_dict[ch]])
 
             self.send_thread_finished() # start the process
 
-    def send_thread_finished(self, char=None, count=0):
+    def send_thread_finished(self):
         """Catch signal when Send thread finished.
 
-        Compare the char we got (char) with expected (self.send_expected).
+        Compare the char we got with expected (self.send_expected).
         If still processing, repeat thread.
 
-        The 'count' param is a loop counter so we can do things like
-        occassionally check is the Koch threshold has been exceeded
-        and we can therefore increase the Koch test charset.
+        The 'self.process_count' value is a loop counter so we can do
+        things like occasionally check if the Koch threshold has been
+        exceeded and we can therefore increase the Koch test charset.
         """
 
         # echo received char, if any
+        if self.resultq.empty():
+            char = None
+        else:
+            char = self.resultq.get()
+
+        # if we get a space, pretend it's None
+        if char == ' ':
+            char = None
+
         if char:
-            if char in utils.AllUserChars:
-                # update the character stats
-                self.update_stats(self.send_stats,
-                                  self.send_expected,
-                                  char==self.send_expected)
+            # update the character stats
+            self.update_stats(self.send_stats,
+                              self.send_expected,
+                              char==self.send_expected)
 
-                # show result in display
-                if char == self.send_expected:
-                    self.send_display.insert_lower(char)
-                else:
-                    self.send_display.insert_lower(char,
-                                                   fg=Display.AnsTextBadColour)
-                new = self.stats2percent(self.send_stats,
-                                         MorseTrainer.KochSendThreshold)
-                self.send_charset.setState(self.send_Koch_number, new,
-                                           MorseTrainer.KochSendThreshold,
-                                           MorseTrainer.KochSendCount)
-            else:
+            # show result in display
+            char_colour = Display.AnsTextGoodColour
+            if char != self.send_expected:
+                char_colour = Display.AnsTextBadColour
+            self.send_display.insert_lower(char, fg=char_colour)
 
-                # put in a tooltip if char was wrong
-                if char != self.send_expected:
-                    colour = self.send_display.AnsTextBadColour
-                    msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
-                            % (self.send_expected,
-                               utils.char2morse(self.send_expected),
-                               char, utils.char2morse(char)))
-                    self.send_display.update_tooltip(msg)
+            # update statistics and mini_charset
+            new = self.stats2percent(self.send_stats,
+                                     MorseTrainer.KochSendThreshold)
+            self.send_charset.setState(self.send_Koch_number, new,
+                                       MorseTrainer.KochSendThreshold,
+                                       MorseTrainer.KochSendCount)
 
-                self.send_expected = None
+            # add error tooltip if char not as expected
+            if char != self.send_expected:
+                msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
+                        % (self.send_expected,
+                           utils.char2morse(self.send_expected),
+                           char, utils.char2morse(char)))
+                self.send_display.update_tooltip(msg)
 
-        # update the user test set
-        on = [ch for ch in self.send_User_chars_dict if self.send_User_chars_dict[ch]]
-        self.send_User_sequence = ''.join(on)
-
-        if self.processing:
-            if self.send_expected is None:
-                send_char = utils.get_random_char(self.send_test_charset)
-                self.send_display.insert_upper(send_char)
-                self.send_expected = send_char
+            # signal that we can wait for another character
+            self.send_expected = None
 
             # update send count, maybe increase Koch charset
-            count += 1
-            if count >= self.KochSendCount:
-                count = 0
+            self.process_count += 1
+            if self.process_count >= self.KochSendCount:
+                self.process_count = 0
                 if self.all_send_chars_ok():
                     self.increase_send_Koch()
 
-            self.threadSend = SendThread(self.send_morse_obj, count=count)
-            self.threadSend.send_finished.connect(self.send_thread_finished)
+        # if we are still processing and not expecting char, prepare for next char
+        if self.processing:
+            if self.send_expected is None:
+                send_char = utils.get_random_char(self.send_Koch_charset)
+                self.send_display.insert_upper(send_char)
+                self.send_expected = send_char
+
+            self.threadSend = SendThread(self.send_morse_obj, self.resultq)
+            self.threadSend.finished.connect(self.send_thread_finished)
             self.threadSend.start()
 
     def send_clear(self, event):
@@ -361,54 +336,50 @@ class MorseTrainer(QTabWidget):
         Note that we return False if *any* char is below the Koch count.
         """
 
-        if self.send_using_Koch:
-            # if we ARE using Koch for Send check all results for charset
-            # note that we may have REDUCED the Koch charset, so active charset
-            # may not contain chars for which we have results
-            for char in self.send_Koch_charset:
-                result_list = self.send_stats[char]
-                num_samples = len(result_list)
+        # note that we may have REDUCED the Koch charset, so active charset
+        # may not contain chars for which we have results
+        for char in self.send_Koch_charset:
+            result_list = self.send_stats[char]
+            num_samples = len(result_list)
 
-                # all samples must be over Koch count threshold
-                if num_samples < self.KochSendCount:
-                    return False
+            # all samples must be over Koch count threshold
+            if num_samples < self.KochSendCount:
+                return False
 
-                try:
-                    fraction = result_list.count(True) / len(result_list)
-                except ZeroDivisionError:
-                    fraction = 0.0
-                if fraction < self.KochSendThreshold:
-                    return False
+            try:
+                fraction = result_list.count(True) / len(result_list)
+            except ZeroDivisionError:
+                fraction = 0.0
+            if fraction < self.KochSendThreshold:
+                return False
 
         return True
 
     def increase_send_Koch(self):
         """Increase the Koch send charset, if possible."""
 
-        if self.send_using_Koch:
-            # if we ARE using Koch for Send
-            if self.send_Koch_number < len(utils.Koch):
-                # we CAN increase the Send Koch charset
-                self.send_Koch_number += 1
-                self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
+        if self.send_Koch_number < len(utils.Koch):
+            # we CAN increase the Send Koch charset
+            self.send_Koch_number += 1
+            self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
 
-                # let user know what is happening
-                new_char = self.send_Koch_charset[-1]
+            # let user know what is happening
+            new_char = self.send_Koch_charset[-1]
 
-                msg = ("<font size=%d>"
-                       "Adding a new character to the test set: '%s'<br>&nbsp;<br>"
-                       "The morse code for this character is '%s'"
-                       "</font>"
-                       % (MorseTrainer.MsgBoxFontSize, new_char,
-                          utils.morse2display(utils.Char2Morse[new_char])))
-                QMessageBox.information(self, 'Send promotion',
-                                        msg, QMessageBox.Yes)
+            msg = ("<font size=%d>"
+                   "Adding a new character to the test set: '%s'<br>&nbsp;<br>"
+                   "The morse code for this character is '%s'"
+                   "</font>"
+                   % (MorseTrainer.MsgBoxFontSize, new_char,
+                      utils.morse2display(utils.Char2Morse[new_char])))
+            QMessageBox.information(self, 'Send promotion',
+                                    msg, QMessageBox.Yes)
 
-                # force a "pause"
-                self.send_start()
+            # force a "pause"
+            self.send_start()
 
-                # update the Send UI
-                self.update_UI()
+            # update the Send UI
+            self.update_UI()
 
 ######
 # All code pertaining to the Copy tab
@@ -491,24 +462,25 @@ class MorseTrainer(QTabWidget):
 
             self.copy_thread_finished()
 
-    def copy_thread_finished(self, count=0):
+    def copy_thread_finished(self):
         """Catch signal when Send thread finished.
 
         If still processing, start new thread.
         """
 
+
         if self.processing:
             # update copy count, maybe increase Koch charset
-            count += 1
-            if count >= self.KochCopyCount:
-                count = 0
+            self.process_count += 1
+            if self.process_count >= self.KochCopyCount:
+                self.process_count = 0
                 if self.all_copy_chars_ok():
                     self.increase_copy_Koch()
 
             send_char = utils.get_random_char(self.copy_Koch_charset)
             self.copy_pending = (self.copy_pending + [send_char])[-2:]
-            self.threadCopy = CopyThread(send_char, self.copy_morse_obj, count)
-            self.threadCopy.copy_finished.connect(self.copy_thread_finished)
+            self.threadCopy = CopyThread(send_char, self.copy_morse_obj)
+            self.threadCopy.finished.connect(self.copy_thread_finished)
             self.threadCopy.start()
 
     def copy_clear(self, event):
@@ -522,53 +494,51 @@ class MorseTrainer(QTabWidget):
         Return True if so.
         """
 
-        if self.copy_using_Koch:
-            # if we ARE using Koch for Copy check all results for charset
-            # note that we may have REDUCED the Koch charset, so active charset
-            # may not contain chars for which we have results
-            for char in self.copy_Koch_charset:
-                result_list = self.copy_stats[char]
-                num_samples = len(result_list)
+        # if we ARE using Koch for Copy check all results for charset
+        # note that we may have REDUCED the Koch charset, so active charset
+        # may not contain chars for which we have results
+        for char in self.copy_Koch_charset:
+            result_list = self.copy_stats[char]
+            num_samples = len(result_list)
 
-                # all samples must be over count threshold
-                if num_samples < self.KochCopyCount:
-                    return False
+            # all samples must be over count threshold
+            if num_samples < self.KochCopyCount:
+                return False
 
-                try:
-                    fraction = result_list.count(True) / num_samples
-                except ZeroDivisionError:
-                    fraction = 0.0
-                if fraction < self.KochCopyThreshold:
-                    return False
+            try:
+                fraction = result_list.count(True) / num_samples
+            except ZeroDivisionError:
+                fraction = 0.0
+            if fraction < self.KochCopyThreshold:
+                return False
 
         return True
 
     def increase_copy_Koch(self):
         """Increase the Koch copy charset, if possible."""
 
-        if self.copy_using_Koch:
-            # if we ARE using Koch for Copy
-            if self.copy_Koch_number < len(utils.Koch):
-                # we CAN increase the Copy Koch charset
-                self.copy_Koch_number += 1
-                self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
+        # if we ARE using Koch for Copy
+        if self.copy_Koch_number < len(utils.Koch):
+            # we CAN increase the Copy Koch charset
+            self.copy_Koch_number += 1
+            self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
 
-                # let user know what is happening
-                new_char = self.copy_Koch_charset[-1]
-                msg = ("<font size=%d>"
-                       "Adding a new copy character to the test set: '%s'.\n\n"
-                       "The morse code for this character is '%s'."
-                       "</font>"
-                       % (MorseTrainer.MsgBoxFontSize, new_char,
-                          utils.morse2display(utils.Char2Morse[new_char])))
-                QMessageBox.information(self, 'Copy promotion',
-                                        msg, QMessageBox.Yes)
+            # let user know what is happening
+            new_char = self.copy_Koch_charset[-1]
+            msg = ("<font size=%d>"
+                   "Adding a new copy character to the test set: '%s'.\n\n"
+                   "The morse code for this character is '%s'."
+                   "</font>"
+                   % (MorseTrainer.MsgBoxFontSize, new_char,
+                      utils.morse2display(utils.Char2Morse[new_char])))
+            QMessageBox.information(self, 'Copy promotion',
+                                    msg, QMessageBox.Yes)
 
-                # force a pause
-                self.copy_start()
+            # force a pause
+            self.copy_start()
 
-                # update the Send UI
-                self.update_UI()
+            # update the Send UI
+            self.update_UI()
 
     def copy_speeds_changed(self, cwpm, wpm):
         """Something in the "copy speed" group changed.
@@ -585,118 +555,6 @@ class MorseTrainer(QTabWidget):
         """Copy grouping changed."""
 
         self.copy_group_index = index
-
-    def copy_charset_change(self, state):
-        """Handle a change in the Copy charset group widget."""
-
-        (self.copy_using_Koch,
-         self.copy_Koch_number,
-         self.copy_User_chars_dict) = state
-
-        # update the Koch test set
-        self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
-
-        # update the user test set
-        on = [ch for ch in self.copy_User_chars_dict
-                  if self.copy_User_chars_dict[ch]]
-        self.copy_User_sequence = ''.join(on)
-
-        # if using the user charset
-        if self.copy_using_Koch:
-            self.btn_copy_start_stop.setDisabled(False)
-        else:
-            # if no user chars, disable "start" button
-            self.btn_copy_start_stop.setDisabled(not on)
-
-        self.update_UI()
-
-######
-# All code pertaining to the Stats tab
-######
-
-#    def InitStatsTab(self):
-#        """Layout the Stats tab."""
-#
-#        # create all tab widgets
-#        doc_text = ('This shows your sending and receiving proficiency. '
-#                    'Each bar shows your proficiency for a character.  The '
-#                    'taller the bar the better.  You need to practice the '
-#                    'characters with shorter bars.\n\n'
-#                    'The red line shows the Koch threshold.  In Koch mode '
-#                    'if all characters in the test set are over the threshold '
-#                    'the algorithm will add another character to the set you '
-#                    'are tested with.\n\n'
-#                    'The colour of the bar indicates how many times that '
-#                    'character has been tested relative to a threshold '
-#                    'count.  The bar is green if the sample is valid, blue if '
-#                    'it close to valid and red if it is far from valid.\n\n'
-#                    'Pressing the "Clear" button will clear the statistics. '
-#                    'This is useful when changing test speeds.')
-#        instructions = Instructions(doc_text)
-#        self.send_status = CharsetProficiency('Send Proficiency',
-#                                              utils.Alphabetics,
-#                                              utils.Numbers,
-#                                              utils.Punctuation,
-#                                              self.KochSendThreshold)
-#        percents = self.stats2percent(self.send_stats, self.KochSendCount)
-#        self.send_status.setState(percents)
-#        self.copy_status = CharsetProficiency('Copy Proficiency',
-#                                              utils.Alphabetics,
-#                                              utils.Numbers,
-#                                              utils.Punctuation,
-#                                              self.KochCopyThreshold)
-#        percents = self.stats2percent(self.copy_stats, self.KochCopyCount)
-#        self.copy_status.setState(percents)
-#        self.stats_btn_clear = QPushButton('Clear')
-#
-#        # lay out the tab
-#        buttons = QVBoxLayout()
-#        buttons.maximumSize()
-#        buttons.addStretch()
-#        buttons.addWidget(self.stats_btn_clear)
-#
-#        controls = QVBoxLayout()
-#        controls.maximumSize()
-#        controls.addWidget(self.send_status)
-#        controls.addWidget(self.copy_status)
-#
-#        hbox = QHBoxLayout()
-#        hbox.maximumSize()
-#        hbox.addLayout(controls)
-#        hbox.addLayout(buttons)
-#
-#        layout = QVBoxLayout()
-#        layout.maximumSize()
-#        layout.addWidget(instructions)
-#        layout.addStretch()
-#        layout.addLayout(hbox)
-#        self.stats_tab.setLayout(layout)
-#
-#        # connect 'Stats' events to handlers
-#        self.stats_btn_clear.clicked.connect(self.clear_stats)
-#
-#    def clear_stats(self):
-#        """Clear the statistics display."""
-#
-#        # "Are you sure?" dialog here
-#        msg = "Are you sure you want to clear all statistics?"
-#        reply = QMessageBox.question(self, 'Clear Statistics?', msg,
-#                                     QMessageBox.Yes, QMessageBox.No)
-#        if reply == QMessageBox.No:
-#            return
-#
-#        # clear the internal data structure
-#        for ch in utils.AllUserChars:
-#            self.send_stats[ch] = []
-#            self.copy_stats[ch] = []
-#
-#        new = self.stats2percent(self.send_stats, self.KochSendCount)
-#        self.send_status.setState(new)
-#
-#        new = self.stats2percent(self.copy_stats, self.KochCopyCount)
-#        self.copy_status.setState(new)
-#
-#        self.stats_btn_clear.setDisabled(True)
 
 ######
 # Other code
@@ -727,11 +585,11 @@ class MorseTrainer(QTabWidget):
                     if self.copy_pending and char == self.copy_pending[0]:
                         pending = self.copy_pending.pop(0)
 
-                self.copy_display.insert_upper(pending, self.send_display.AskTextColour)
+                self.copy_display.insert_upper(pending, self.copy_display.AskTextColour)
 
-                colour = self.send_display.AnsTextGoodColour
+                colour = self.copy_display.AnsTextGoodColour
                 if pending != char:
-                    colour = self.send_display.AnsTextBadColour
+                    colour = self.copy_display.AnsTextBadColour
                     msg = ("Sent '%s' (%s),<br>"
                            "got '%s' (%s)."
                             % (pending, utils.char2morse(pending),
@@ -767,7 +625,7 @@ class MorseTrainer(QTabWidget):
         """Update controls that show state values."""
 
         # the send speeds
-        self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
+        self.send_speeds.setState(self.send_wpm)
 
         # the send test sets
         data = self.stats2percent(self.send_stats,
@@ -780,7 +638,6 @@ class MorseTrainer(QTabWidget):
         self.copy_speeds.setState(self.copy_wpm)
 
         # the copy test sets
-        #data = self.stats2percent(self.send_User_chars_dict,
         data = self.stats2percent(self.send_stats,
                                   MorseTrainer.KochSendThreshold)
         self.send_charset.setState(self.send_Koch_number, data,
@@ -803,22 +660,16 @@ class MorseTrainer(QTabWidget):
         self.copy_morse_obj = SoundMorse()
 
         # Send variables
-        self.send_using_Koch = True
         self.send_Koch_number = 2
         self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
-        self.send_User_chars_dict = {ch:False for ch in utils.AllUserChars}
         self.send_use_speed = False
         self.send_wpm = 5
         # self.send_cwpm not used for Send
-        self.send_group_index = 0
         self.send_expected = None
-        self.send_test_charset = None
 
         # Copy variables
-        self.copy_using_Koch = True
         self.copy_Koch_number = 2
         self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
-        self.copy_User_chars_dict = {ch:False for ch in utils.AllUserChars}
         self.copy_wpm = 5
         self.copy_cwpm = 5
         self.copy_group_index = 0
@@ -831,6 +682,8 @@ class MorseTrainer(QTabWidget):
 
         # state variable shows send or copy test in progress
         self.processing = False
+        self.process_count = 0
+        self.resultq = Queue()
 
         # set the current and previous tab indices
         self.current_tab_index = MorseTrainer.DefaultStartTab
@@ -872,7 +725,7 @@ class MorseTrainer(QTabWidget):
         #####
 
         # Send panel
-        self.send_speeds.setState(self.send_using_Koch, self.send_wpm)
+        self.send_speeds.setState(self.send_wpm)
         data = self.stats2percent(self.send_stats,
                                   MorseTrainer.KochSendThreshold)
         self.send_charset.setState(self.send_Koch_number, data,
@@ -886,9 +739,6 @@ class MorseTrainer(QTabWidget):
         self.copy_charset.setState(self.copy_Koch_number, data,
                                    MorseTrainer.KochCopyThreshold,
                                    MorseTrainer.KochCopyCount)
-        self.copy_charset_change((self.copy_using_Koch,
-                                  self.copy_Koch_number,
-                                  self.copy_User_chars_dict))
         self.copy_morse_obj.set_speeds(self.copy_wpm, self.copy_cwpm)
 
         # adjust tabbed view to last view
@@ -929,13 +779,9 @@ class MorseTrainer(QTabWidget):
         widget module knows nothing of the Koch count threshold.
         """
 
-        log('stats2percent: stats=%s, threshold=%d' % (str(stats), threshold))
-
         results = {}
 
         for (char, result_list) in stats.items():
-            log('top: char=%s, result_list=%s' % (char, str(result_list)))
-
             if not result_list:
                 fraction = 0.0
                 sample_size = 0
@@ -945,8 +791,6 @@ class MorseTrainer(QTabWidget):
                     fraction = result_list.count(True) / sample_size
                 except ZeroDivisionError:
                     fraction = 0.0
-
-            log('stats2percent: fraction=%f, sample_size=%d' % (fraction, sample_size))
 
             results[char] = (fraction, sample_size)
 
@@ -990,34 +834,23 @@ class SendThread(QThread):
     The signal contains the character read (or None if nothing read).
     """
 
-    # the signal when finished
-    send_finished = pyqtSignal(str, int)
-
-    def __init__(self, sound_object, count):
+    def __init__(self, sound_object, resultq):
         """Create a thread to read one morse character.
 
         sound_object  the object that reads morse sounds
-        count         times we've run the thread, returned in 'finished' event
+        resultq       queue on which to place recognized character
         """
 
         super().__init__()
         self.sound_object = sound_object
-        self.count = count
-
-# This is supposed to be what we do, but we get errors!?
-#    def __del__(self):
-#        """Delete the thread."""
-#
-#        self.wait()
+        self.resultq = resultq
 
     def run(self):
         """Sound the character."""
 
         # make the character sound in morse
         char = self.sound_object.read()
-
-        # send signal to main thread: finished
-        self.send_finished.emit(char, self.count)
+        self.resultq.put(char)
 
 ######
 # A thread to sound one morse character.
@@ -1029,27 +862,16 @@ class CopyThread(QThread):
     It automatically sends a signal to the main thread when finished.
     """
 
-    # the signal when finished
-    copy_finished = pyqtSignal(int)
-
-    def __init__(self, char, sound_object, count):
+    def __init__(self, char, sound_object):
         """Create a thread to sound one morse character.
 
         char          the character to sound
         sound_object  the object that makes morse sounds
-        count         number of times the thread has run
         """
 
         super().__init__()
         self.char = char
         self.sound_object = sound_object
-        self.count = count
-
-# This is supposed to be what we do, but we get errors!?
-#    def __del__(self):
-#        """Delete the thread."""
-#
-#        self.wait()
 
     def run(self):
         """Sound the character."""
@@ -1058,13 +880,6 @@ class CopyThread(QThread):
 
         # make the character sound in morse
         self.sound_object.send(self.char)
-
-        log.debug('CopyThread.run: signalling main thread we are done')
-
-        # send signal to main thread: finished
-        self.copy_finished.emit(self.count)
-
-        log.debug('CopyThread.run: finished')
 
 
 if __name__ == '__main__':
