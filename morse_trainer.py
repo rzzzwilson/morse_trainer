@@ -23,11 +23,9 @@ import traceback
 from queue import Queue
 from random import randrange
 
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
+from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
-                             QTabWidget, QFormLayout, QLineEdit, QRadioButton,
-                             QLabel, QCheckBox, QPushButton, QMessageBox,
-                             QSpacerItem)
+                             QTabWidget, QPushButton, QMessageBox, QSpacerItem)
 from PyQt5.QtGui import QIcon
 
 from display import Display
