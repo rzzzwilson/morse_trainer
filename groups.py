@@ -15,7 +15,7 @@ Raises the '.change' signal when changed.
 """
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
+from PyQt5.QtWidgets import (QWidget, QComboBox, QLabel,
                              QHBoxLayout, QVBoxLayout, QGroupBox)
 
 import utils

@@ -9,8 +9,7 @@ Used to show a QLabel containing instructions.  Read only.
 instructions = Instructions()
 """
 
-from PyQt5.QtWidgets import (QApplication, QWidget, QComboBox, QLabel,
-                             QTextEdit, QHBoxLayout, QVBoxLayout, QGroupBox)
+from PyQt5.QtWidgets import (QWidget, QTextEdit, QVBoxLayout)
 
 class Instructions(QWidget):
     def __init__(self, text):
