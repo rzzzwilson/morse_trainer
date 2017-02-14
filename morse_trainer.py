@@ -72,7 +72,7 @@ class MorseTrainer(QTabWidget):
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
-    MsgBoxFontSize = 10
+    MsgBoxFontSize = 4
 
     # set the thresholds when we increase the Koch test charset
     KochSendThreshold = 0.90  # fraction
@@ -360,13 +360,18 @@ class MorseTrainer(QTabWidget):
             new_char = self.send_Koch_charset[-1]
 
             msg = ("<font size=%d>"
-                   "Adding a new character to the test set: '%s'<br>&nbsp;<br>"
-                   "The morse code for this character is '%s'"
+                   "Adding a new character to the test set: '%s'.<br>"
+                   "The morse code for this character is '%s'."
                    "</font>"
                    % (MorseTrainer.MsgBoxFontSize, new_char,
                       utils.morse2display(utils.Char2Morse[new_char])))
-            QMessageBox.information(self, 'Send promotion',
-                                    msg, QMessageBox.Yes)
+
+            msgbox = QMessageBox(self)
+            msgbox.setText('Koch promotion')
+            msgbox.setInformativeText(msg)
+            msgbox.setStandardButtons(QMessageBox.Ok)
+            msgbox.setDefaultButton(QMessageBox.Ok)
+            msgbox.exec()
 
             # force a "pause"
             self.send_start()
@@ -519,13 +524,18 @@ class MorseTrainer(QTabWidget):
             # let user know what is happening
             new_char = self.copy_Koch_charset[-1]
             msg = ("<font size=%d>"
-                   "Adding a new copy character to the test set: '%s'.\n\n"
+                   "Adding a new character to the test set: '%s'.<br>"
                    "The morse code for this character is '%s'."
                    "</font>"
                    % (MorseTrainer.MsgBoxFontSize, new_char,
                       utils.morse2display(utils.Char2Morse[new_char])))
-            QMessageBox.information(self, 'Copy promotion',
-                                    msg, QMessageBox.Yes)
+
+            msgbox = QMessageBox(self)
+            msgbox.setText('Koch promotion')
+            msgbox.setInformativeText(msg)
+            msgbox.setStandardButtons(QMessageBox.Ok)
+            msgbox.setDefaultButton(QMessageBox.Ok)
+            msgbox.exec()
 
             # force a pause
             self.copy_start()

@@ -54,6 +54,7 @@ class Display(QWidget):
         BaselineOffsetUpper = 24
         BaselineOffsetLower = 48
         FontSize = 30
+        TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
@@ -65,6 +66,7 @@ class Display(QWidget):
         BaselineOffsetUpper = 40
         BaselineOffsetLower = 80
         FontSize = 40
+        TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
@@ -76,6 +78,7 @@ class Display(QWidget):
         BaselineOffsetUpper = 28
         BaselineOffsetLower = 56
         FontSize = 40
+        TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0
         TooltipOffset = 33
@@ -180,7 +183,9 @@ class Display(QWidget):
                     offset = (Display.TooltipOffset +
                               Display.TooltipLineOffset*num_newlines)
                     posn = e.globalPos() + QPoint(0, -offset)
-                    QToolTip.showText(posn, '<font size=12>%s</font>' % text)
+                    new_text = text.replace('\n', '<br>')
+                    QToolTip.showText(posn, '<font size=%d>%s</font>'
+                                            % (Display.TooltipFontSize, new_text))
 
     def x2index(self, x):
         """Convert widget x coordinate to column index.
