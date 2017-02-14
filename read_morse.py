@@ -155,7 +155,8 @@ class ReadMorse:
         The average is taken from ReadMorse.CHUNK audio samples.
         """
 
-        data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+        #data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+        data = self.stream.read(ReadMorse.CHUNK)
         data = np.fromstring(data, 'int16')
         data = [abs(x) for x in data]
         return int(sum(data) // len(data))      # average value
