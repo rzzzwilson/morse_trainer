@@ -7,7 +7,7 @@ Morse Trainer is an application to help a user learn to send and copy Morse.
 Usage:  morse_trainer [-d <debug>]  [-h]
 
 where  -d <debug>  sets the debug level to the number <debug> [0,50], output
-                   is written to ./debug.log, smaller number means less debug
+                   is written to ./debug.log, smaller number means more debug
 and    -h          prints this help and then stops.
 
 You will need a morse key and Code Practice Oscillator (CPO).
