@@ -145,7 +145,8 @@ class ReadMorse:
         try:
             char = utils.Morse2Char[morse]
         except KeyError:
-            char = ReadMorse.NOTHING
+            #char = ReadMorse.NOTHING
+            char = None
         return char
 
     def average_stream(self):
@@ -155,8 +156,8 @@ class ReadMorse:
         The average is taken from ReadMorse.CHUNK audio samples.
         """
 
-        #data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
-        data = self.stream.read(ReadMorse.CHUNK)
+        data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
+        #data = self.stream.read(ReadMorse.CHUNK)
         data = np.fromstring(data, 'int16')
         data = [abs(x) for x in data]
         return int(sum(data) // len(data))      # average value
@@ -216,7 +217,12 @@ class ReadMorse:
                     count += 1
 
     def read(self):
-        """Returns one character in morse."""
+        """Returns one recognized character.
+
+        Returns a tuple (char, morse)
+        where char   is the recognized character (None if not recognized)
+        and   morse  is the recognized morse dots'n'dashes string (None if no equivalent)
+        """
 
         space_count = 0
         word_count = 0
@@ -224,8 +230,6 @@ class ReadMorse:
 
         while True:
             (count, level) = self._get_sample()
-
-            log.debug('got: (%s, %s) #############' % (str(count), str(level)))
 
             if count > 0:
                 # got a sound
@@ -256,16 +260,16 @@ class ReadMorse:
                 # if silence long enough, emit a space
                 if space_count >= self.char_space:
                     if morse:
-                        return self._decode_morse(morse)
+                        return (self._decode_morse(morse), morse)
                     elif not self.sent_space:
                         self.sent_space = True
-                        return ' '
+                        return (' ', None)
                     space_count = 0
 
                 if word_count >= self.word_space:
                     if not self.sent_word_space:
                         self.sent_word_space = True
-                        return ' '
+                        return (' ', None)
                     word_count = 0
 
             # set new signal threshold
