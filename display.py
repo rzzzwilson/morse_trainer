@@ -73,10 +73,10 @@ class Display(QWidget):
         TooltipLineOffset = 13
         DisplayFont = 'Courier'
     elif platform.system() == 'Darwin':
-        DefaultWidgetHeight = 60
+        DefaultWidgetHeight = 68
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 28
-        BaselineOffsetLower = 56
+        BaselineOffsetUpper = 30
+        BaselineOffsetLower = 60
         FontSize = 40
         TooltipFontSize = 4
         TextLeftOffset = 3
