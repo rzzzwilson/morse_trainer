@@ -173,10 +173,10 @@ class MorseTrainer(QTabWidget):
         self.send_display = Display()
         doc_text = ('Here we test your sending accuracy.  The program will '
                     'print the character you should send in the top row of the '
-                    'display above.  Your job is to send that '
-                    'character using your key and code practice oscillator.  '
-                    'The program will print what it thinks you sent on the '
-                    'lower line of the display.')
+                    'display.  Your job is to send that character using your '
+                    'key and code practice oscillator.  The program will print '
+                    'what it thinks you sent on the lower line of the display.  '
+                    'Errors are marked in red.')
         instructions = Instructions(doc_text)
         self.send_speeds = SendSpeeds()
         self.send_charset = MiniCharset(utils.Koch)
@@ -261,8 +261,11 @@ class MorseTrainer(QTabWidget):
         # echo received char, if any
         if self.resultq.empty():
             char = None
+            morse = None
         else:
-            char = self.resultq.get()
+            (char, morse) = self.resultq.get()
+            if char is None:
+                char = MorseTrainer.ErrorSymbol
 
         # if we get a space, pretend it's None
         if char == ' ':
@@ -292,7 +295,7 @@ class MorseTrainer(QTabWidget):
                 msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
                         % (self.send_expected,
                            utils.char2morse(self.send_expected),
-                           char, utils.char2morse(char)))
+                           char, str(morse)))
                 self.send_display.update_tooltip(msg)
 
             # signal that we can wait for another character
@@ -391,9 +394,9 @@ class MorseTrainer(QTabWidget):
         doc_text = ('Here we test your copying accuracy.  The program '
                     'will sound a random morse character which you should type '
                     'on the keyboard.  The character you typed will appear in '
-                    'the bottom row of the display above '
-                    'along with the character the program actually sent in '
-                    'the top row.')
+                    'the bottom row of the display along with the character '
+                    'the program actually sent in the top row.  '
+                    'Errors are marked in red.')
         instructions = Instructions(doc_text)
         self.copy_speeds = CopySpeeds()
         self.copy_charset = MiniCharset(utils.Koch)
@@ -587,11 +590,13 @@ class MorseTrainer(QTabWidget):
 
                 colour = self.copy_display.AnsTextGoodColour
                 if pending != char:
+                    try:
+                        morse = utils.char2morse(char)
+                    except KeyError:
+                        morse = '<unknown>'
                     colour = self.copy_display.AnsTextBadColour
-                    msg = ("Sent '%s' (%s),<br>"
-                           "got '%s' (%s)."
-                            % (pending, utils.char2morse(pending),
-                               char, utils.char2morse(char)))
+                    msg = ("Sent '%s' (%s),\ngot '%s' (%s)."
+                           % (pending, utils.char2morse(pending), char, morse))
                     self.copy_display.update_tooltip(msg)
                 self.copy_display.insert_lower(char, colour)
 
@@ -604,7 +609,7 @@ class MorseTrainer(QTabWidget):
                                            MorseTrainer.KochCopyThreshold,
                                            MorseTrainer.KochCopyCount)
             else:
-                log.critical("Shouldn't see this!?")
+                log.critical("HUH!?  .processing=%s, .copy_pending=%s" % (str(self.processing), str(self.copy_pending)))
                 print("Shouldn't see this!?  See log.")
 
     def update_stats(self, stats, char, result):
@@ -828,7 +833,7 @@ class SendThread(QThread):
     """A thread to read a morse character from the microphone.
 
     It automatically sends a signal to the main thread when finished.
-    The signal contains the character read (or None if nothing read).
+    The tuple of recognized char and morse is put onto the supplied queue.
     """
 
     def __init__(self, sound_object, resultq):
@@ -846,8 +851,9 @@ class SendThread(QThread):
         """Sound the character."""
 
         # make the character sound in morse
-        char = self.sound_object.read()
-        self.resultq.put(char)
+        result = self.sound_object.read()
+        log('SendThread: result=%s' % str(result))
+        self.resultq.put(result)
 
 ######
 # A thread to sound one morse character.
