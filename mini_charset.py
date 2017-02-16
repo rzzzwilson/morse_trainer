@@ -71,11 +71,11 @@ class MiniCharset(QWidget):
         lbl_using = QLabel('   Using first')
         lbl_chars = QLabel('characters')
         self.lbl_UsedNumber = QLabel(str(self.num_used))
-        self.lbl_Charset = QLabel('Charset:')
+        self.lbl_Charset = QLabel('Test set:')
         self.mpr_proficiency = MiniProficiency(self.charset)
 
         layout = QVBoxLayout()
-        groupbox = QGroupBox('Test character set')
+        groupbox = QGroupBox('Koch Test Set')
         groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
@@ -86,12 +86,6 @@ class MiniCharset(QWidget):
         grid.setVerticalSpacing(1)
 
         row = 0
-        #grid.addWidget(self.lbl_Charset, row, 0, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        #grid.addWidget(self.mpr_proficiency, row, 1, alignment=Qt.AlignLeft|Qt.AlignVCenter)
-        #grid.addWidget(lbl_using, row, 2, alignment=Qt.AlignRight|Qt.AlignVCenter)
-        #grid.addWidget(self.lbl_UsedNumber, row, 3, alignment=Qt.AlignVCenter)
-        #grid.addWidget(lbl_chars, row, 4, alignment=Qt.AlignLeft|Qt.AlignVCenter)
-
         grid.addWidget(self.lbl_Charset, row, 0)
         grid.addWidget(self.mpr_proficiency, row, 1)
         grid.addWidget(lbl_using, row, 2)

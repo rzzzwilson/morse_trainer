@@ -49,7 +49,7 @@ class CopySpeeds(QWidget):
 
     def initUI(self, char_speed, word_speed):
         # define the widgets we are going to use
-        lbl_words = QLabel('  Overall')
+        lbl_words = QLabel('  Words')
         self.spb_words = QSpinBox(self)
         self.spb_words.setMinimum(CopySpeeds.MinSpeed)
         self.spb_words.setMaximum(CopySpeeds.MaxSpeed)
@@ -66,7 +66,7 @@ class CopySpeeds(QWidget):
         # start the layout
         layout = QVBoxLayout()
 
-        groupbox = QGroupBox("Speeds")
+        groupbox = QGroupBox("Farnsworth Speeds")
         groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
