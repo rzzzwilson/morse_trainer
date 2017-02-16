@@ -49,11 +49,11 @@ class Display(QWidget):
 
     # set platform-dependent sizes
     if platform.system() == 'Windows':
-        DefaultWidgetHeight = 55
+        DefaultWidgetHeight = 74
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 24
-        BaselineOffsetLower = 48
-        FontSize = 30
+        BaselineOffsetUpper = 34
+        BaselineOffsetLower = 68
+        FontSize = 40
         TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0
@@ -63,8 +63,8 @@ class Display(QWidget):
     elif platform.system() == 'Linux':
         DefaultWidgetHeight = 85
         DefaultWidgetWidth = 600
-        BaselineOffsetUpper = 40
-        BaselineOffsetLower = 80
+        BaselineOffsetUpper = 38
+        BaselineOffsetLower = 76
         FontSize = 40
         TooltipFontSize = 4
         TextLeftOffset = 3
