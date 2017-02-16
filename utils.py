@@ -78,14 +78,11 @@ QGroupBox {
 
 QGroupBox:title{
     subcontrol-origin: margin;
-/*    subcontrol-origin: content; */
-/*    subcontrol-origin: padding; */
     subcontrol-position: top left;
-/*    padding: 0px 5px -2 5; */
-
     padding-left: 0px;
     padding-right: 5px;
     padding-top: -7px;
+    border-top: none;
 }
 """
 
