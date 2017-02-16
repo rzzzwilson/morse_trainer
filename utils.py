@@ -62,28 +62,32 @@ Char2Morse = {
 Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 
 # stylesheet code for PyQt5
-StyleCSS = ""
-# StyleCSS = """
-# /*css stylesheet file that contains all the style information*/
-# 
-# table, th, td {
-#     border: 1px solid black;
-#     border-collapse: collapse;
-# }
-# 
-# QGroupBox {
-#     border: 1px solid black;
-#     border-radius: 3px;
-# }
-# 
-# QGroupBox:title{
-#     subcontrol-origin: margin;
-# /*    subcontrol-origin: content; */
-# /*    subcontrol-origin: padding; */
-#     subcontrol-position: top left;
-#     padding: -8px 5px 0 5;
-# }
-# """
+#StyleCSS = ""
+StyleCSS = """
+/*css stylesheet file that contains all the style information*/
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+QGroupBox {
+    border: 1px solid black;
+    border-radius: 3px;
+}
+
+QGroupBox:title{
+    subcontrol-origin: margin;
+/*    subcontrol-origin: content; */
+/*    subcontrol-origin: padding; */
+    subcontrol-position: top left;
+/*    padding: 0px 5px -2 5; */
+
+    padding-left: 0px;
+    padding-right: 5px;
+    padding-top: -7px;
+}
+"""
 
 log = logger.Log('debug.log', logger.Log.CRITICAL)
 
