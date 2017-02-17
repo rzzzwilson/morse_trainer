@@ -295,7 +295,7 @@ class MorseTrainer(QTabWidget):
                 msg = ("Expected '%s' (%s),\nyou sent '%s' (%s)."
                         % (self.send_expected,
                            utils.char2morse(self.send_expected),
-                           char, str(morse)))
+                           char, utils.morse2display(morse)))
                 self.send_display.update_tooltip(msg)
 
             # signal that we can wait for another character
@@ -311,7 +311,7 @@ class MorseTrainer(QTabWidget):
         # if we are still processing and not expecting char, prepare for next char
         if self.processing:
             if self.send_expected is None:
-                send_char = utils.get_random_char(self.send_Koch_charset)
+                send_char = utils.get_random_char(self.send_Koch_charset, self.send_stats)
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
 
@@ -478,9 +478,9 @@ class MorseTrainer(QTabWidget):
                 if self.all_copy_chars_ok():
                     self.increase_copy_Koch()
 
-            send_char = utils.get_random_char(self.copy_Koch_charset)
-            self.copy_pending = (self.copy_pending + [send_char])[-2:]
-            self.threadCopy = CopyThread(send_char, self.copy_morse_obj)
+            copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
+            self.copy_pending = (self.copy_pending + [copy_char])[-2:]
+            self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
             self.threadCopy.finished.connect(self.copy_thread_finished)
             self.threadCopy.start()
 
@@ -608,9 +608,10 @@ class MorseTrainer(QTabWidget):
                 self.copy_charset.setState(self.copy_Koch_number, data,
                                            MorseTrainer.KochCopyThreshold,
                                            MorseTrainer.KochCopyCount)
-            else:
-                log.critical("HUH!?  .processing=%s, .copy_pending=%s" % (str(self.processing), str(self.copy_pending)))
-                print("Shouldn't see this!?  See log.")
+#            else:
+#                # only get here is user keying ahead, ignore it
+#                log.critical("HUH!?  .processing=%s, .copy_pending=%s" % (str(self.processing), str(self.copy_pending)))
+#                print("Shouldn't see this!?  See log.")
 
     def update_stats(self, stats, char, result):
         """Update internal character statistics.
