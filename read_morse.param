@@ -1,10 +1,10 @@
 {
     "self.char_space": 3,
-    "self.dot_dash_threshold": 69,
-    "self.len_dash": 113,
-    "self.len_dot": 25,
-    "self.max_signal": 2579,
-    "self.min_signal": 58,
-    "self.signal_threshold": 1781,
+    "self.dot_dash_threshold": 81,
+    "self.len_dash": 125,
+    "self.len_dot": 38,
+    "self.max_signal": 20792,
+    "self.min_signal": 750,
+    "self.signal_threshold": 14170,
     "self.word_space": 9
 }
