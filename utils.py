@@ -8,7 +8,8 @@ Small utility functions.
 
 import sys
 import traceback
-from random import randrange
+from random import betavariate
+from math import floor
 
 import logger
 
@@ -139,10 +140,71 @@ def morse2display(morse):
     return SIX_PER_EM_SPACE.join(result)
 
 
-def get_random_char(charset):
-    """Get a random char from the charset sequence."""
+def get_random_char(charset, stats):
+    """Get a random char from the charset sequence.
 
-    return charset[randrange(len(charset))]
+    charset  a string of characters we are testing
+    stats    a dictionary of stats: {'A': [T, F, T, ...], ...}
+
+    Choose a character biased more towards the characters most in error.
+    We do this by sorting the charset by error rate, then choosing from the
+    front of the sorted list.
+    """
+
+    # figure out the error rate of chars in the charset
+    test_stats = {}
+    for ch in charset:
+        test_stats[ch] = stats[ch]
+    log('test_stats=%s' % str(test_stats))
+    weighted_charset = stats2errorrate(test_stats)
+    log('weighted_charset=%s' % str(weighted_charset))
+
+    # choose randomly, but more likely the erroring char(s)
+    beta = betavariate(1, 3)
+    log('beta=%f' % beta)
+    beta_len = beta * len(charset)
+    log('beta_len=%f' % beta_len)
+    rand_sample = floor(beta_len)
+    log('rand_sample=%d' % rand_sample)
+    result = weighted_charset[rand_sample]
+    log('rand_sample=%d, result=%s' % (rand_sample, result))
+
+    return result
+
+def stats2errorrate(stats):
+    """Convert stats data into an errorrate list.
+
+    stats      dictionary holding statistics data
+
+    The 'stats' data has the form {'A':[T,F,T], ...} where
+    the list contains the last N results (True or False).
+
+    The result is a list of characters sorted so the character with
+    the highest error rate is forst, etc.
+    """
+
+    # working list of tuples (rate, char)
+    temp = []
+
+    # get a list of (rate, char)
+    for (char, result_list) in stats.items():
+        if len(result_list) < 20:
+            # if few results yet, test mostest, probably just added
+            rate = 0.1
+        else:
+            sample_size = len(result_list)
+            rate = result_list.count(True) / sample_size
+
+        temp.append((rate, char))
+    log('temp=%s' % str(temp))
+
+    # sort by error rate, drop the rates
+    temp2 = sorted(temp, key=lambda t: t[0])
+    log('temp2=%s' % str(temp2))
+    result = [ch for (_, ch) in temp2]
+
+    return result
+
 
 def char2morse(char):
     """Convert a character into a morse string."""
