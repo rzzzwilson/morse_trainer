@@ -314,6 +314,7 @@ class MorseTrainer(QTabWidget):
                 send_char = utils.get_random_char(self.send_Koch_charset, self.send_stats)
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
+                self.send_display.set_highlight()
 
             self.threadSend = SendThread(self.send_morse_obj, self.resultq)
             self.threadSend.finished.connect(self.send_thread_finished)
@@ -598,6 +599,7 @@ class MorseTrainer(QTabWidget):
                            % (pending, utils.char2morse(pending), char, morse))
                     self.copy_display.update_tooltip(msg)
                 self.copy_display.insert_lower(char, colour)
+                self.copy_display.set_highlight()       # move highlight to end
 
                 # update the character stats and display
                 self.update_stats(self.copy_stats, pending, pending==char)
