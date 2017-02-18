@@ -155,19 +155,13 @@ def get_random_char(charset, stats):
     test_stats = {}
     for ch in charset:
         test_stats[ch] = stats[ch]
-    log('test_stats=%s' % str(test_stats))
     weighted_charset = stats2errorrate(test_stats)
-    log('weighted_charset=%s' % str(weighted_charset))
 
     # choose randomly, but more likely the erroring char(s)
     beta = betavariate(1, 3)
-    log('beta=%f' % beta)
     beta_len = beta * len(charset)
-    log('beta_len=%f' % beta_len)
     rand_sample = floor(beta_len)
-    log('rand_sample=%d' % rand_sample)
     result = weighted_charset[rand_sample]
-    log('rand_sample=%d, result=%s' % (rand_sample, result))
 
     return result
 
@@ -196,11 +190,9 @@ def stats2errorrate(stats):
             rate = result_list.count(True) / sample_size
 
         temp.append((rate, char))
-    log('temp=%s' % str(temp))
 
     # sort by error rate, drop the rates
     temp2 = sorted(temp, key=lambda t: t[0])
-    log('temp2=%s' % str(temp2))
     result = [ch for (_, ch) in temp2]
 
     return result

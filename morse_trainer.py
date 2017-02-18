@@ -76,9 +76,9 @@ class MorseTrainer(QTabWidget):
 
     # set the thresholds when we increase the Koch test charset
     KochSendThreshold = 0.90  # fraction
-    KochSendCount = 20
+    KochSendCount = 50
     KochCopyThreshold = 0.90  # fraction
-    KochCopyCount = 20
+    KochCopyCount = 50
 
     # set the max number of results we keep for each character
     KochMaxHistory = 50
@@ -90,7 +90,7 @@ class MorseTrainer(QTabWidget):
     # name of the 'read morse' parameters file
     MorseParamsFile = 'read_morse.param'
 
-    # 'enum' constants for the three tabs
+    # 'enum' constants for the two tabs
     (SendTab, CopyTab) = range(2)
 
     # dict to convert tab index to name
@@ -853,7 +853,6 @@ class SendThread(QThread):
 
         # make the character sound in morse
         result = self.sound_object.read()
-        log('SendThread: result=%s' % str(result))
         self.resultq.put(result)
 
 ######
@@ -879,8 +878,6 @@ class CopyThread(QThread):
 
     def run(self):
         """Sound the character."""
-
-        log.debug('CopyThread.run: char=%s' % self.char)
 
         # make the character sound in morse
         self.sound_object.send(self.char)
