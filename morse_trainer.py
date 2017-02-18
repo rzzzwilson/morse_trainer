@@ -469,15 +469,17 @@ class MorseTrainer(QTabWidget):
         If still processing, start new thread.
         """
 
-
         if self.processing:
             # update copy count, maybe increase Koch charset
             self.process_count += 1
             if self.process_count >= self.KochCopyCount:
                 self.process_count = 0
                 if self.all_copy_chars_ok():
+                    self.copy_start()       # turn off copying
                     self.increase_copy_Koch()
 
+        # we check again if processing as we can disable in code above
+        if self.processing:
             copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
             self.copy_pending = (self.copy_pending + [copy_char])[-2:]
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
@@ -539,9 +541,6 @@ class MorseTrainer(QTabWidget):
             msgbox.setStandardButtons(QMessageBox.Ok)
             msgbox.setDefaultButton(QMessageBox.Ok)
             msgbox.exec()
-
-            # force a pause
-            self.copy_start()
 
             # update the Send UI
             self.update_UI()
