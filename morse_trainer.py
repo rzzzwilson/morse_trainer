@@ -741,7 +741,7 @@ class MorseTrainer(QTabWidget):
         self.copy_charset.setState(self.copy_Koch_number, data,
                                    MorseTrainer.KochCopyThreshold,
                                    MorseTrainer.KochCopyCount)
-        self.copy_morse_obj.set_speeds(self.copy_wpm, self.copy_cwpm)
+        self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
 
         # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
