@@ -569,11 +569,12 @@ class MorseTrainer(QTabWidget):
 
         # ignore anything we aren't interested in
         key_int = e.key()
-        if not 32 < key_int < 128:
-            return
+#        if not 32 < key_int < 128:
+#            return      # not printable ASCII
+
         char = chr(key_int)
         if char not in utils.AllUserChars:
-            return
+            return      # ignore chars we aren't testing on
 
         if self.processing:
             if self.copy_pending:
@@ -624,7 +625,7 @@ class MorseTrainer(QTabWidget):
 
         # update history list for char, limit list length
         stats[char].append(result)
-        stats[char] = stats[char][:self.KochMaxHistory]
+        stats[char] = stats[char][-self.KochMaxHistory:]
 
     def update_UI(self):
         """Update controls that show state values."""
