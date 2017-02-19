@@ -115,12 +115,14 @@ class MiniProficiency(QWidget):
         # set a tooltip on this custom widget
         self.setToolTip('<font size=4>'
                         'This shows the Koch test with colours showing usage:<br>'
+                        '<center>'
                         '<table fontsize="4" border="1">'
                         '<tr><td>gray</td><td>not in use</td></tr>'
-                        '<tr><td>black</td><td>not enough samples of character</td></tr>'
-                        '<tr><td>red</td><td>enough samples, but too many errors</td></tr>'
-                        '<tr><td>blue</td><td>ready for promotion.</td></tr>'
+                        '<tr><td>black</td><td>character not tested enough</td></tr>'
+                        '<tr><td>red</td><td>too many errors</td></tr>'
+                        '<tr><td>blue</td><td>OK, low error rate</td></tr>'
                         '</table>'
+                        '</center>'
                         '</font>'
                         )
 
