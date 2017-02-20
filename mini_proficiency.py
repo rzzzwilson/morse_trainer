@@ -19,8 +19,8 @@ where 'in_use'  is the number of characters of the dataset in use, and
 
 import platform
 
-from PyQt5.QtWidgets import QWidget, QGridLayout
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QGridLayout, QToolTip
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont
 
 import logger
@@ -40,6 +40,7 @@ class MiniProficiency(QWidget):
         BottomMargin = 3            # bottom margin
         CharWidth = 7               # character spacing
         CharHeight = 10             # character 'height'
+        TooltipFontSize = 4         # tooltip font size
     elif platform.system() == 'Darwin':
         Font = 'Courier'
         FontSize = 13
@@ -49,6 +50,7 @@ class MiniProficiency(QWidget):
         BottomMargin = 0
         CharWidth = 8
         CharHeight = 8
+        TooltipFontSize = 4
     elif platform.system() == 'Windows':
         Font = 'Courier'
         FontSize = 12
@@ -58,6 +60,7 @@ class MiniProficiency(QWidget):
         BottomMargin = 3
         CharWidth = 8
         CharHeight = 10
+        TooltipFontSize = 4
     else:
         raise Exception('Unrecognized platform: %s' % platform.system())
 
@@ -154,11 +157,11 @@ class MiniProficiency(QWidget):
             qp.drawText(x, y, char)
             x += MiniProficiency.CharWidth
 
-    def setState(self, in_use, data, threshold, min_sample):
+    def setState(self, in_use, stats, threshold, min_sample):
         """Update self.display_list with values matching 'data'.
 
         in_use      the number of characters in the test set in use
-        data        a dict of {char: (fraction, sample_size), ...} values
+        stats       a dict of {char: (fraction, sample_size), ...} values
                     where fraction    is the measure of number right (float, [0.0,1.0]),
                           sample_size is the number of samples of character, and
         threshold   required proficiency before Koch promotion can occur
@@ -166,13 +169,14 @@ class MiniProficiency(QWidget):
         """
 
         self.in_use = in_use
+        self.stats = stats
 
         self.display_list = []
         for (i, char) in enumerate(self.data):
             if i < in_use:
                 # get all data pertinent for each character
                 try:
-                    (fraction, sample_size) = data[char]
+                    (fraction, sample_size) = stats[char]
                 except KeyError:
                     fraction = 0.0
                     sample_size = 0
@@ -195,3 +199,34 @@ class MiniProficiency(QWidget):
             self.display_list.append((char, colour))
 
         self.update()   # redraw the widget
+
+    def mousePressEvent(self, e):
+        """Left click handler - show 'tooltip'."""
+
+        # coding for e.button() and e.type() values
+        # button = {1:'left', 2:'right', 4:'middle'}
+        # type = {2:'single', 4:'double'}
+
+        # single click, left button, show tooltip
+        if e.type() == 2 and e.button() == 1:
+            # figure out what character we clicked on, if any
+            char_index = (e.x() - MiniProficiency.LeftMargin) // MiniProficiency.CharWidth
+            char = self.data[char_index]
+            log('Left-click: e.x()=%d, char_index=%d, self.in_use=%d, char=%s'
+                % (e.x(), char_index, self.in_use, char))
+            if char_index < self.in_use:
+                log('self.stats[char]=%s' % str(self.stats[char]))
+                (correct, num_samples) = self.stats[char]
+                text = ('Character: %s\n'
+                        '%d samples\n'
+                        '%d%% correct' % (char, num_samples, int(correct*100)))
+            else:
+                text = ('Character: %s\n'
+                        'Not used' % char)
+            log('text=%s' % text)
+
+            num_newlines = text.count('\n')
+            posn = e.globalPos()
+            new_text = text.replace('\n', '<br>')
+            QToolTip.showText(posn, '<font size=%d>%s</font>'
+                              % (MiniProficiency.TooltipFontSize, new_text))
