@@ -9,6 +9,7 @@ Small utility functions.
 import sys
 import traceback
 from random import betavariate
+from random import choices
 from math import floor
 
 import logger
@@ -141,6 +142,33 @@ def morse2display(morse):
 
 
 def get_random_char(charset, stats):
+    """Get a random char from the charset sequence.
+
+    charset  a string of characters we are testing
+    stats    a dictionary of stats: {'A': [T, F, T, ...], ...}
+
+    Choose a character biased more towards the characters most in error.
+    We do this by sorting the charset by error rate, then choosing from the
+    front of the sorted list.
+    """
+
+    # figure out the error rate of chars in the charset
+    test_stats = {}
+    for ch in charset:
+        test_stats[ch] = stats[ch]
+    ordered_charset = stats2errorrate(test_stats)
+
+    bias = 2
+    charset_len = len(charset)
+    #weights = [charset_len-x+bias for x in range(charset_len)]
+    weights = [x+bias for x in range(charset_len)]
+    sum_weights = sum(weights)
+    normal_weights = [x/sum_weights for x in weights]
+
+    return choices(ordered_charset, weights=weights)[0]
+
+
+def new_get_random_char(charset, stats):
     """Get a random char from the charset sequence.
 
     charset  a string of characters we are testing
