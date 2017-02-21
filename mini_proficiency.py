@@ -212,10 +212,7 @@ class MiniProficiency(QWidget):
             # figure out what character we clicked on, if any
             char_index = (e.x() - MiniProficiency.LeftMargin) // MiniProficiency.CharWidth
             char = self.data[char_index]
-            log('Left-click: e.x()=%d, char_index=%d, self.in_use=%d, char=%s'
-                % (e.x(), char_index, self.in_use, char))
             if char_index < self.in_use:
-                log('self.stats[char]=%s' % str(self.stats[char]))
                 (correct, num_samples) = self.stats[char]
                 text = ('Character: %s\n'
                         '%d samples\n'
@@ -223,7 +220,6 @@ class MiniProficiency(QWidget):
             else:
                 text = ('Character: %s\n'
                         'Not used' % char)
-            log('text=%s' % text)
 
             num_newlines = text.count('\n')
             posn = e.globalPos()
