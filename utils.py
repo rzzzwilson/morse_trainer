@@ -157,18 +157,19 @@ def get_random_char(charset, stats):
     for ch in charset:
         test_stats[ch] = stats[ch]
     ordered_charset = stats2errorrate(test_stats)
+    log('ordered_charset=%s' % str(ordered_charset))
 
-    bias = 2
+    bias = 0.5
     charset_len = len(charset)
     #weights = [charset_len-x+bias for x in range(charset_len)]
     weights = [x+bias for x in range(charset_len)]
     sum_weights = sum(weights)
     normal_weights = [x/sum_weights for x in weights]
+    log('normal_weights=%s' % str(normal_weights))
 
-    return choices(ordered_charset, weights=weights)[0]
+    return choices(ordered_charset, weights=normal_weights)[0]
 
-
-def new_get_random_char(charset, stats):
+def old_get_random_char(charset, stats):
     """Get a random char from the charset sequence.
 
     charset  a string of characters we are testing
@@ -220,7 +221,7 @@ def stats2errorrate(stats):
         temp.append((rate, char))
 
     # sort by error rate, drop the rates
-    temp2 = sorted(temp, key=lambda t: t[0])
+    temp2 = sorted(temp, key=lambda t: t[0], reverse=True)
     result = [ch for (_, ch) in temp2]
 
     return result
