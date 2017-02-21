@@ -223,6 +223,8 @@ class MorseTrainer(QTabWidget):
     def send_start(self):
         """The Send 'start/pause' button was clicked."""
 
+        log("Send 'start/pause' button was clicked, self.processing=%s" % str(self.processing))
+
         if self.processing:
             # enable the Clear button and speed/grouping/charset
             self.btn_send_clear.setDisabled(False)
@@ -231,6 +233,9 @@ class MorseTrainer(QTabWidget):
             # Pause button label becomes Start
             self.btn_send_start_stop.setText('Start')
 
+            # destroy the result queue
+            self.resultq = None
+
             # change state variables to reflect the stop
             self.processing = False
         else:
@@ -238,6 +243,9 @@ class MorseTrainer(QTabWidget):
             self.btn_send_clear.setDisabled(True)
             self.send_speeds.setDisabled(True)
             self.btn_send_start_stop.setText('Pause')
+
+            # get a new result queue
+            self.resultq = Queue()
 
             # start the 'Send' process
             self.send_expected = None
@@ -256,12 +264,15 @@ class MorseTrainer(QTabWidget):
         exceeded and we can therefore increase the Koch test charset.
         """
 
+        log('send_thread_finished: called, self.resultq.qsize()=%d' % self.resultq.qsize())
+
         # echo received char, if any
         if self.resultq.empty():
             char = None
             morse = None
         else:
             (char, morse) = self.resultq.get()
+            log('send_thread_finished: char=%s' % str(char))
             if char is None:
                 char = MorseTrainer.ErrorSymbol
 
@@ -280,6 +291,7 @@ class MorseTrainer(QTabWidget):
             if char != self.send_expected:
                 char_colour = Display.AnsTextBadColour
             self.send_display.insert_lower(char, fg=char_colour)
+            log('send_thread_finished: inserted char %s in lower' % str(char))
 
             # update statistics and mini_charset
             new = self.stats2percent(self.send_stats,
@@ -310,10 +322,12 @@ class MorseTrainer(QTabWidget):
         if self.processing:
             if self.send_expected is None:
                 send_char = utils.get_random_char(self.send_Koch_charset, self.send_stats)
+                log('send_thread_finished: new char to expect=%s' % str(send_char))
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
                 self.send_display.set_highlight()
 
+            log('send_thread_finished: starting SendThread()')
             self.threadSend = SendThread(self.send_morse_obj, self.resultq)
             self.threadSend.finished.connect(self.send_thread_finished)
             self.threadSend.start()
@@ -842,12 +856,14 @@ class SendThread(QThread):
         super().__init__()
         self.sound_object = sound_object
         self.resultq = resultq
+        log('SendThread: created new thread')
 
     def run(self):
         """Sound the character."""
 
         # make the character sound in morse
         result = self.sound_object.read()
+        log('SendThread: returning recognized char=%s' % str(result))
         self.resultq.put(result)
 
 ######
