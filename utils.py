@@ -157,7 +157,6 @@ def get_random_char(charset, stats):
     for ch in charset:
         test_stats[ch] = stats[ch]
     ordered_charset = stats2errorrate(test_stats)
-    log('ordered_charset=%s' % str(ordered_charset))
 
     bias = 0.5
     charset_len = len(charset)
@@ -165,7 +164,6 @@ def get_random_char(charset, stats):
     weights = [x+bias for x in range(charset_len)]
     sum_weights = sum(weights)
     normal_weights = [x/sum_weights for x in weights]
-    log('normal_weights=%s' % str(normal_weights))
 
     return choices(ordered_charset, weights=normal_weights)[0]
 
