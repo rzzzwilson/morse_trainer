@@ -227,7 +227,6 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_send_clear.setDisabled(False)
             self.send_speeds.setDisabled(False)
-            self.send_charset.setDisabled(False)
 
             # Pause button label becomes Start
             self.btn_send_start_stop.setText('Start')
@@ -238,7 +237,6 @@ class MorseTrainer(QTabWidget):
             # disable Clear button, speed/grouping/charset, relabel Start button
             self.btn_send_clear.setDisabled(True)
             self.send_speeds.setDisabled(True)
-            self.send_charset.setDisabled(True)
             self.btn_send_start_stop.setText('Pause')
 
             # start the 'Send' process
@@ -443,7 +441,6 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(False)
             self.copy_speeds.setDisabled(False)
-            #self.copy_charset.setDisabled(False)
 
             # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
@@ -455,7 +452,6 @@ class MorseTrainer(QTabWidget):
             # disable the Clear button and speed/grouping/charset, relabel Start button
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
-            #self.copy_charset.setDisabled(True)
             self.btn_copy_start_stop.setText('Pause')
 
             # start the 'Send' process
@@ -569,9 +565,6 @@ class MorseTrainer(QTabWidget):
 
         # ignore anything we aren't interested in
         key_int = e.key()
-#        if not 32 < key_int < 128:
-#            return      # not printable ASCII
-
         char = chr(key_int)
         if char not in utils.AllUserChars:
             return      # ignore chars we aren't testing on
