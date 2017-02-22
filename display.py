@@ -324,10 +324,16 @@ class Display(QWidget):
 
         ch  the character to insert
         fg  foreground colour of char
+
+        Overwrite upper row end if lower is shorter than upper.
         """
 
         if fg is None:
             fg = Display.AskTextColour
+
+       # if rows not equal, remove latest char
+        if self.upper_len() > self.lower_len():
+            self.text_upper = self.text_upper[:-1]
 
         # add char to upper row
         self.text_upper.append((ch, fg))
