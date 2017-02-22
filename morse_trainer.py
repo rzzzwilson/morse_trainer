@@ -63,12 +63,15 @@ class MorseTrainer(QTabWidget):
     if System == 'Windows':
         MinimumWidth = 850
         MinimumHeight = 435
+        ButtonWidth = 80
     elif System == 'Linux':
         MinimumWidth = 850
         MinimumHeight = 435
+        ButtonWidth = 80
     elif System == 'Darwin':
         MinimumWidth = 900
         MinimumHeight = 435
+        ButtonWidth = 80
     else:
         raise Exception('Unrecognized platform: %s' % System)
 
@@ -180,8 +183,10 @@ class MorseTrainer(QTabWidget):
         instructions = Instructions(doc_text)
         self.send_speeds = SendSpeeds()
         self.send_charset = MiniCharset(utils.Koch)
-        self.btn_send_start_stop = QPushButton('Start')
-        self.btn_send_clear = QPushButton('Clear')
+        self.btn_send_start_stop = QPushButton('Start', self)
+        self.btn_send_start_stop.setMinimumWidth(MorseTrainer.ButtonWidth)
+        self.btn_send_clear = QPushButton('Clear', self)
+        self.btn_send_clear.setMinimumWidth(MorseTrainer.ButtonWidth)
 
         # start layout
         buttons = QVBoxLayout()
@@ -412,7 +417,9 @@ class MorseTrainer(QTabWidget):
         self.copy_speeds = CopySpeeds()
         self.copy_charset = MiniCharset(utils.Koch)
         self.btn_copy_start_stop = QPushButton('Start')
+        self.btn_copy_start_stop.setMinimumWidth(MorseTrainer.ButtonWidth)
         self.btn_copy_clear = QPushButton('Clear')
+        self.btn_copy_clear.setMinimumWidth(MorseTrainer.ButtonWidth)
 
         # start layout
         buttons = QVBoxLayout()
