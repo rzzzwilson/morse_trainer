@@ -150,6 +150,8 @@ def get_random_char(charset, stats):
     Choose a character biased more towards the characters most in error.
     We do this by sorting the charset by error rate, then choosing from the
     front of the sorted list.
+
+    A low number of samples biases character(s) to be more frequent.
     """
 
     # figure out the error rate of chars in the charset
@@ -160,7 +162,6 @@ def get_random_char(charset, stats):
 
     bias = 0.5
     charset_len = len(charset)
-    #weights = [charset_len-x+bias for x in range(charset_len)]
     weights = [x+bias for x in range(charset_len)]
     sum_weights = sum(weights)
     normal_weights = [x/sum_weights for x in weights]
@@ -209,12 +210,11 @@ def stats2errorrate(stats):
 
     # get a list of (rate, char)
     for (char, result_list) in stats.items():
-        if len(result_list) < 20:
+        sample_size = len(result_list)
+        rate = result_list.count(True) / sample_size
+        if len(result_list) < 50:
             # if few results yet, test mostest, probably just added
-            rate = 0.1
-        else:
-            sample_size = len(result_list)
-            rate = result_list.count(True) / sample_size
+            rate *= len(result_list)/50
 
         temp.append((rate, char))
 
