@@ -211,7 +211,11 @@ def stats2errorrate(stats):
     # get a list of (rate, char)
     for (char, result_list) in stats.items():
         sample_size = len(result_list)
-        rate = result_list.count(True) / sample_size
+        try:
+            rate = result_list.count(True) / sample_size
+        except ZeroDivisionError:
+            # sample_size is zero, allocate low proficiency
+            rate = 0.01
         if len(result_list) < 50:
             # if few results yet, test mostest, probably just added
             rate *= len(result_list)/50
