@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QToolTip
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QFont
 
+import utils
 import logger
 log = logger.Log('debug.log', logger.Log.CRITICAL)
 
@@ -213,10 +214,12 @@ class MiniProficiency(QWidget):
             char_index = (e.x() - MiniProficiency.LeftMargin) // MiniProficiency.CharWidth
             char = self.data[char_index]
             if char_index < self.in_use:
+                morse_display = utils.morse2display(utils.Char2Morse[char])
                 (correct, num_samples) = self.stats[char]
-                text = ('Character: %s\n'
+                text = ('Character: %s (%s)\n'
                         '%d samples\n'
-                        '%d%% correct' % (char, num_samples, int(correct*100)))
+                        '%d%% correct'
+                        % (char, morse_display, num_samples, int(correct*100)))
             else:
                 text = ('Character: %s\n'
                         'Not used' % char)
