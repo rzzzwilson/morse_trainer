@@ -23,7 +23,7 @@ import traceback
 from queue import Queue
 from random import randrange
 
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
                              QTabWidget, QPushButton, QMessageBox, QSpacerItem)
 from PyQt5.QtGui import QIcon
@@ -253,7 +253,7 @@ class MorseTrainer(QTabWidget):
 
             self.send_thread_finished() # start the process
 
-    def send_thread_finished(self):
+    def send_thread_finished(self, result=None):
         """Catch signal when Send thread finished.
 
         Compare the char we got with expected (self.send_expected).
@@ -264,15 +264,13 @@ class MorseTrainer(QTabWidget):
         exceeded and we can therefore increase the Koch test charset.
         """
 
-        log('send_thread_finished: called, self.resultq.qsize()=%d' % self.resultq.qsize())
+        log('send_thread_finished: called, result=%s' % str(result))
 
-        # echo received char, if any
-        if self.resultq.empty():
+        if result is None:
             char = None
             morse = None
         else:
-            (char, morse) = self.resultq.get()
-            log('send_thread_finished: char=%s' % str(char))
+            (char, morse) = result
             if char is None:
                 char = MorseTrainer.ErrorSymbol
 
@@ -328,8 +326,8 @@ class MorseTrainer(QTabWidget):
                 self.send_display.set_highlight()
 
             log('send_thread_finished: starting SendThread()')
-            self.threadSend = SendThread(self.send_morse_obj, self.resultq)
-            self.threadSend.finished.connect(self.send_thread_finished)
+            self.threadSend = SendThread(self.send_morse_obj)
+            self.threadSend.send_done.connect(self.send_thread_finished)
             self.threadSend.start()
 
     def send_clear(self, event):
@@ -475,7 +473,7 @@ class MorseTrainer(QTabWidget):
             self.copy_thread_finished()
 
     def copy_thread_finished(self):
-        """Catch signal when Send thread finished.
+        """Catch signal when Copy thread finished.
 
         If still processing, start new thread.
         """
@@ -494,7 +492,7 @@ class MorseTrainer(QTabWidget):
             copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
             self.copy_pending = (self.copy_pending + [copy_char])[-2:]
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
-            self.threadCopy.finished.connect(self.copy_thread_finished)
+            self.threadCopy.copy_done.connect(self.copy_thread_finished)
             self.threadCopy.start()
 
     def copy_clear(self, event):
@@ -846,7 +844,9 @@ class SendThread(QThread):
     The tuple of recognized char and morse is put onto the supplied queue.
     """
 
-    def __init__(self, sound_object, resultq):
+    send_done = pyqtSignal(tuple)
+
+    def __init__(self, sound_object):
         """Create a thread to read one morse character.
 
         sound_object  the object that reads morse sounds
@@ -855,7 +855,6 @@ class SendThread(QThread):
 
         super().__init__()
         self.sound_object = sound_object
-        self.resultq = resultq
         log('SendThread: created new thread')
 
     def run(self):
@@ -863,8 +862,8 @@ class SendThread(QThread):
 
         # make the character sound in morse
         result = self.sound_object.read()
+        self.send_done.emit(result)
         log('SendThread: returning recognized char=%s' % str(result))
-        self.resultq.put(result)
 
 ######
 # A thread to sound one morse character.
@@ -875,6 +874,8 @@ class CopyThread(QThread):
 
     It automatically sends a signal to the main thread when finished.
     """
+
+    copy_done = pyqtSignal()
 
     def __init__(self, char, sound_object):
         """Create a thread to sound one morse character.
@@ -892,6 +893,7 @@ class CopyThread(QThread):
 
         # make the character sound in morse
         self.sound_object.send(self.char)
+        self.copy_done.emit()
 
 
 if __name__ == '__main__':
