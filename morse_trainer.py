@@ -290,7 +290,13 @@ class MorseTrainer(QTabWidget):
         log('send_thread_finished: called, result=%s' % str(result))
 
         # indicate that the thread isn't running
+        if self.threadSend:
+            log('send_thread_finished: disconnecting')
+            self.threadSend.send_done.disconnect()
+            log('send_thread_finished: AFTER .disconnect()')
+            self.threadSend.wait()
         self.threadSend = None
+        log('send_thread_finished: After self.threadSend = None')
 
         if result is None:
             char = None
@@ -305,19 +311,22 @@ class MorseTrainer(QTabWidget):
             char = None
 
         log('send_thread_finished: char=%s' % str(char))
-
+# crash here
         if char:
+            log('send_thread_finished: recognized char=%s, updating stats' % char)
             # update the character stats
             self.update_stats(self.send_stats,
                               self.send_expected,
                               char==self.send_expected)
+            log('send_thread_finished: after stats')
 
             # show result in display
             char_colour = Display.AnsTextGoodColour
             if char != self.send_expected:
                 char_colour = Display.AnsTextBadColour
+            log('send_thread_finished: inserting char %s in lower' % str(char))
             self.send_display.insert_lower(char, fg=char_colour)
-            log('send_thread_finished: inserted char %s in lower' % str(char))
+            log('send_thread_finished: AFTER inserting char %s in lower' % str(char))
 
             # update statistics and mini_charset
             new = self.stats2percent(self.send_stats,
@@ -363,6 +372,7 @@ class MorseTrainer(QTabWidget):
             self.threadSend = SendThread(self.send_morse_obj)
             self.threadSend.send_done.connect(self.send_thread_finished)
             self.threadSend.start()
+            log('send_thread_finished: AFTER starting SendThread()')
 
     def send_clear(self, event):
         """The Send 'clear' button was clicked."""
@@ -514,19 +524,26 @@ class MorseTrainer(QTabWidget):
         If still processing, start new thread.
         """
 
+        log('copy_thread_finished: called, Copy thread finished')
+
+        # indicate that the thread isn't running
+        if self.threadCopy:
+            self.threadCopy.copy_done.disconnect()
+        self.threadCopy = None
+
         if self.processing:
             # update copy count, maybe increase Koch charset
             self.process_count += 1
             if self.process_count >= self.KochCopyCount:
                 self.process_count = 0
                 if self.all_copy_chars_ok():
-                    self.copy_start()       # turn off copying
+                    self.copy_start()   # turn off copying, self.processing := None
                     self.increase_copy_Koch()
 
         # we check again if processing as we can disable in code above
         if self.processing:
             copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
-            self.copy_pending = (self.copy_pending + [copy_char])[-2:]
+            self.copy_pending = (self.copy_pending + [copy_char])[-2:]    # IMPROVE, use .append()
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
             self.threadCopy.copy_done.connect(self.copy_thread_finished)
             self.threadCopy.start()
@@ -723,7 +740,8 @@ class MorseTrainer(QTabWidget):
         self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
         self.copy_wpm = 5
         self.copy_cwpm = 5
-        self.copy_pending = ''              # holds last 2 chars sounded
+        self.copy_pending = ''  # holds last 2 chars sounded
+        self.threadCopy = None  # the sounding thread
 
         # the send/copy statistics
         # each 'char':value is a list of last N results, True or False
@@ -908,10 +926,13 @@ class SendThread(QThread):
     def run(self):
         """Sound the character."""
 
+        log('SendThread.run: listening')
         # make the character sound in morse
         result = self.sound_object.read()
         log('SendThread: returning recognized char=%s' % str(result))
         self.send_done.emit(result)
+        log('SendThread.run: thread finished, sent send_done')
+#        self.terminate()
 
 ######
 # A thread to sound one morse character.
@@ -935,13 +956,18 @@ class CopyThread(QThread):
         super().__init__()
         self.char = char
         self.sound_object = sound_object
+        log('CopyThread: created new thread')
 
     def run(self):
         """Sound the character."""
 
+        log("CopyThread: sounding '%s'" % self.char)
+
         # make the character sound in morse
         self.sound_object.send(self.char)
         self.copy_done.emit()
+
+        log("CopyThread: finished, sent 'copy_done' signal")
 
 
 if __name__ == '__main__':
