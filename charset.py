@@ -355,12 +355,9 @@ class Charset(QWidget):
         gs  reference to the GridSelect object
         """
 
-        log('handleCharsetButton: gs=%s' % str(gs))
-
         # get current selection, check if all ON
         selection = gs.getState()
         all_true = all([value for (key, value) in selection.items()])
-        log('handleCharsetButton: selection=%s, all_true=%s' % (str(selection), str(all_true)))
 
         if all_true:
             # all selected, turn all off
@@ -368,8 +365,6 @@ class Charset(QWidget):
         else:
             # one or more not selected, turn all on
             new_dict = {key:True for key in selection}
-
-        log('handleCharsetButton: new_dict=%s' % str(new_dict))
 
         gs.setState(new_dict)
 
