@@ -168,31 +168,6 @@ def get_random_char(charset, stats):
 
     return choices(ordered_charset, weights=normal_weights)[0]
 
-def old_get_random_char(charset, stats):
-    """Get a random char from the charset sequence.
-
-    charset  a string of characters we are testing
-    stats    a dictionary of stats: {'A': [T, F, T, ...], ...}
-
-    Choose a character biased more towards the characters most in error.
-    We do this by sorting the charset by error rate, then choosing from the
-    front of the sorted list.
-    """
-
-    # figure out the error rate of chars in the charset
-    test_stats = {}
-    for ch in charset:
-        test_stats[ch] = stats[ch]
-    weighted_charset = stats2errorrate(test_stats)
-
-    # choose randomly, but more likely the erroring char(s)
-    beta = betavariate(1, 3)
-    beta_len = beta * len(charset)
-    rand_sample = floor(beta_len)
-    result = weighted_charset[rand_sample]
-
-    return result
-
 def stats2errorrate(stats):
     """Convert stats data into an errorrate list.
 
@@ -241,6 +216,11 @@ def str2morse(string):
     """
 
     return ' '.join([Char2Morse[ch] for ch in string.upper()])
+
+def make_multiple(value, multiple):
+    """Return integer value closest to 'value' that is multiple of 'multiple'."""
+
+    return int(floor((value + multiple - 0.01) / 5) * 5)
 
 
 if __name__ == '__main__':
