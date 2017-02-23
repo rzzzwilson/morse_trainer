@@ -220,15 +220,6 @@ def str2morse(string):
 def make_multiple(value, multiple):
     """Return integer value closest to 'value' that is multiple of 'multiple'."""
 
-    log('-------------------------------------------------')
-    log('value=%s, multiple=%s' % (str(value), str(multiple)))
-    log('multiple/2=%s' % str(multiple/2))
-    log('(value + multiple/2)=%s' % str((value + multiple/2)))
-    log('(value + multiple/2) / 5=%s' % str((value + multiple/2) / 5))
-    log('floor((value + multiple/2) / 5)=%s' % str(floor((value + multiple/2) / 5)))
-    log('floor((value + multiple/2) / 5) * 5=%s' % str(floor((value + multiple/2) / 5) * 5))
-    log('int(floor((value + multiple/2) / 5) * 5)=%s' % str(int(floor((value + multiple/2) / 5) * 5)))
-
     return int(floor((value + multiple/2) / 5) * 5)
 
 
