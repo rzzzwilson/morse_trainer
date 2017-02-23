@@ -29,9 +29,10 @@ class SendSpeeds(QWidget):
     # signal raised when user changes cwpm
     changed = pyqtSignal(int)
 
-    # maximum and minimum speeds
+    # maximum, minimum speeds and increment
     MinSpeed = 5
     MaxSpeed = 40
+    StepSpeed = 5
 
     def __init__(self, speed=MinSpeed):
         QWidget.__init__(self)
@@ -52,6 +53,7 @@ class SendSpeeds(QWidget):
         self.spb_speed = QSpinBox(self)
         self.spb_speed.setMinimum(SendSpeeds.MinSpeed)
         self.spb_speed.setMaximum(SendSpeeds.MaxSpeed)
+        self.spb_speed.setSingleStep(SendSpeeds.StepSpeed)
         self.spb_speed.setSuffix(' wpm')
         self.spb_speed.setValue(self.speed)
 
@@ -94,10 +96,13 @@ class SendSpeeds(QWidget):
         wpm  the speed in words per minute (integer)
         """
 
+        # force speed to nearest 5wpm value
+        canon_wpm = utils.make_multiple(wpm, 5)
+
         self.inhibit = True
 
-        self.speed = wpm
-        self.spb_speed.setValue(wpm)
+        self.speed = canon_wpm
+        self.spb_speed.setValue(canon_wpm)
         self.inhibit = False
 
         self.update()

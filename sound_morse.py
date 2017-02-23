@@ -110,32 +110,6 @@ class SoundMorse:
 
         return bytes(data)
 
-    def Xmake_tone(self, duration, volume):
-        """Create a string full of sinewave data.
-
-        duration  time duration of string
-        volume    volume when string played
-
-        Result is a string of byte data.
-        """
-
-        # calculate length of one cycle at rquired frequency
-        cycle_len = SoundMorse.SampleRate // self.frequency
-        num_cycles = int((duration * SoundMorse.SampleRate) // cycle_len)
-
-        # create one cycle at required frequency+volume
-        cycle_data = []
-        for t in range(cycle_len):
-            cycle_data.append(chr(int((math.sin(t*2*math.pi/cycle_len)*127+128)*volume)))
-
-        # add cycles until required duration is reached
-        result = []
-        for _ in range(num_cycles):
-            result.extend(cycle_data)
-
-        result = ''.join(result)
-        return result
-
     def farnsworth_times(self, cwpm, wpm):
         """Calculate Farnsworth spacing.
 

@@ -30,9 +30,10 @@ class CopySpeeds(QWidget):
     # signal raised when user changes cwpm
     changed = pyqtSignal(int, int)
 
-    # maximum and minimum speeds
+    # maximum, minimum speeds and increment
     MinSpeed = 5
     MaxSpeed = 40
+    StepSpeed = 5
 
     def __init__(self, char_speed=MinSpeed, word_speed=MaxSpeed):
         QWidget.__init__(self)
@@ -53,6 +54,7 @@ class CopySpeeds(QWidget):
         self.spb_words = QSpinBox(self)
         self.spb_words.setMinimum(CopySpeeds.MinSpeed)
         self.spb_words.setMaximum(CopySpeeds.MaxSpeed)
+        self.spb_words.setSingleStep(CopySpeeds.StepSpeed)
         self.spb_words.setValue(word_speed)
         self.spb_words.setSuffix(' wpm')
 
@@ -60,6 +62,7 @@ class CopySpeeds(QWidget):
         self.spb_chars = QSpinBox(self)
         self.spb_chars.setMinimum(CopySpeeds.MinSpeed)
         self.spb_chars.setMaximum(CopySpeeds.MaxSpeed)
+        self.spb_chars.setSingleStep(CopySpeeds.StepSpeed)
         self.spb_chars.setValue(char_speed)
         self.spb_chars.setSuffix(' wpm')
 
@@ -130,13 +133,19 @@ class CopySpeeds(QWidget):
         cwpm  the character speed in words per minute (integer)
         """
 
-        self.inhibit = True
-        self.word_speed = wpm
-        self.spb_words.setValue(wpm)
+        if not cwpm:
+            cwpm = wpm
 
-        if cwpm is not None:
-            self.char_speed = cwpm
-            self.spb_chars.setValue(cwpm)
+        # force speeds to nearest 5wpm value
+        canon_wpm = utils.make_multiple(wpm, 5)
+        canon_cwpm = utils.make_multiple(cwpm, 5)
+
+        self.inhibit = True
+        self.word_speed = canon_wpm
+        self.spb_words.setValue(canon_wpm)
+
+        self.char_speed = canon_cwpm
+        self.spb_chars.setValue(canon_cwpm)
         self.inhibit = False
 
         self.update()

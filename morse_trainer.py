@@ -90,6 +90,9 @@ class MorseTrainer(QTabWidget):
     DefaultWordsPerMinute = 15
     DefaultCharWordsPerMinute = 10
 
+    # set speed step (must be same as 'StepSpeed' in *_speeds.py)
+    StepSpeed = 5
+
     # name of the 'read morse' parameters file
     MorseParamsFile = 'read_morse.param'
 
@@ -670,6 +673,7 @@ class MorseTrainer(QTabWidget):
 
         # the send speeds
         self.send_speeds.setState(self.send_wpm)
+        self.send_speeds.update()
 
         # the send test sets
         data = self.stats2percent(self.send_stats,
@@ -677,16 +681,19 @@ class MorseTrainer(QTabWidget):
         self.send_charset.setState(self.send_Koch_number, data,
                                    MorseTrainer.KochSendThreshold,
                                    MorseTrainer.KochSendCount)
+        self.send_charset.update()
 
         # the copy speeds
-        self.copy_speeds.setState(self.copy_wpm)
+        self.copy_speeds.setState(self.copy_wpm, self.copy_cwpm)
+        self.copy_speeds.update()
 
-        # the copy test sets
-        data = self.stats2percent(self.send_stats,
-                                  MorseTrainer.KochSendThreshold)
-        self.send_charset.setState(self.send_Koch_number, data,
-                                   MorseTrainer.KochSendThreshold,
-                                   MorseTrainer.KochSendCount)
+        # the send test sets
+        data = self.stats2percent(self.copy_stats,
+                                  MorseTrainer.KochCopyThreshold)
+        self.copy_charset.setState(self.copy_Koch_number, data,
+                                   MorseTrainer.KochCopyThreshold,
+                                   MorseTrainer.KochCopyCount)
+        self.copy_charset.update()
 
     def closeEvent(self, *args, **kwargs):
         """Program close - save the internal state."""
@@ -706,7 +713,6 @@ class MorseTrainer(QTabWidget):
         # Send variables
         self.send_Koch_number = 2
         self.send_Koch_charset = utils.Koch[:self.send_Koch_number]
-        self.send_use_speed = False
         self.send_wpm = 5
         # self.send_cwpm not used for Send
         self.send_expected = None
@@ -763,6 +769,14 @@ class MorseTrainer(QTabWidget):
                 log.debug('load_state: setting var %s to %s'
                           % (var_name, str(value)))
                 setattr(self, var_name, value)
+
+        #####
+        # ensure speeds are a multiple of 5
+        #####
+
+        self.send_wpm = utils.make_multiple(self.send_wpm, MorseTrainer.StepSpeed)
+        self.copy_wpm = utils.make_multiple(self.copy_wpm, MorseTrainer.StepSpeed)
+        self.copy_cwpm = utils.make_multiple(self.copy_cwpm, MorseTrainer.StepSpeed)
 
         #####
         # now update UI state from state variables
