@@ -274,7 +274,6 @@ class ReadMorse:
 
             # set new signal threshold
             self.signal_threshold = (self.min_signal + 2*self.max_signal)//3
-            log.debug('new .signal_threshold=%d' % self.signal_threshold)
 
 
 if __name__ == '__main__':
@@ -338,8 +337,9 @@ if __name__ == '__main__':
 
     while True:
         try:
-            char = morse.read()
-            emit(char)
+            (char, morse_str) = morse.read()
+            if char and char != ' ':
+                emit(char)
         except KeyboardInterrupt:
             emit('\nFinished\n')
             break
