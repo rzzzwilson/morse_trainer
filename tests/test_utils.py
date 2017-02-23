@@ -23,8 +23,8 @@ class TestUtils(unittest.TestCase):
         multiple = 5
         expected = 5
         actual = utils.make_multiple(given, multiple)
-        msg = ('Given %.2f, using multiple %d, expected %s, got %s'
-               % (given, multiple, str(expected), str(actual)))
+        msg = ('Given %s, using multiple %s, expected %s, got %s'
+               % (str(given), str(multiple), str(expected), str(actual)))
         self.assertEqual(actual, expected, msg)
 
         # just below and very close to a multiple
@@ -32,8 +32,8 @@ class TestUtils(unittest.TestCase):
         multiple = 5
         expected = 10
         actual = utils.make_multiple(given, multiple)
-        msg = ('Given %.2f, using multiple %d, expected %s, got %s'
-               % (given, multiple, str(expected), str(actual)))
+        msg = ('Given %s, using multiple %s, expected %s, got %s'
+               % (str(given), str(multiple), str(expected), str(actual)))
         self.assertEqual(actual, expected, msg)
 
         # just above and very close to a multiple
@@ -41,8 +41,26 @@ class TestUtils(unittest.TestCase):
         multiple = 5
         expected = 15
         actual = utils.make_multiple(given, multiple)
-        msg = ('Given %.2f, using multiple %d, expected %s, got %s'
-               % (given, multiple, str(expected), str(actual)))
+        msg = ('Given %s, using multiple %s, expected %s, got %s'
+               % (str(given), str(multiple), str(expected), str(actual)))
+        self.assertEqual(actual, expected, msg)
+
+        # just above midway between two multiples
+        given = 12.5001
+        multiple = 5
+        expected = 15
+        actual = utils.make_multiple(given, multiple)
+        msg = ('Given %s, using multiple %s, expected %s, got %s'
+               % (str(given), str(multiple), str(expected), str(actual)))
+        self.assertEqual(actual, expected, msg)
+
+        # just below midway between two multiples
+        given = 12.499
+        multiple = 5
+        expected = 10
+        actual = utils.make_multiple(given, multiple)
+        msg = ('Given %s, using multiple %s, expected %s, got %s'
+               % (str(given), str(multiple), str(expected), str(actual)))
         self.assertEqual(actual, expected, msg)
 
 
