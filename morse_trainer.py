@@ -231,18 +231,24 @@ class MorseTrainer(QTabWidget):
         log("Send 'start/pause' button was clicked, self.processing=%s" % str(self.processing))
 
         if self.processing:
+            log('point 1')
             # stop any processing, thread, etc
             if self.threadSend:
                 self.threadSend.terminate()
+                self.threadSend.wait()
                 self.threadSend = None
+
+            log('point 2')
             # enable the Clear button and speed/grouping/charset
             self.btn_send_clear.setDisabled(False)
             self.send_speeds.setDisabled(False)
             self.btn_send_start_stop.setText('Start')
 
+            log('point 3')
             # destroy the result queue
             self.resultq = None
 
+            log('point 4')
             # change state variables to reflect the stop
             self.send_expected = None
             self.processing = False
