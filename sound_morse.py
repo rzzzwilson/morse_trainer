@@ -110,7 +110,8 @@ class SoundMorse:
 
         return bytes(data)
 
-    def farnsworth_times(self, cwpm, wpm):
+    @classmethod
+    def farnsworth_times(cls, cwpm, wpm):
         """Calculate Farnsworth spacing.
 
         cwpm  character speed, words/minute
@@ -218,3 +219,8 @@ class SoundMorse:
                 print("Unrecognized character '%s' in morse to send" % char)
 
             self.stream.write(self.inter_word_silence)
+
+if __name__ == '__main__':
+    for wpm in [5, 10, 15, 20, 25, 30, 35, 40, 45]:
+        (dot_time, stretch_dot_time) = SoundMorse.farnsworth_times(wpm, wpm)
+        print('wpm=%d, dot_time=%d' % (wpm, int(dot_time*500)))
