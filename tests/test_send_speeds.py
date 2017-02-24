@@ -6,6 +6,8 @@ Test the 'Send speeds' widget.
 """
 
 import sys
+import random
+
 sys.path.append('..')
 from send_speeds import SendSpeeds
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
@@ -32,7 +34,8 @@ class SpeedsExample(QWidget):
         self.speed_group.changed.connect(self.speed_changed)
 
     def speed_changed(self, speed):
-        print('Changed speed=%d' % speed)
+        rand_speed = random.randint(5, 40)
+        self.speed_group.setApparentSpeed(rand_speed)
 
 
 app = QApplication(sys.argv)

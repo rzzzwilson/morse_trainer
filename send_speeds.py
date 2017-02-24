@@ -16,7 +16,7 @@ The widget generates a signal '.changed' when some value changes.
 import platform
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout
-from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox, QCheckBox
+from PyQt5.QtWidgets import QLabel, QSpinBox, QGroupBox, QCheckBox, QSpacerItem
 from PyQt5.QtCore import pyqtSignal
 
 import utils
@@ -45,17 +45,18 @@ class SendSpeeds(QWidget):
         self.initUI()
         self.setFixedHeight(80)
         self.show()
-        self.inhibit = True
+        self.inhibit = False
 
     def initUI(self):
         # define the widgets we are going to use
-        lbl_speed = QLabel('Speed')
+        lbl_set_speed = QLabel('Set to:')
         self.spb_speed = QSpinBox(self)
         self.spb_speed.setMinimum(SendSpeeds.MinSpeed)
         self.spb_speed.setMaximum(SendSpeeds.MaxSpeed)
         self.spb_speed.setSingleStep(SendSpeeds.StepSpeed)
         self.spb_speed.setSuffix(' wpm')
         self.spb_speed.setValue(self.speed)
+        self.lbl_apparent_speed = QLabel('Apparent speed:')
 
         # start the layout
         layout = QVBoxLayout()
@@ -65,7 +66,10 @@ class SendSpeeds(QWidget):
         layout.addWidget(groupbox)
 
         hbox = QHBoxLayout()
+        hbox.addWidget(lbl_set_speed)
         hbox.addWidget(self.spb_speed)
+        hbox.addItem(QSpacerItem(20, 20))
+        hbox.addWidget(self.lbl_apparent_speed)
         hbox.addStretch()
 
         groupbox.setLayout(hbox)
@@ -86,7 +90,7 @@ class SendSpeeds(QWidget):
         # save changed speed
         self.speed = word_speed
 
-        # tell the world there was a change
+        # tell the world there was a change, if allowed
         if not self.inhibit:
             self.changed.emit(self.speed)
 
@@ -103,6 +107,7 @@ class SendSpeeds(QWidget):
 
         self.speed = canon_wpm
         self.spb_speed.setValue(canon_wpm)
+
         self.inhibit = False
 
         self.update()
@@ -114,3 +119,10 @@ class SendSpeeds(QWidget):
         """
 
         return self.speed
+
+    def setApparentSpeed(self, wpm):
+        """Set the apparent speed to 'wpm'."""
+
+        new_text = 'Apparent speed: %d wpm' % wpm
+        self.lbl_apparent_speed.setText(new_text)
+        self.lbl_apparent_speed.update()
