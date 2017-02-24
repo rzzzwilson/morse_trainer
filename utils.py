@@ -240,7 +240,9 @@ def params2wpm(dot_time):
     log('params2wpm: dot_time=%s' % str(dot_time))
 
     # sequence of tuples (dot_time, wpm) used to interpolate
-    speeds = ((90, 5), (45, 10), (30, 20), (20, 30), (15, 40), (10, 50))
+    speeds = ((120, 5), (60, 10), (40, 15), (30, 20),
+              (24, 25), (20, 30), (17, 35), (15, 40), (13, 45))
+
 
     # find tuples that are next highest and next lowest dot_times
     high_dot = 1000
