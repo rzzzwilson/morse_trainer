@@ -54,7 +54,8 @@ class ReadMorse:
     WordSpace = 9      # number of silences to end word
 
     # the UNICODE character for "unrecognized"
-    NOTHING = u'\u00bf'     # inverted 'question'
+#    NOTHING = u'\u00bf'     # inverted 'question'
+    NOTHING = '◇'
 
 
     def __init__(self):
@@ -224,6 +225,8 @@ class ReadMorse:
         and   morse  is the recognized morse dots'n'dashes string (None if no equivalent)
         """
 
+        log('ReadMorse.read: entered')
+
         space_count = 0
         word_count = 0
         morse = ''
@@ -260,15 +263,18 @@ class ReadMorse:
                 # if silence long enough, emit a space
                 if space_count >= self.char_space:
                     if morse:
+                        log("ReadMorse.read: returning '%s'" % morse)
                         return (self._decode_morse(morse), morse)
                     elif not self.sent_space:
                         self.sent_space = True
+                        log("ReadMorse.read: returning ' '")
                         return (' ', None)
                     space_count = 0
 
                 if word_count >= self.word_space:
                     if not self.sent_word_space:
                         self.sent_word_space = True
+                        log("ReadMorse.read: returning ' '")
                         return (' ', None)
                     word_count = 0
 

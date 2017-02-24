@@ -44,7 +44,7 @@ def main():
     input("Send morse until characters are recognized ")
     try:
         while True:
-            char = in_stream.read()
+            (char, morse) = in_stream.read()
             if char != ' ':
                 print(char, end='')
             sys.stdout.flush()

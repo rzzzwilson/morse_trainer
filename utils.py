@@ -222,6 +222,62 @@ def make_multiple(value, multiple):
 
     return int(floor((value + multiple/2) / 5) * 5)
 
+def wpm2params(wpm):
+    """Convert a wpm value to morse params.
+
+    wpm  speed in words per minute
+
+    Returns a 'dot_time' in seconds.
+    """
+
+    dot_time = 1.2 / wpm
+
+    return dot_time
+
+def params2wpm(dot_time):
+    """Convert morse params into a wpm speed."""
+
+    log('params2wpm: dot_time=%s' % str(dot_time))
+
+    # sequence of tuples (dot_time, wpm) used to interpolate
+    speeds = ((90, 5), (45, 10), (30, 20), (20, 30), (15, 40), (10, 50))
+
+    # find tuples that are next highest and next lowest dot_times
+    high_dot = 1000
+    high_wpm = None
+    low_dot = 0
+    low_wpm = None
+    for (dot, wpm) in speeds:
+        if dot > dot_time:
+            if dot < high_dot:
+                high_dot = dot
+                high_wpm = wpm
+        elif dot < dot_time:
+            if dot > low_dot:
+                low_dot = dot
+                low_wpm = wpm
+    log('After, high_dot=%s, high_wpm=%s, low_dot=%s, low_wpm=%s' % (str(high_dot), str(high_wpm), str(low_dot), str(low_wpm)))
+
+    # handle out of range situation
+    if high_wpm is None:
+        # very slow, assume slow end
+        (high_dot, high_wpm) = speeds[0]
+    if low_wpm is None:
+        # very fast, assume fast end
+        (low_dot, low_wpm) = speeds[-1]
+
+    # interpolate between low/high dot to get wpm
+    delta = dot_time - low_dot
+    speed_range = high_dot - low_dot
+    percent = delta * 100.0 / speed_range
+    log('delta=%s, speed_range=%s, percent=%s' % (str(delta), str(speed_range), str(percent)))
+
+    wpm_range = low_wpm - high_wpm
+    wpm = int(low_wpm - percent*wpm_range/100)
+    log('high_wpm=%s, percent*wpm_range/100=%s' % (str(high_wpm), str(percent*wpm_range/100)))
+    log('wpm_range=%s, wpm=%s' % (str(wpm_range), str(wpm)))
+    return wpm
+
 
 if __name__ == '__main__':
     morse = '.'

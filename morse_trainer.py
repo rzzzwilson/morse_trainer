@@ -17,6 +17,7 @@ import os
 import sys
 import json
 import time
+import random
 import getopt
 import platform
 import traceback
@@ -124,7 +125,7 @@ class MorseTrainer(QTabWidget):
                     ]
 
     # error symbol, if needed
-    ErrorSymbol = '☒'
+    ErrorSymbol = '◇'
 
     def __init__(self, parent = None):
         """Create a MorseTrainer object."""
@@ -362,17 +363,17 @@ class MorseTrainer(QTabWidget):
                 self.send_display.set_highlight()
                 log('send_thread_finished: new char .insert_upper(%s)' % str(send_char))
 
-#            send_char = utils.get_random_char(self.send_Koch_charset, self.send_stats)
-#            self.send_display.insert_upper(send_char)
-#            self.send_expected = send_char
-#            self.send_display.set_highlight()
-#            log('send_thread_finished: new char .insert_upper(%s)' % str(send_char))
-
             log('send_thread_finished: starting SendThread()')
             self.threadSend = SendThread(self.send_morse_obj)
             self.threadSend.send_done.connect(self.send_thread_finished)
             self.threadSend.start()
             log('send_thread_finished: AFTER starting SendThread()')
+
+        # update apparent wpm display
+        len_dot = self.send_morse_obj.len_dot
+        log('len_dot=%s' % str(len_dot))
+        apparent_wpm = utils.params2wpm(len_dot)
+        self.send_speeds.setApparentSpeed(apparent_wpm)
 
     def send_clear(self, event):
         """The Send 'clear' button was clicked."""
@@ -542,8 +543,12 @@ class MorseTrainer(QTabWidget):
 
         # we check again if processing as we can disable in code above
         if self.processing:
+            # prepare, get next char
             copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
-            self.copy_pending = (self.copy_pending + [copy_char])[-2:]    # IMPROVE, use .append()
+            self.copy_pending.append(copy_char)
+            self.copy_pending = self.copy_pending[-2:] # last 2 pending chars
+
+            # start new thread to sound character
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
             self.threadCopy.copy_done.connect(self.copy_thread_finished)
             self.threadCopy.start()
@@ -965,6 +970,7 @@ class CopyThread(QThread):
 
         # make the character sound in morse
         self.sound_object.send(self.char)
+        log('CopyThread: sent morse sound')
         self.copy_done.emit()
 
         log("CopyThread: finished, sent 'copy_done' signal")
