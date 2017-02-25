@@ -4,7 +4,7 @@
     "self.len_dash": 85,
     "self.len_dot": 44,
     "self.max_signal": 20568,
-    "self.min_signal": 68,
-    "self.signal_threshold": 13734,
+    "self.min_signal": 82,
+    "self.signal_threshold": 13739,
     "self.word_space": 9
 }

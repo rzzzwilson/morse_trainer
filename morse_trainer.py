@@ -20,6 +20,7 @@ import time
 import random
 import getopt
 import platform
+import faulthandler
 import traceback
 from queue import Queue
 from random import randrange
@@ -54,7 +55,11 @@ ProgramMajor = 0
 ProgramMinor = 9
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
+# extension for program state file
 ProgramStateExtension = 'state'
+
+# where we dump faulthandler module output
+FaultHandlerFile = './faulthandler.log'
 
 
 class MorseTrainer(QTabWidget):
@@ -1030,8 +1035,10 @@ if __name__ == '__main__':
             usage()
             sys.exit(0)
 
-    # launch the app
-    app = QApplication(sys.argv)
-    ex = MorseTrainer()
-    ex.show()
-    sys.exit(app.exec())
+    # launch the app, catch thread crashes with 'faulthandler'
+    with open(FaultHandlerFile, 'w') as fd:
+        faulthandler.enable(file=fd)   # turn on fault trap
+        app = QApplication(sys.argv)
+        ex = MorseTrainer()
+        ex.show()
+        sys.exit(app.exec())
