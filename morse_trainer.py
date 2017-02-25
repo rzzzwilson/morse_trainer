@@ -1035,6 +1035,25 @@ if __name__ == '__main__':
             usage()
             sys.exit(0)
 
+    # set up c_call tracing
+    def trace_calls(frame, event, arg):
+        if event != 'c_call':
+            return
+        co = frame.f_code
+        func_name = co.co_name
+        func_line_no = frame.f_lineno
+        func_filename = co.co_filename
+        caller = frame.f_back
+        caller_line_no = caller.f_lineno
+        caller_filename = caller.f_code.co_filename
+        log('** arg=%s' % str(arg))
+        log('* Call to', func_name)
+        log('*  on line {} of {}'.format(func_line_no, func_filename))
+        log('*  from line {} of {}'.format(caller_line_no, caller_filename))
+        return
+
+    sys.settrace(trace_calls)
+
     # launch the app, catch thread crashes with 'faulthandler'
     with open(FaultHandlerFile, 'w') as fd:
         faulthandler.enable(file=fd)   # turn on fault trap
