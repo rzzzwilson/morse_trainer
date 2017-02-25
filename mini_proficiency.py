@@ -213,16 +213,16 @@ class MiniProficiency(QWidget):
             # figure out what character we clicked on, if any
             char_index = (e.x() - MiniProficiency.LeftMargin) // MiniProficiency.CharWidth
             char = self.data[char_index]
+            morse_display = utils.morse2display(utils.Char2Morse[char])
             if char_index < self.in_use:
-                morse_display = utils.morse2display(utils.Char2Morse[char])
                 (correct, num_samples) = self.stats[char]
                 text = ('Character: %s (%s)\n'
                         '%d samples\n'
                         '%d%% correct'
                         % (char, morse_display, num_samples, int(correct*100)))
             else:
-                text = ('Character: %s\n'
-                        'Not used' % char)
+                text = ('Character: %s (%s)\n'
+                        'Not used' % (char, morse_display))
 
             num_newlines = text.count('\n')
             posn = e.globalPos()
