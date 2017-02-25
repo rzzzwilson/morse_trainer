@@ -931,12 +931,12 @@ class SendThread(QThread):
     def run(self):
         """Sound the character."""
 
-        log('SendThread.run: listening')
+        log('SendThread.run: listening >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
         # make the character sound in morse
         result = self.sound_object.read()
         log('SendThread: returning recognized char=%s' % str(result))
         self.send_done.emit(result)
-        log('SendThread.run: thread finished, sent send_done')
+        log('SendThread.run: thread finished, sent send_done <<<<<<<<<<<<<<<<<<<<<<<<<<<')
 #        self.terminate()
 
 ######
@@ -966,14 +966,14 @@ class CopyThread(QThread):
     def run(self):
         """Sound the character."""
 
-        log("CopyThread: sounding '%s'" % self.char)
+        log("CopyThread: sounding '%s' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" % self.char)
 
         # make the character sound in morse
         self.sound_object.send(self.char)
         log('CopyThread: sent morse sound')
         self.copy_done.emit()
 
-        log("CopyThread: finished, sent 'copy_done' signal")
+        log("CopyThread: finished, sent 'copy_done' signal <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 
 if __name__ == '__main__':
