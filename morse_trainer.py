@@ -232,7 +232,18 @@ class MorseTrainer(QTabWidget):
     def send_speeds_change(self, speed):
         """Something changed in the speeds widget."""
 
+        # update internal state
         self.send_wpm = speed
+
+        # modify receive params to about the speed
+        dot_time = utils.wpm2params(speed)
+        self.send_morse_obj.len_dot = dot_time
+        self.send_morse_obj.len_dash = 3 * dot_time
+        self.send_morse_obj.dot_dash_threshold = 2 * dot_time
+
+        log('send_speeds_change: .len_dot=%d, .len_dash=%d, .dot_dash_threshold=%d'
+            % (self.send_morse_obj.len_dot, self.send_morse_obj.len_dash,
+               self.send_morse_obj.dot_dash_threshold))
 
     def send_start(self):
         """The Send 'start/pause' button was clicked."""

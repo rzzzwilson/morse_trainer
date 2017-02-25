@@ -34,32 +34,32 @@ class MiniProficiency(QWidget):
     # set platform-dependent sizes
     if platform.system() == 'Linux':
         Font = 'Courier'            # the font to use
-        FontSize = 12               # font size
-        TopMargin = 10              # top margin
+        FontSize = 15               # font size
+        TopMargin = 11              # top margin
         LeftMargin = 5              # left margin
         RightMargin = 5             # right margin
         BottomMargin = 3            # bottom margin
-        CharWidth = 7               # character spacing
+        CharWidth = 10              # character spacing
         CharHeight = 10             # character 'height'
         TooltipFontSize = 4         # tooltip font size
     elif platform.system() == 'Darwin':
         Font = 'Courier'
-        FontSize = 13
-        TopMargin = 10
+        FontSize = 15
+        TopMargin = 11
         LeftMargin = 5
         RightMargin = 3
         BottomMargin = 0
-        CharWidth = 8
+        CharWidth = 10
         CharHeight = 8
         TooltipFontSize = 4
     elif platform.system() == 'Windows':
         Font = 'Courier'
-        FontSize = 12
-        TopMargin = 10
+        FontSize = 15
+        TopMargin = 11
         LeftMargin = 5
         RightMargin = 5
         BottomMargin = 3
-        CharWidth = 8
+        CharWidth = 10
         CharHeight = 10
         TooltipFontSize = 4
     else:

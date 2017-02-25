@@ -60,6 +60,12 @@ Char2Morse = {
               ' ': ' '
              }
 
+# sequence of tuples (dot_time, wpm) used to interpolate
+# put sentinel values both ends, MUST BE SORTED ON WPM!
+# NOTE: this is arbitrary and will probably need adjustment
+DotTime2Wpm = ((120, 0), (120, 5), (60, 10), (40, 15), (30, 20),
+               (24, 25), (20, 30), (17, 35), (15, 40), (13, 45), (10, 50))
+
 # invert above dict to create map of morse strings to chars
 Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 
@@ -230,55 +236,42 @@ def wpm2params(wpm):
     Returns a 'dot_time' in seconds.
     """
 
-    dot_time = 1.2 / wpm
-
-    return dot_time
+    # find tuples that are next highest and next lowest wpm
+    # DotTime2Wpm is ((120, 0), (120, 5), (60, 10), ...), from slow to fast
+    for (dot_time, dot_wpm) in DotTime2Wpm:
+        if dot_wpm > wpm:
+            # first tuple with faster speed, interpolate and return
+            dot_range = low_dot - dot_time
+            wpm_range = dot_wpm - low_wpm
+            delta = dot_wpm - wpm
+            ratio = delta / wpm_range
+            new_dot_time = int(dot_time + ratio*dot_range)
+            return new_dot_time
+        else:
+            # slower tuple, remember as slow speeds
+            low_dot = dot_time
+            low_wpm = dot_wpm
 
 def params2wpm(dot_time):
     """Convert morse params into a wpm speed."""
 
     log('params2wpm: dot_time=%s' % str(dot_time))
 
-    # sequence of tuples (dot_time, wpm) used to interpolate
-    speeds = ((120, 5), (60, 10), (40, 15), (30, 20),
-              (24, 25), (20, 30), (17, 35), (15, 40), (13, 45))
-
-
     # find tuples that are next highest and next lowest dot_times
-    high_dot = 1000
-    high_wpm = None
-    low_dot = 0
-    low_wpm = None
-    for (dot, wpm) in speeds:
-        if dot > dot_time:
-            if dot < high_dot:
-                high_dot = dot
-                high_wpm = wpm
-        elif dot < dot_time:
-            if dot > low_dot:
-                low_dot = dot
-                low_wpm = wpm
-    log('After, high_dot=%s, high_wpm=%s, low_dot=%s, low_wpm=%s' % (str(high_dot), str(high_wpm), str(low_dot), str(low_wpm)))
-
-    # handle out of range situation
-    if high_wpm is None:
-        # very slow, assume slow end
-        (high_dot, high_wpm) = speeds[0]
-    if low_wpm is None:
-        # very fast, assume fast end
-        (low_dot, low_wpm) = speeds[-1]
-
-    # interpolate between low/high dot to get wpm
-    delta = dot_time - low_dot
-    speed_range = high_dot - low_dot
-    percent = delta * 100.0 / speed_range
-    log('delta=%s, speed_range=%s, percent=%s' % (str(delta), str(speed_range), str(percent)))
-
-    wpm_range = low_wpm - high_wpm
-    wpm = int(low_wpm - percent*wpm_range/100)
-    log('high_wpm=%s, percent*wpm_range/100=%s' % (str(high_wpm), str(percent*wpm_range/100)))
-    log('wpm_range=%s, wpm=%s' % (str(wpm_range), str(wpm)))
-    return wpm
+    # DotTime2Wpm is ((120, 0), (120, 5), (60, 10), ...), from slow to fast
+    for (dot, wpm) in DotTime2Wpm:
+        if dot < dot_time:
+            # first tuple with lower dot_time
+            wpm_range = wpm - low_wpm
+            dot_range = low_dot - dot
+            delta = low_dot - dot_time
+            ratio = delta / dot_range
+            new_wpm = int(low_wpm + ratio*wpm_range)
+            return new_wpm
+        else:
+            # slower tuple, remember values
+            low_dot = dot
+            low_wpm = wpm
 
 
 if __name__ == '__main__':
