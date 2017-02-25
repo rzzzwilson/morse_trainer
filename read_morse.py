@@ -86,10 +86,6 @@ class ReadMorse:
         self.stream.close()
         self.pyaudio.terminate()
 
-# seems to cause problems
-#    def __del__(self):
-#        self.close()
-
     def save_params(self, filename):
         """Save recognition params to file."""
 
@@ -146,7 +142,6 @@ class ReadMorse:
         try:
             char = utils.Morse2Char[morse]
         except KeyError:
-            #char = ReadMorse.NOTHING
             char = None
         return char
 
@@ -157,8 +152,10 @@ class ReadMorse:
         The average is taken from ReadMorse.CHUNK audio samples.
         """
 
+# TODO 'exception_on_overflow' needs to be True or False depending on OS
         data = self.stream.read(ReadMorse.CHUNK, exception_on_overflow=False)
         #data = self.stream.read(ReadMorse.CHUNK)
+
         data = np.fromstring(data, 'int16')
         data = [abs(x) for x in data]
         return int(sum(data) // len(data))      # average value
@@ -170,6 +167,8 @@ class ReadMorse:
              -N       silence for N samples
              N        N samples of sound (terminated by silence)
         and  average  is the average sound value in the sample.
+
+        There is some logic to ignore short silence periods inside sounds.
         """
 
         # state values
@@ -225,7 +224,7 @@ class ReadMorse:
         and   morse  is the recognized morse dots'n'dashes string (None if no equivalent)
         """
 
-        log('ReadMorse.read: entered')
+        log('ReadMorse.read: entered >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 
         space_count = 0
         word_count = 0
@@ -263,18 +262,18 @@ class ReadMorse:
                 # if silence long enough, emit a space
                 if space_count >= self.char_space:
                     if morse:
-                        log("ReadMorse.read: returning '%s'" % morse)
+                        log("ReadMorse.read: returning '%s' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<" % morse)
                         return (self._decode_morse(morse), morse)
                     elif not self.sent_space:
                         self.sent_space = True
-                        log("ReadMorse.read: returning ' '")
+                        log("ReadMorse.read: returning ' ' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
                         return (' ', None)
                     space_count = 0
 
                 if word_count >= self.word_space:
                     if not self.sent_word_space:
                         self.sent_word_space = True
-                        log("ReadMorse.read: returning ' '")
+                        log("ReadMorse.read: returning ' ' <<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
                         return (' ', None)
                     word_count = 0
 
