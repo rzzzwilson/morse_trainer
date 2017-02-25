@@ -1035,7 +1035,7 @@ if __name__ == '__main__':
             usage()
             sys.exit(0)
 
-    # set up c_call tracing
+    # set up c_call tracing - https://pymotw.com/3/sys/tracing.html
     def trace_calls(frame, event, arg):
         if event != 'c_call':
             return
