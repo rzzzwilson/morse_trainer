@@ -116,20 +116,6 @@ class MiniProficiency(QWidget):
         self.font = QFont(MiniProficiency.Font, MiniProficiency.FontSize)
         self.font_size = MiniProficiency.FontSize
 
-        # set a tooltip on this custom widget
-        self.setToolTip('<font size=4>'
-                        'This shows the Koch test with colours showing usage:<br>'
-                        '<center>'
-                        '<table fontsize="4" border="1">'
-                        '<tr><td>gray</td><td>not in use</td></tr>'
-                        '<tr><td>black</td><td>character not tested enough</td></tr>'
-                        '<tr><td>red</td><td>too many errors</td></tr>'
-                        '<tr><td>blue</td><td>OK, low error rate</td></tr>'
-                        '</table>'
-                        '</center>'
-                        '</font>'
-                        )
-
     def paintEvent(self, e):
         """Prepare to draw the widget."""
 

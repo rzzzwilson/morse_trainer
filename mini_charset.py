@@ -99,6 +99,20 @@ class MiniCharset(QWidget):
         groupbox.setLayout(grid)
         self.setLayout(layout)
 
+        self.setToolTip('<font size=4>'
+                        'This shows the Koch test with colours showing usage:<br>'
+                        '<center>'
+                        '<table fontsize="4" border="1">'
+                        '<tr><td>gray</td><td>not in use</td></tr>'
+                        '<tr><td>black</td><td>character not tested enough</td></tr>'
+                        '<tr><td>red</td><td>too many errors</td></tr>'
+                        '<tr><td>blue</td><td>OK, low error rate</td></tr>'
+                        '</table>'
+                        '</center>'
+                        '<br>Click on an individual character to get more statistics.'
+                        '</font>'
+                       )
+
         self.setMinimumSize(500, 100)
 
         self.show()
