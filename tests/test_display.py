@@ -37,7 +37,7 @@ class DisplayExample(QWidget):
 
         button.clicked.connect(self.buttonClicked)
 
-        self.setGeometry(20, 100, 1100, 200)
+        self.setGeometry(20, 100, 1000, 200)
         self.setWindowTitle('Example of Display widget')
         self.show()
 

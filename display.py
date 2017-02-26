@@ -23,6 +23,7 @@ display.set_highlight()             # set tooltip on latest column
 """
 
 import platform
+from math import floor
 
 import utils
 
@@ -228,12 +229,12 @@ class Display(QWidget):
         self.display_width = width
 
         # calc the max number of chars we can fit on display
-        self.num_columns = (width - Display.TextLeftOffset) // self.char_width
+        self.num_columns = floor((width - Display.TextLeftOffset) / self.char_width)
 
-        # figures out if we need to truncate the display to make it fit
+        # figure out if we need to truncate the display to make it fit
         max_len = max(self.upper_len(), self.lower_len())
         if max_len > self.num_columns:
-            self.left_scroll(max_len - self.num_columns)
+            self.left_scroll(max_len - self.num_columns + 1)
 
         # clear the display area
         qp.setPen(Qt.white)
@@ -261,22 +262,24 @@ class Display(QWidget):
 
         # draw upper text
         x = Display.TextLeftOffset
+        y = Display.BaselineOffsetUpper
         last_colour = None
         for (char, colour) in self.text_upper:
             if last_colour != colour:
                 qp.setPen(colour)
                 last_colour = colour
-            qp.drawText(x, Display.BaselineOffsetUpper, char)
+            qp.drawText(x, y, char)
             x += self.char_width
 
         # draw lower text
         x = Display.TextLeftOffset
+        y = Display.BaselineOffsetLower
         last_colour = None
         for (char, colour) in self.text_lower:
             if last_colour != colour:
                 qp.setPen(colour)
                 last_colour = colour
-            qp.drawText(x, Display.BaselineOffsetLower, char)
+            qp.drawText(x, y, char)
             x += self.char_width
 
         # draw hover selection, if any
