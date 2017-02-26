@@ -67,15 +67,15 @@ class MorseTrainer(QTabWidget):
 
     # set platform-dependent sizes
     if System == 'Windows':
-        MinimumWidth = 850
+        MinimumWidth = 910
         MinimumHeight = 435
         ButtonWidth = 80
     elif System == 'Linux':
-        MinimumWidth = 850
+        MinimumWidth = 910
         MinimumHeight = 435
         ButtonWidth = 80
     elif System == 'Darwin':
-        MinimumWidth = 900
+        MinimumWidth = 910
         MinimumHeight = 435
         ButtonWidth = 80
     else:
@@ -566,8 +566,8 @@ class MorseTrainer(QTabWidget):
 
             # start new thread to sound character
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
-            self.threadCopy.copy_done.connect(self.copy_thread_finished)
             self.threadCopy.start()
+            self.threadCopy.copy_done.connect(self.copy_thread_finished)
 
     def copy_clear(self, event):
         """The Copy 'clear' button was clicked."""
