@@ -51,8 +51,8 @@ if ProgName.endswith('_' + System):
     parts = ProgName.split('_')
     ProgName = '_'.join(parts[:-1])
 
-ProgramMajor = 0
-ProgramMinor = 9
+ProgramMajor = 1
+ProgramMinor = 0
 ProgramVersion = '%d.%d' % (ProgramMajor, ProgramMinor)
 
 # extension for program state file
@@ -188,7 +188,8 @@ class MorseTrainer(QTabWidget):
                     'display.  Your job is to send that character using your '
                     'key and code practice oscillator.  The program will print '
                     'what it thinks you sent on the lower line of the display.  '
-                    'Errors are marked in red.')
+                    'Errors are marked in red and you can right click on an '
+                    'error to see what went wrong.')
         instructions = Instructions(doc_text)
         self.send_speeds = SendSpeeds()
         self.send_charset = MiniCharset(utils.Koch)
@@ -468,7 +469,8 @@ class MorseTrainer(QTabWidget):
                     'on the keyboard.  The character you typed will appear in '
                     'the bottom row of the display along with the character '
                     'the program actually sent in the top row.  '
-                    'Errors are marked in red.')
+                    'Errors are marked in red and you can right click on an '
+                    'error to see what went wrong.')
         instructions = Instructions(doc_text)
         self.copy_speeds = CopySpeeds()
         self.copy_charset = MiniCharset(utils.Koch)
