@@ -652,8 +652,12 @@ class MorseTrainer(QTabWidget):
         """
 
         # ignore anything we aren't interested in
-        key_int = e.key()
-        char = chr(key_int)
+        try:
+            char = chr(e.key())
+        except ValueError:
+            # probably some sort of control key, ignore
+            return
+
         if char not in utils.AllUserChars:
             return      # ignore chars we aren't testing on
 
