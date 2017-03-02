@@ -3,6 +3,7 @@
 TTD.txt
 .DS_Store
 icons
+*.OLD
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
