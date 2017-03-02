@@ -1,14 +1,11 @@
 #!/bin/bash
 #
-# A bash script to build the standalone executables for morse_trainer.
-#
-# Uses 'pyinstaller' to generate a *.zip file for the architecture
-# it is run on.  Leaves the *.zip in the ./dist directory.
-#
-# Zip files are:
-#     morse_trainer_linux.zip
-#     morse_trainer_macos.zip
-#     morse_trainer_windows.zip
+# A bash script to build the standalone executables for morse_trainer.  Uses 
+# 'pyinstaller' to generate an executable for the architecture  it is run on.
+# Executable files are:
+#     morse_trainer_Linux
+#     morse_trainer_Darwin
+#     morse_trainer_Windows
 
 # make the pyinstaller executable directory
 rm -Rf dist build
