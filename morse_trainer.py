@@ -543,8 +543,6 @@ class MorseTrainer(QTabWidget):
         If still processing, start new thread.
         """
 
-        log('copy_thread_finished: called, Copy thread finished')
-
         # indicate that the thread isn't running
         if self.threadCopy:
             self.threadCopy.copy_done.disconnect()
@@ -745,6 +743,10 @@ class MorseTrainer(QTabWidget):
         super().closeEvent(*args, **kwargs)
         self.save_state(MorseTrainer.StateSaveFile)
         self.send_morse_obj.save_params(MorseTrainer.MorseParamsFile)
+        if self.threadSend:
+            self.threadSend.wait(msecs=10000)
+        if self.threadCopy:
+            self.threadCopy.wait(msecs=10000)
 
     def clear_data(self):
         """Define and clear all internal variables."""
@@ -948,17 +950,13 @@ class SendThread(QThread):
 
         super().__init__()
         self.sound_object = sound_object
-        log('SendThread: created new thread')
 
     def run(self):
         """Sound the character."""
 
-        log('SendThread.run: listening >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
         # make the character sound in morse
         result = self.sound_object.read()
-        log('SendThread: returning recognized char=%s' % str(result))
         self.send_done.emit(result)
-        log('SendThread.run: thread finished, sent send_done <<<<<<<<<<<<<<<<<<<<<<<<<<<')
 #        self.terminate()
 
 ######
@@ -983,19 +981,13 @@ class CopyThread(QThread):
         super().__init__()
         self.char = char
         self.sound_object = sound_object
-        log('CopyThread: created new thread')
 
     def run(self):
         """Sound the character."""
 
-        log("CopyThread: sounding '%s' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" % self.char)
-
         # make the character sound in morse
         self.sound_object.send(self.char)
-        log('CopyThread: sent morse sound')
         self.copy_done.emit()
-
-        log("CopyThread: finished, sent 'copy_done' signal <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
 
 if __name__ == '__main__':
