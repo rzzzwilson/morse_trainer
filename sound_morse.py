@@ -220,6 +220,7 @@ class SoundMorse:
 
             self.stream.write(self.inter_word_silence)
 
+
 if __name__ == '__main__':
     for wpm in [5, 10, 15, 20, 25, 30, 35, 40, 45]:
         (dot_time, stretch_dot_time) = SoundMorse.farnsworth_times(wpm, wpm)
