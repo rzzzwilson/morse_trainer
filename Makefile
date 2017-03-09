@@ -3,7 +3,7 @@
 #
 
 run:
-	rm -f *.log
+#	rm -f *.log
 	python3 morse_trainer.py
 
 exe:
