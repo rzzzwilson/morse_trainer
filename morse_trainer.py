@@ -278,9 +278,10 @@ class MorseTrainer(QTabWidget):
             self.processing = True
 
             # start new thread, send_thread_finished() called when finished
-            self.send_thread_finished()
+            self.send_thread_finished(None)
 
-    def send_thread_finished(self, result=None):
+    @pyqtSlot(tuple)
+    def send_thread_finished(self, result):
         """Catch signal when Send thread finished.
 
         result  a tuple (char, morse)
@@ -718,8 +719,10 @@ class MorseTrainer(QTabWidget):
         self.save_state(MorseTrainer.StateSaveFile)
         self.send_morse_obj.save_params(MorseTrainer.MorseParamsFile)
         if self.threadSend:
+            self.threadSend.terminate()
             self.threadSend.wait(msecs=10000)
         if self.threadCopy:
+            self.threadCopy.terminate()
             self.threadCopy.wait(msecs=10000)
 
     def clear_data(self):
