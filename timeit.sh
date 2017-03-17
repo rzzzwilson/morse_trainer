@@ -27,7 +27,7 @@ CWPM=$(grep "copy_cwpm" $STATE | sed -e "s/^.*: //" | sed -e "s/,//")
 WPM=$(grep "copy_wpm" $STATE | sed -e "s/^.*: //" | sed -e "s/,//")
 
 # we turn crash reporting off for the test, but force it back on if interrupted
-trap 'defaults write com.apple.CrashReporter DialogType crashreport' SIGINT
+trap 'defaults write com.apple.CrashReporter DialogType crashreport; exit' SIGINT
 defaults write com.apple.CrashReporter DialogType none
 
 while true; do
