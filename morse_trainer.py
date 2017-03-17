@@ -507,6 +507,10 @@ class MorseTrainer(QTabWidget):
             # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
             self.btn_copy_start_stop.update()
+            if self.threadCopy:
+                self.threadCopy.terminate()
+                self.threadCopy.wait()
+                self.threadCopy = None
 
             # change state variables to reflect the stop
             self.processing = False
