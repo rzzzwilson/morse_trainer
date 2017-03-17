@@ -35,8 +35,8 @@ class CopyVolumes(QWidget):
     levels = [('S0', 00), ('S1', 11), ('S2', 22), ('S3', 33), ('S4', 44),
               ('S5', 55), ('S6', 66), ('S7', 77), ('S8', 88), ('S9', 99)]
 
-    def __init__(self, parent, signal=55, noise=0):
-        QWidget.__init__(self, parent)
+    def __init__(self, signal=55, noise=0):
+        QWidget.__init__(self)
 
         # define state variables
         self.inhibit = True
@@ -45,6 +45,12 @@ class CopyVolumes(QWidget):
 
         # define the UI
         self.initUI()
+
+        # connect combobox events to handlers
+        self.cbo_signal.currentIndexChanged.connect(self.handle_signal_changed)
+        self.cbo_noise.currentIndexChanged.connect(self.handle_noise_changed)
+
+        # finish off display params
         self.setFixedHeight(80)
         self.show()
         self.inhibit = False
@@ -64,7 +70,7 @@ class CopyVolumes(QWidget):
         # start the layout
         layout = QVBoxLayout()
 
-        groupbox = QGroupBox("Audio levels")
+        groupbox = QGroupBox("Audio Levels")
         groupbox.setStyleSheet(utils.StyleCSS)
         layout.addWidget(groupbox)
 
@@ -80,9 +86,17 @@ class CopyVolumes(QWidget):
 
         self.setLayout(layout)
 
-        # connect combobox events to handlers
-        self.cbo_signal.currentIndexChanged.connect(self.handle_signal_changed)
-        self.cbo_noise.currentIndexChanged.connect(self.handle_noise_changed)
+        # define hover tooltop
+        self.setToolTip('<font size=4>'
+                        'This shows the signal and noise levels:<br>'
+                        '<center>'
+                        '<table fontsize="4" border="1" style="width:100%">'
+                        '<tr><td>S0</td><td>no signal or noise level</td></tr>'
+                        '<tr><td>S9</td><td>the maximum level</td></tr>'
+                        '</table>'
+                        '</center>'
+                        '</font>'
+                       )
 
     def handle_signal_changed(self, index):
         """The widget signal level changed.
@@ -128,7 +142,7 @@ class CopyVolumes(QWidget):
         def percent2index(percent):
             """Convert a percent value to canonical percent & combobox item index."""
 
-            good_percent = int((percent + 11) // 11) * 11
+            good_percent = (int(percent + 10) // 11) * 11
             for (i, (l, p)) in enumerate(CopyVolumes.levels):
                 if good_percent == p:
                     return (good_percent, i)

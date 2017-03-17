@@ -10,7 +10,7 @@ morse = SoundMorse()
 morse.set_speeds(chars_per_minute, words_per_minute)
 (cwpm, wpm) = morse.get_speeds()
 
-morse.set_volume(volume)
+morse.set_volumes(signal, noise)
 morse.set_frequency(frequency)
 
 morse.close()
@@ -52,7 +52,8 @@ class SoundMorse:
         # set send params to defaults
         self.cwpm = cwpm            # the character word speed
         self.wpm = wpm              # the word speed
-        self.volume = volume        # volume
+        self.signal = 0.3           # signal volume (fraction)
+        self.noise = 0.0            # noise volume (fraction)
         self.frequency = frequency  # audio frequency
 
         # prepare variables for created sound bites
@@ -86,6 +87,8 @@ class SoundMorse:
         Result is a string of byte data.
         """
 
+        log('type(volume)=%s, volume=%s' % (type(volume), str(volume)))
+
         MaxValue = 2**7 // 2
         LeadInOutCycles = 3
 
@@ -107,6 +110,8 @@ class SoundMorse:
         for i in range(lead_samples):
             data[i] = int(data[i] * i/lead_samples)
             data[-i] = int(data[-i] * i/lead_samples)
+
+        log('data: %s' % str(data))
 
         return bytes(data)
 
@@ -159,8 +164,9 @@ class SoundMorse:
             inter_char_time = 3 * dot_time_f
             inter_word_time = 7 * dot_time_f
 
-        self.dot_sound = self.make_tone(dot_time, volume=self.volume)
-        self.dash_sound = self.make_tone(dash_time, volume=self.volume)
+        log('self.signal=%s' % str(self.signal))
+        self.dot_sound = self.make_tone(dot_time, volume=self.signal)
+        self.dash_sound = self.make_tone(dash_time, volume=self.signal)
         self.inter_element_silence = self.make_tone(inter_elem_time, volume=0.0)
         self.inter_char_silence = self.make_tone(inter_char_time, volume=0.0)
         self.inter_word_silence = self.make_tone(inter_word_time, volume=0.0)
@@ -178,10 +184,15 @@ class SoundMorse:
 
         return (self.cwpm, self.wpm)
 
-    def set_volume(self, volume):
-        """Set morse volume."""
+    def set_volumes(self, signal, noise):
+        """Set morse volumes.
 
-        self.volume = volume
+        signal  signal volume percentage
+        noise   noise volume percentage
+        """
+
+        self.signal = signal / 100.0
+        self.noise = noise / 100.0
         self.create_sounds()
 
     def set_frequency(self, frequency):

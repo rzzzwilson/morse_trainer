@@ -37,6 +37,7 @@ from mini_charset import MiniCharset
 from instructions import Instructions
 from sound_morse import SoundMorse
 from read_morse import ReadMorse
+from copy_volumes import CopyVolumes
 import utils
 import logger
 
@@ -76,7 +77,7 @@ class MorseTrainer(QTabWidget):
         ButtonWidth = 80
     elif System == 'Darwin':
         MinimumWidth = 910
-        MinimumHeight = 435
+        MinimumHeight = 540
         ButtonWidth = 80
     else:
         raise Exception('Unrecognized platform: %s' % System)
@@ -122,15 +123,21 @@ class MorseTrainer(QTabWidget):
                      'current_tab_index',
 
                      'send_Koch_number', 'send_Koch_charset',
-                     'send_wpm', 'send_stats',
+                     'send_wpm',
+                     'send_stats',
 
                      'copy_Koch_number', 'copy_Koch_charset',
                      'copy_wpm', 'copy_cwpm',
+                     'copy_signal', 'copy_noise',
                      'copy_stats',
                     ]
 
     # error symbol, if needed
     ErrorSymbol = '◇'
+
+    # default signal and noise percentages
+    DefaultSignalPercent = 55
+    DefaultNoisePercent = 0
 
     def __init__(self, parent = None):
         """Create a MorseTrainer object."""
@@ -447,6 +454,7 @@ class MorseTrainer(QTabWidget):
                     'error to see what went wrong.')
         instructions = Instructions(doc_text)
         self.copy_speeds = CopySpeeds()
+        self.copy_volumes = CopyVolumes()
         self.copy_charset = MiniCharset(utils.Koch)
         self.btn_copy_start_stop = QPushButton('Start')
         self.btn_copy_start_stop.setMinimumWidth(MorseTrainer.ButtonWidth)
@@ -464,6 +472,7 @@ class MorseTrainer(QTabWidget):
         controls = QVBoxLayout()
         controls.maximumSize()
         controls.addWidget(self.copy_speeds)
+        controls.addWidget(self.copy_volumes)
         controls.addWidget(self.copy_charset)
 
         hbox = QHBoxLayout()
@@ -482,6 +491,7 @@ class MorseTrainer(QTabWidget):
 
         # connect 'Copy' events to handlers
         self.copy_speeds.changed.connect(self.copy_speeds_changed)
+        self.copy_volumes.changed.connect(self.copy_volumes_changed)
         self.btn_copy_start_stop.clicked.connect(self.copy_start)
         self.btn_copy_clear.clicked.connect(self.copy_clear)
 
@@ -492,6 +502,7 @@ class MorseTrainer(QTabWidget):
             # enable the Clear button and speed/grouping/charset
             self.btn_copy_clear.setDisabled(False)
             self.copy_speeds.setDisabled(False)
+            self.copy_volumes.setDisabled(False)
 
             # Pause button label becomes Start
             self.btn_copy_start_stop.setText('Start')
@@ -503,6 +514,7 @@ class MorseTrainer(QTabWidget):
             # disable the Clear button and speed/grouping/charset, relabel Start button
             self.btn_copy_clear.setDisabled(True)
             self.copy_speeds.setDisabled(True)
+            self.copy_volumes.setDisabled(True)
             self.btn_copy_start_stop.setText('Pause')
 
             # start the 'Send' process
@@ -613,6 +625,17 @@ class MorseTrainer(QTabWidget):
         self.copy_cwpm = cwpm
         self.copy_wpm = wpm
         self.copy_morse_obj.set_speeds(cwpm, wpm)
+
+    def copy_volumes_changed(self, signal, noise):
+        """Something in the "copy volume" group changed.
+
+        signal  new signal percent
+        noise   new noise percent
+        """
+
+        self.copy_signal = signal
+        self.copy_noise = noise
+        self.copy_morse_obj.set_volumes(signal, noise)
 
 ######
 # Other code
@@ -749,6 +772,9 @@ class MorseTrainer(QTabWidget):
         self.copy_pending = ''  # holds last 2 chars sounded
         self.threadCopy = None  # the sounding thread
 
+        self.copy_signal = MorseTrainer.DefaultSignalPercent
+        self.copy_noise = MorseTrainer.DefaultNoisePercent
+
         # the send/copy statistics
         # each 'char':value is a list of last N results, True or False
         self.send_stats = {ch:[] for ch in utils.AllUserChars}
@@ -822,6 +848,7 @@ class MorseTrainer(QTabWidget):
                                    MorseTrainer.KochCopyThreshold,
                                    MorseTrainer.KochCopyCount)
         self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
+        self.copy_volumes.setState(self.copy_signal, self.copy_noise)
 
         # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
