@@ -22,6 +22,7 @@ import sys
 import math
 import audioop
 import pyaudio
+from random import randint
 
 import utils
 import logger
@@ -34,7 +35,8 @@ class SoundMorse:
     # the default settings
     DefaultCWPM = 10            # character speed (characters per minute)
     DefaultWPM = 5              # word speed (words per minute)
-    DefaultVolume = 0.7         # in range [0.0, 1.0]
+    DefaultSignal = 0.3         # in range [0.0, 1.0]
+    DefaultNoise = 0.0          # in range [0.0, 1.0]
     DefaultFrequency = 700      # hertz
 
     # internal settings
@@ -45,14 +47,15 @@ class SoundMorse:
     FarnsworthThreshold = 18
 
 
-    def __init__(self, volume=DefaultVolume, frequency=DefaultFrequency,
+    def __init__(self, signal=DefaultSignal, noise=DefaultNoise,
+                       frequency=DefaultFrequency,
                        cwpm=DefaultCWPM, wpm=DefaultWPM):
         """Prepare the SoundMorse object."""
 
         # set send params to defaults
         self.cwpm = cwpm            # the character word speed
         self.wpm = wpm              # the word speed
-        self.signal = 0.3           # signal volume (fraction)
+        self.signal = signal        # signal volume (fraction)
         self.noise = 0.0            # noise volume (fraction)
         self.frequency = frequency  # audio frequency
 
@@ -78,16 +81,15 @@ class SoundMorse:
         self.stream.close()
         self.pyaudio.terminate()
 
-    def make_tone(self, duration, volume):
+    def make_tone(self, duration, signal, noise=0.0):
         """Create a bytes sequence full of sinewave data.
 
         duration  time duration of string
-        volume    volume when string played
+        signal    volume of morse sound
+        noise     volume of noise sound
 
         Result is a string of byte data.
         """
-
-        log('type(volume)=%s, volume=%s' % (type(volume), str(volume)))
 
         MaxValue = 2**7 // 2
         LeadInOutCycles = 3
@@ -97,12 +99,13 @@ class SoundMorse:
         cycle = []
         for n in range(num_cycle_samples):
             value = int((math.sin(2*math.pi*n/num_cycle_samples)*MaxValue
-                                  + MaxValue) * volume)
+                                  + MaxValue) * signal)
             cycle.append(value)
 
         # make complete tone
         data = []
-        for _ in range(int(self.frequency * duration)):
+        num_cycles = int(self.frequency * duration)
+        for _ in range(num_cycles):
             data.extend(cycle)
 
         # add lead-in and lead-out
@@ -111,7 +114,21 @@ class SoundMorse:
             data[i] = int(data[i] * i/lead_samples)
             data[-i] = int(data[-i] * i/lead_samples)
 
-        log('data: %s' % str(data))
+        # make noise samples of same duration, add to morse signal
+        last_noise = 0
+        if noise > 0.0:
+            num_samples = num_cycle_samples * num_cycles
+
+            noise_data = []
+            for _ in range(num_samples):
+                sample_noise = int(randint(0, 255) * noise)
+                new_noise = (last_noise + sample_noise) // 2
+                last_noise = sample_noise
+                noise_data.append(new_noise)
+            new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
+            data = new_data
+
+        result = bytes(data)
 
         return bytes(data)
 
@@ -147,6 +164,8 @@ class SoundMorse:
         The input variables are:
             self.cwpm
             self.wpm
+            self.signal
+            self.noise
             self.frequency
             SoundMorse.SampleRate
         """
@@ -165,11 +184,11 @@ class SoundMorse:
             inter_word_time = 7 * dot_time_f
 
         log('self.signal=%s' % str(self.signal))
-        self.dot_sound = self.make_tone(dot_time, volume=self.signal)
-        self.dash_sound = self.make_tone(dash_time, volume=self.signal)
-        self.inter_element_silence = self.make_tone(inter_elem_time, volume=0.0)
-        self.inter_char_silence = self.make_tone(inter_char_time, volume=0.0)
-        self.inter_word_silence = self.make_tone(inter_word_time, volume=0.0)
+        self.dot_sound = self.make_tone(dot_time, signal=self.signal, noise=self.noise)
+        self.dash_sound = self.make_tone(dash_time, signal=self.signal, noise=self.noise)
+        self.inter_element_silence = self.make_tone(inter_elem_time, signal=0.0, noise=self.noise)
+        self.inter_char_silence = self.make_tone(inter_char_time, signal=0.0, noise=self.noise)
+        self.inter_word_silence = self.make_tone(inter_word_time, signal=0.0, noise=self.noise)
 
     def set_speeds(self, cwpm=None, wpm=None):
         """Set morse speeds."""
