@@ -25,7 +25,7 @@ import traceback
 from queue import Queue
 from random import randrange
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QVBoxLayout, QWidget,
                              QTabWidget, QPushButton, QMessageBox, QSpacerItem)
 from PyQt5.QtGui import QIcon
@@ -188,7 +188,7 @@ class MorseTrainer(QTabWidget):
                     'display.  Your job is to send that character using your '
                     'key and code practice oscillator.  The program will print '
                     'what it thinks you sent on the lower line of the display.  '
-                    'Errors are marked in red and you can right click on an '
+                    'Errors are marked in red and you can left click on an '
                     'error to see what went wrong.')
         instructions = Instructions(doc_text)
         self.send_speeds = SendSpeeds()
@@ -236,44 +236,33 @@ class MorseTrainer(QTabWidget):
         # update internal state
         self.send_wpm = speed
 
-        # modify receive params to about the speed
+        # modify receive params to be the approximate desired speed
         dot_time = utils.wpm2params(speed)
         self.send_morse_obj.len_dot = dot_time
         self.send_morse_obj.len_dash = 3 * dot_time
         self.send_morse_obj.dot_dash_threshold = 2 * dot_time
 
-        log('send_speeds_change: .len_dot=%d, .len_dash=%d, .dot_dash_threshold=%d'
-            % (self.send_morse_obj.len_dot, self.send_morse_obj.len_dash,
-               self.send_morse_obj.dot_dash_threshold))
-
     def send_start(self):
         """The Send 'start/pause' button was clicked."""
 
-        log("Send 'start/pause' button was clicked, self.processing=%s" % str(self.processing))
-
         if self.processing:
-            log('point 1')
-            # stop any processing, thread, etc
+            # stop Send thread
             if self.threadSend:
                 self.threadSend.terminate()
                 self.threadSend.wait()
                 self.threadSend = None
 
-            log('point 2')
             # enable the Clear button and speed/grouping/charset
             self.btn_send_clear.setDisabled(False)
             self.send_speeds.setDisabled(False)
             self.btn_send_start_stop.setText('Start')
 
-            log('point 3')
             # destroy the result queue
             self.resultq = None
 
-            log('point 4')
             # change state variables to reflect the stop
             self.send_expected = None
             self.processing = False
-            log('STOP pressed, .processing=%s, .resultq=%s' % (str(self.processing), str(self.resultq)))
         else:
             # start processing, create a thread with next random char, etc
             # disable Clear button, speed/grouping/charset, relabel Start button
@@ -288,7 +277,6 @@ class MorseTrainer(QTabWidget):
             self.send_expected = None
             self.processing = True
 
-            log('START pressed, .processing=%s, .resultq=%s' % (str(self.processing), str(self.resultq)))
             # start new thread, send_thread_finished() called when finished
             self.send_thread_finished()
 
@@ -305,16 +293,11 @@ class MorseTrainer(QTabWidget):
         exceeded and we can therefore increase the Koch test charset.
         """
 
-        log('send_thread_finished: called, result=%s' % str(result))
-
         # indicate that the thread isn't running
         if self.threadSend:
-            log('send_thread_finished: disconnecting')
             self.threadSend.send_done.disconnect()
-            log('send_thread_finished: AFTER .disconnect()')
             self.threadSend.wait()
         self.threadSend = None
-        log('send_thread_finished: After self.threadSend = None')
 
         if result is None:
             char = None
@@ -328,23 +311,17 @@ class MorseTrainer(QTabWidget):
         if char == ' ':
             char = None
 
-        log('send_thread_finished: char=%s' % str(char))
-# crash here
         if char:
-            log('send_thread_finished: recognized char=%s, updating stats' % char)
             # update the character stats
             self.update_stats(self.send_stats,
                               self.send_expected,
                               char==self.send_expected)
-            log('send_thread_finished: after stats')
 
             # show result in display
             char_colour = Display.AnsTextGoodColour
             if char != self.send_expected:
                 char_colour = Display.AnsTextBadColour
-            log('send_thread_finished: inserting char %s in lower' % str(char))
             self.send_display.insert_lower(char, fg=char_colour)
-            log('send_thread_finished: AFTER inserting char %s in lower' % str(char))
 
             # update statistics and mini_charset
             new = self.stats2percent(self.send_stats,
@@ -378,17 +355,13 @@ class MorseTrainer(QTabWidget):
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
                 self.send_display.set_highlight()
-                log('send_thread_finished: new char .insert_upper(%s)' % str(send_char))
 
-            log('send_thread_finished: starting SendThread()')
             self.threadSend = SendThread(self.send_morse_obj)
             self.threadSend.send_done.connect(self.send_thread_finished)
             self.threadSend.start()
-            log('send_thread_finished: AFTER starting SendThread()')
 
         # update apparent wpm display
         len_dot = self.send_morse_obj.len_dot
-        log('len_dot=%s' % str(len_dot))
         apparent_wpm = utils.params2wpm(len_dot)
         self.send_speeds.setApparentSpeed(apparent_wpm)
 
@@ -469,7 +442,7 @@ class MorseTrainer(QTabWidget):
                     'on the keyboard.  The character you typed will appear in '
                     'the bottom row of the display along with the character '
                     'the program actually sent in the top row.  '
-                    'Errors are marked in red and you can right click on an '
+                    'Errors are marked in red and you can left click on an '
                     'error to see what went wrong.')
         instructions = Instructions(doc_text)
         self.copy_speeds = CopySpeeds()
@@ -537,24 +510,22 @@ class MorseTrainer(QTabWidget):
             self.threadCopy = None
             self.copy_thread_finished()
 
-    def copy_thread_finished(self, char=None):
+    @pyqtSlot()
+    def copy_thread_finished(self):
         """Catch signal when Copy thread finished.
 
         If still processing, start new thread.
         """
 
-        log.critical('copy_thread_finished: self.processing=%s, char=%s' % (str(self.processing), str(char)))
-
         # indicate that the thread isn't running
         if self.threadCopy:
-            self.threadCopy.copy_done.disconnect()
+            self.threadCopy.finished.disconnect()
         self.threadCopy = None
 
         if self.processing:
             # update copy count, maybe increase Koch charset
             self.process_count += 1
             if self.process_count >= self.KochCopyCount:
-                log.critical('self.process_count=%d' % self.process_count)
                 self.process_count = 0
                 if self.all_copy_chars_ok():
                     self.copy_start()   # turn off copying, self.processing := None
@@ -569,7 +540,7 @@ class MorseTrainer(QTabWidget):
 
             # start new thread to sound character
             self.threadCopy = CopyThread(copy_char, self.copy_morse_obj)
-            self.threadCopy.copy_done.connect(self.copy_thread_finished)
+            self.threadCopy.finished.connect(self.copy_thread_finished)
             self.threadCopy.start()
 
     def copy_clear(self, event):
@@ -971,8 +942,6 @@ class CopyThread(QThread):
     It automatically sends a signal to the main thread when finished.
     """
 
-    copy_done = pyqtSignal(str)
-
     def __init__(self, char, sound_object):
         """Create a thread to sound one morse character.
 
@@ -989,7 +958,6 @@ class CopyThread(QThread):
 
         # make the character sound in morse
         self.sound_object.send(self.char)
-        self.copy_done.emit(self.char)
 
 
 if __name__ == '__main__':
