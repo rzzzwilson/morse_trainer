@@ -31,9 +31,13 @@ class CopyVolumes(QWidget):
     # signal raised when user changes state: signal, noise integer percentages
     changed = pyqtSignal(int, int)
 
-    # display levels & volume percentages for both signal and noise:
+    # display signal level and percentage
     levels = [('S0', 00), ('S1', 11), ('S2', 22), ('S3', 33), ('S4', 44),
               ('S5', 55), ('S6', 66), ('S7', 77), ('S8', 88), ('S9', 99)]
+
+    # display QRN level and percentage
+    qrn_levels = [('1 - none', 00), ('2 - slight', 25), ('3 - moderate', 50),
+                  ('4 - severe', 75), ('5 - extreme', 99)]
 
     def __init__(self, signal=55, noise=0):
         QWidget.__init__(self)
@@ -62,9 +66,9 @@ class CopyVolumes(QWidget):
         for (l, p) in CopyVolumes.levels:
             self.cbo_signal.addItem(l, userData=p)
 
-        lbl_noise = QLabel('Noise:')
+        lbl_noise = QLabel('QRN:')
         self.cbo_noise = QComboBox(self)
-        for (l, p) in CopyVolumes.levels:
+        for (l, p) in CopyVolumes.qrn_levels:
             self.cbo_noise.addItem(l, userData=p)
 
         # start the layout
@@ -88,11 +92,13 @@ class CopyVolumes(QWidget):
 
         # define hover tooltop
         self.setToolTip('<font size=4>'
-                        'This shows the signal and noise levels:<br>'
+                        'This shows the signal and noise (QRN) levels:<br>'
                         '<center>'
                         '<table fontsize="4" border="1" style="width:100%">'
-                        '<tr><td>S0</td><td>no signal or noise level</td></tr>'
-                        '<tr><td>S9</td><td>the maximum level</td></tr>'
+                        '<tr><td rowspan="2">Signal</td><td>S0</td><td>no signal</td></tr>'
+                        '<tr><td>S9</td><td>maximum signal</td></tr>'
+                        '<tr><td rowspan="2">QRN</td><td>1</td><td>no noise</td></tr>'
+                        '<tr><td>5</td><td>maximum noise</td></tr>'
                         '</table>'
                         '</center>'
                         '</font>'
@@ -139,22 +145,21 @@ class CopyVolumes(QWidget):
         noise   the noise volume percentage
         """
 
-        def percent2index(percent):
+        def percent2index(percent, levels_list):
             """Convert a percent value to canonical percent & combobox item index."""
 
-            good_percent = (int(percent + 10) // 11) * 11
-            for (i, (l, p)) in enumerate(CopyVolumes.levels):
-                if good_percent == p:
-                    return (good_percent, i)
+            for (i, (l, p)) in enumerate(levels_list):
+                if percent == p:
+                    return (percent, i)
             raise RuntimeException('Got bad percent value: %s' % str(percent))
 
         self.inhibit = True
 
-        (good_percent, index) = percent2index(signal)
+        (good_percent, index) = percent2index(signal, CopyVolumes.levels)
         self.signal = good_percent
         self.cbo_signal.setCurrentIndex(index)
 
-        (good_percent, index) = percent2index(noise)
+        (good_percent, index) = percent2index(noise, CopyVolumes.qrn_levels)
         self.noise = good_percent
         self.cbo_noise.setCurrentIndex(index)
 
