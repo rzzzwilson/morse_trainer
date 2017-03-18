@@ -100,7 +100,7 @@ class MiniCharset(QWidget):
         self.setLayout(layout)
 
         self.setToolTip('<font size=4>'
-                        'This shows the Koch test with colours showing usage:<br>'
+                        'This shows the Koch test charset with colours showing usage:<br>'
                         '<center>'
                         '<table fontsize="4" border="1">'
                         '<tr><td>gray</td><td>not in use</td></tr>'
