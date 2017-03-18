@@ -76,6 +76,18 @@ class SendSpeeds(QWidget):
 
         self.setLayout(layout)
 
+        # helpful (?) tooltip
+        self.setToolTip('<font size=4>'
+                        'This provides a rough control over the speed Morse '
+                        'Trainer will attempt to recognize.  Setting the '
+                        'speed in the spinbox will configure the program to '
+                        'recognize that speed.  Once the program recognizes '
+                        'your code it will adapt to any speed variation.<p>'
+                        'The "apparent speed" display is a rough attempt to '
+                        'show the speed you are sending.'
+                        '</font>'
+                       )
+
         # connect spinbox events to handlers
         self.spb_speed.valueChanged.connect(self.handle_speed_change)
 

@@ -50,7 +50,7 @@ class CopySpeeds(QWidget):
 
     def initUI(self, char_speed, word_speed):
         # define the widgets we are going to use
-        lbl_words = QLabel('  Words')
+        lbl_words = QLabel('  Word')
         self.spb_words = QSpinBox(self)
         self.spb_words.setMinimum(CopySpeeds.MinSpeed)
         self.spb_words.setMaximum(CopySpeeds.MaxSpeed)
@@ -58,7 +58,7 @@ class CopySpeeds(QWidget):
         self.spb_words.setValue(word_speed)
         self.spb_words.setSuffix(' wpm')
 
-        lbl_chars = QLabel('Characters')
+        lbl_chars = QLabel('Character')
         self.spb_chars = QSpinBox(self)
         self.spb_chars.setMinimum(CopySpeeds.MinSpeed)
         self.spb_chars.setMaximum(CopySpeeds.MaxSpeed)
@@ -83,6 +83,17 @@ class CopySpeeds(QWidget):
         groupbox.setLayout(hbox)
 
         self.setLayout(layout)
+
+        # helpful (?) tooltip
+        self.setToolTip('<font size=4>'
+            'This controls the sending speed. The Farnsworth method is used.<p>'
+            'The "character" speed sets the speed each character is sent. '
+            'The "word" speed sets the speed at which standard 5 character '
+            'words are sent.  You should set the character speed to a reasonable '
+            'speed such as 20wpm.  Use a slower word speed such as 10wpm or '
+            '15wpm.  Increase the word speed as you become more proficient.'
+            '</font>'
+            )
 
         # connect spinbox events to handlers
         self.spb_chars.valueChanged.connect(self.handle_charspeed_change)
