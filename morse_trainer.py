@@ -198,6 +198,7 @@ class MorseTrainer(QTabWidget):
                     'Errors are marked in red and you can left click on an '
                     'error to see what went wrong.')
         instructions = Instructions(doc_text)
+        instructions.minimumSize()
         self.send_speeds = SendSpeeds()
         self.send_charset = MiniCharset(utils.Koch)
         self.btn_send_start_stop = QPushButton('Start', self)
@@ -207,29 +208,29 @@ class MorseTrainer(QTabWidget):
 
         # start layout
         buttons = QVBoxLayout()
-        buttons.maximumSize()
         buttons.addStretch()
         buttons.addWidget(self.btn_send_start_stop)
-        buttons.addItem(QSpacerItem(20, 20))
+        buttons.addItem(QSpacerItem(10, 10))
         buttons.addWidget(self.btn_send_clear)
+        buttons.maximumSize()
 
         controls = QVBoxLayout()
-        controls.maximumSize()
         controls.addWidget(self.send_speeds)
         controls.addWidget(self.send_charset)
+        controls.maximumSize()
 
         hbox = QHBoxLayout()
-        hbox.maximumSize()
         hbox.addLayout(controls)
         buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
+        hbox.maximumSize()
 
         layout = QVBoxLayout()
-        layout.maximumSize()
         layout.addWidget(self.send_display)
         layout.addWidget(instructions)
         layout.addStretch()
         layout.addLayout(hbox)
+        layout.maximumSize()
         self.send_tab.setLayout(layout)
 
         # connect 'Send' events to handlers
@@ -453,6 +454,7 @@ class MorseTrainer(QTabWidget):
                     'Errors are marked in red and you can left click on an '
                     'error to see what went wrong.')
         instructions = Instructions(doc_text)
+        instructions.minimumSize()
         self.copy_speeds = CopySpeeds()
         self.copy_volumes = CopyVolumes()
         self.copy_charset = MiniCharset(utils.Koch)
@@ -463,30 +465,30 @@ class MorseTrainer(QTabWidget):
 
         # start layout
         buttons = QVBoxLayout()
-        buttons.maximumSize()
         buttons.addStretch()
         buttons.addWidget(self.btn_copy_start_stop)
-        buttons.addItem(QSpacerItem(20, 20))
+        buttons.addItem(QSpacerItem(10, 10))
         buttons.addWidget(self.btn_copy_clear)
+        buttons.maximumSize()
 
         controls = QVBoxLayout()
-        controls.maximumSize()
         controls.addWidget(self.copy_speeds)
         controls.addWidget(self.copy_volumes)
         controls.addWidget(self.copy_charset)
+        controls.maximumSize()
 
         hbox = QHBoxLayout()
-        hbox.maximumSize()
         hbox.addLayout(controls)
         buttons.addItem(QSpacerItem(10, 1))
         hbox.addLayout(buttons)
+        hbox.maximumSize()
 
         layout = QVBoxLayout()
-        layout.maximumSize()
         layout.addWidget(self.copy_display)
         layout.addWidget(instructions)
         layout.addStretch()
         layout.addLayout(hbox)
+        layout.maximumSize()
         self.copy_tab.setLayout(layout)
 
         # connect 'Copy' events to handlers
@@ -852,6 +854,7 @@ class MorseTrainer(QTabWidget):
                                    MorseTrainer.KochCopyThreshold,
                                    MorseTrainer.KochCopyCount)
         self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
+        self.copy_morse_obj.set_volumes(self.copy_signal, self.copy_noise)
         self.copy_volumes.setState(self.copy_signal, self.copy_noise)
 
         # adjust tabbed view to last view
