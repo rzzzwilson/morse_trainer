@@ -112,8 +112,6 @@ class CopyVolumes(QWidget):
         Raise self.changed event with new signal/noise percentages.
         """
 
-        log('handle_signal_change: index=%s' % str(index))
-
         # save changed speed
         self.signal = self.cbo_signal.currentData()
 
@@ -128,8 +126,6 @@ class CopyVolumes(QWidget):
 
         Raise self.changed event with new noise/noise percentages.
         """
-
-        log('handle_noise_change: index=%s' % str(index))
 
         # save changed speed
         self.noise = self.cbo_noise.currentData()

@@ -118,8 +118,12 @@ class SoundMorse:
 
         # make noise samples of same duration, add to morse signal
         if noise > 0.0:
-            num_samples = num_cycle_samples * num_cycles
-            noise_data = [int((nd * noise)/3) for nd in NoiseData[:num_samples]]
+            rand_offset = randint(100, 10000)
+            num_samples = num_cycle_samples * num_cycles // 2
+            noise_data = [int((nd * noise)/2) for nd in NoiseData[rand_offset:num_samples+rand_offset]]
+            noise_sample = list(noise_data)
+            noise_data.reverse()
+            noise_sample += noise_data
             new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
             data = new_data
 
@@ -176,7 +180,6 @@ class SoundMorse:
             inter_char_time = 3 * dot_time_f
             inter_word_time = 7 * dot_time_f
 
-        log('self.signal=%s' % str(self.signal))
         self.dot_sound = self.make_tone(dot_time, signal=self.signal, noise=self.noise)
         self.dash_sound = self.make_tone(dash_time, signal=self.signal, noise=self.noise)
         self.inter_element_silence = self.make_tone(inter_elem_time, signal=0.0, noise=self.noise)
