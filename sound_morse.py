@@ -24,6 +24,8 @@ import audioop
 import pyaudio
 from random import randint
 
+from noise_data import NoiseData
+
 import utils
 import logger
 log = logger.Log('debug.log', logger.Log.CRITICAL)
@@ -115,20 +117,11 @@ class SoundMorse:
             data[-i] = int(data[-i] * i/lead_samples)
 
         # make noise samples of same duration, add to morse signal
-        last_noise = 0
         if noise > 0.0:
             num_samples = num_cycle_samples * num_cycles
-
-            noise_data = []
-            for _ in range(num_samples):
-                sample_noise = int(randint(0, 255) * noise)
-                new_noise = (last_noise + sample_noise) // 2
-                last_noise = sample_noise
-                noise_data.append(new_noise)
+            noise_data = [int((nd * noise)/3) for nd in NoiseData[:num_samples]]
             new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
             data = new_data
-
-        result = bytes(data)
 
         return bytes(data)
 
