@@ -275,6 +275,27 @@ def params2wpm(dot_time):
             low_dot = dot
             low_wpm = wpm
 
+def farnsworth_times(cwpm, wpm):
+    """Calculate Farnsworth spacing.
+
+    cwpm  character speed, words/minute
+    wpm   overall speed, words/minute
+
+    Returns (dot_time, stretched_dot_time) times (in seconds).
+    The 'stretched_dot_time' is used to calculate the inter-char and
+    inter_word spacings in Farnsworth mode.
+    """
+
+    dot_time = (1.2 / cwpm)
+    word_time_cwpm = 60 / cwpm
+    word_time_wpm = 60 / wpm
+
+    delta_per_word = word_time_wpm - word_time_cwpm
+    stretched_dot_time = dot_time + delta_per_word/19
+
+    return (dot_time, stretched_dot_time)
+
+
 
 if __name__ == '__main__':
     morse = '.'

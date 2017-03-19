@@ -129,27 +129,6 @@ class SoundMorse:
 
         return bytes(data)
 
-    @classmethod
-    def farnsworth_times(cls, cwpm, wpm):
-        """Calculate Farnsworth spacing.
-
-        cwpm  character speed, words/minute
-        wpm   overall speed, words/minute
-
-        Returns (dot_time, stretched_dot_time) times (in seconds).
-        The 'stretched_dot_time' is used to calculate the inter-char and
-        inter_word spacings in Farnsworth mode.
-        """
-
-        dot_time = (1.2 / cwpm)
-        word_time_cwpm = 60 / cwpm
-        word_time_wpm = 60 / wpm
-
-        delta_per_word = word_time_wpm - word_time_cwpm
-        stretched_dot_time = dot_time + delta_per_word/19
-
-        return (dot_time, stretched_dot_time)
-
     def create_sounds(self):
         """Create morse sounds from state variables.
 
@@ -168,7 +147,7 @@ class SoundMorse:
         """
 
         # calculate dot and dash times, normal and Farnsworth
-        (dot_time, dot_time_f) = self.farnsworth_times(self.cwpm, self.wpm)
+        (dot_time, dot_time_f) = utils.farnsworth_times(self.cwpm, self.wpm)
 
         dash_time = 3 * dot_time
         inter_elem_time = dot_time
@@ -249,5 +228,5 @@ class SoundMorse:
 
 if __name__ == '__main__':
     for wpm in [5, 10, 15, 20, 25, 30, 35, 40, 45]:
-        (dot_time, stretch_dot_time) = SoundMorse.farnsworth_times(wpm, wpm)
+        (dot_time, stretch_dot_time) = utils.farnsworth_times(wpm, wpm)
         print('wpm=%d, dot_time=%d' % (wpm, int(dot_time*500)))
