@@ -360,7 +360,10 @@ class MorseTrainer(QTabWidget):
         # if we are still processing and not expecting char, prepare for next char
         if self.processing:
             if self.send_expected is None:
-                send_char = utils.get_random_char(self.send_Koch_charset, self.send_stats)
+                send_char = utils.get_random_char(self.send_Koch_charset,
+                                                  self.send_stats,
+                                                  self.KochSendCount,
+                                                  self.KochSendThreshold)
                 self.send_display.insert_upper(send_char)
                 self.send_expected = send_char
                 self.send_display.set_highlight()
@@ -553,7 +556,10 @@ class MorseTrainer(QTabWidget):
         # we check again if processing as we can disable in code above
         if self.processing:
             # prepare, get next char, remember last two chars
-            copy_char = utils.get_random_char(self.copy_Koch_charset, self.copy_stats)
+            copy_char = utils.get_random_char(self.copy_Koch_charset,
+                                              self.copy_stats,
+                                              self.KochCopyCount,
+                                              self.KochCopyThreshold)
             self.copy_pending.append(copy_char)
             self.copy_pending = self.copy_pending[-2:]
 

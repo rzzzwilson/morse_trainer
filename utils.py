@@ -9,10 +9,11 @@ Small utility functions.
 import sys
 import traceback
 from random import betavariate
-from random import choices
+from random import choice
 from math import floor
 
 import logger
+log = logger.Log('debug.log', logger.Log.CRITICAL)
 
 
 # various charsets
@@ -96,8 +97,6 @@ QGroupBox:title{
 }
 """
 
-log = logger.Log('debug.log', logger.Log.CRITICAL)
-
 
 def str_trace(msg=None):
     """Get a traceback string.
@@ -149,32 +148,39 @@ def morse2display(morse):
     return SIX_PER_EM_SPACE.join(result)
 
 
-def get_random_char(charset, stats):
+def get_random_char(charset, stats, min_sample, threshold):
     """Get a random char from the charset sequence.
 
-    charset  a string of characters we are testing
-    stats    a dictionary of stats: {'A': [T, F, T, ...], ...}
+    charset     a string of characters we are testing
+    stats       a dictionary of stats: {'A': [T, F, T, ...], ...}
+    min_sample  number of samples before char is considered 'OK'
+    threshold   percentage below which char is considered 'bad' (0.0, 0.999)
 
     Choose a character biased more towards the characters most in error.
-    We do this by sorting the charset by error rate, then choosing from the
-    front of the sorted list.
+    We do this by creating a list with ALL characters plus the characters
+    with a low sample number or those below the proficiency threshold
+    being duplicated.
 
     A low number of samples biases character(s) to be more frequent.
     """
 
-    # figure out the error rate of chars in the charset
-    test_stats = {}
+    # make a list of characters we are going to choose from
+    # chars with low proficiency are duplicated in this list,
+    # as are chars with sample numbers less than the threshold
+    choose_from = []
+
     for ch in charset:
-        test_stats[ch] = stats[ch]
-    ordered_charset = stats2errorrate(test_stats)
+        choose_from.append(ch)
+        results = stats[ch]
+        len_results = len(results)
+        if len_results < min_sample:
+            choose_from.append(ch)
+            choose_from.append(ch)
+        elif results.count(True) / len_results < threshold:
+            choose_from.append(ch)
+            choose_from.append(ch)
 
-    bias = 0.5
-    charset_len = len(charset)
-    weights = [x+bias for x in range(charset_len)]
-    sum_weights = sum(weights)
-    normal_weights = [x/sum_weights for x in weights]
-
-    return choices(ordered_charset, weights=normal_weights)[0]
+    return choice(choose_from)
 
 def stats2errorrate(stats):
     """Convert stats data into an errorrate list.
@@ -185,7 +191,7 @@ def stats2errorrate(stats):
     the list contains the last N results (True or False).
 
     The result is a list of characters sorted so the character with
-    the highest error rate is forst, etc.
+    the highest error rate is first, etc.
     """
 
     # working list of tuples (rate, char)
@@ -257,8 +263,6 @@ def wpm2params(wpm):
 def params2wpm(dot_time):
     """Convert morse params into a wpm speed."""
 
-    log('params2wpm: dot_time=%s' % str(dot_time))
-
     # find tuples that are next highest and next lowest dot_times
     # DotTime2Wpm is ((120, 0), (120, 5), (60, 10), ...), from slow to fast
     for (dot, wpm) in DotTime2Wpm:
@@ -274,6 +278,7 @@ def params2wpm(dot_time):
             # slower tuple, remember values
             low_dot = dot
             low_wpm = wpm
+    log('SHOULD NOT GET HERE: dot_time=%d, DotTime2Wpm=%s' % (dot_time, str(DotTime2Wpm)))
 
 def farnsworth_times(cwpm, wpm):
     """Calculate Farnsworth spacing.
