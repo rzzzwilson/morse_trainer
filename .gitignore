@@ -1,5 +1,6 @@
 *.swp
 *.state
+*.param
 TTD.txt
 .DS_Store
 icons
