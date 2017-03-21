@@ -119,11 +119,9 @@ class SoundMorse:
         # make noise samples of same duration, add to morse signal
         if noise > 0.0:
             rand_offset = randint(100, 10000)
-            num_samples = num_cycle_samples * num_cycles // 2
+            num_samples = num_cycle_samples * num_cycles
             noise_data = [int((nd * noise)/2) for nd in NoiseData[rand_offset:num_samples+rand_offset]]
             noise_sample = list(noise_data)
-            noise_data.reverse()
-            noise_sample += noise_data
             new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
             data = new_data
 
