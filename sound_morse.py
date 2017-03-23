@@ -176,13 +176,15 @@ class SoundMorse:
 
         return (self.cwpm, self.wpm)
 
-    def set_volumes(self, signal, noise):
+    def set_volumes(self, tone, signal, noise):
         """Set morse volumes.
 
+        tone    signal tone
         signal  signal volume percentage
         noise   noise volume percentage
         """
 
+        self.frequency = tone
         self.signal = signal / 100.0
         self.noise = noise / 100.0
         self.create_sounds()

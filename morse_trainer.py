@@ -128,7 +128,7 @@ class MorseTrainer(QTabWidget):
 
                      'copy_Koch_number', 'copy_Koch_charset',
                      'copy_wpm', 'copy_cwpm',
-                     'copy_signal', 'copy_noise',
+                     'copy_freq', 'copy_signal', 'copy_noise',
                      'copy_stats',
                     ]
 
@@ -638,16 +638,17 @@ class MorseTrainer(QTabWidget):
         self.copy_wpm = wpm
         self.copy_morse_obj.set_speeds(cwpm, wpm)
 
-    def copy_volumes_changed(self, signal, noise):
+    def copy_volumes_changed(self, tone, signal, noise):
         """Something in the "copy volume" group changed.
 
         signal  new signal percent
         noise   new noise percent
         """
 
+        self.copy_freq = tone
         self.copy_signal = signal
         self.copy_noise = noise
-        self.copy_morse_obj.set_volumes(signal, noise)
+        self.copy_morse_obj.set_volumes(tone, signal, noise)
 
 ######
 # Other code
@@ -860,8 +861,10 @@ class MorseTrainer(QTabWidget):
                                    MorseTrainer.KochCopyThreshold,
                                    MorseTrainer.KochCopyCount)
         self.copy_morse_obj.set_speeds(self.copy_cwpm, self.copy_wpm)
-        self.copy_morse_obj.set_volumes(self.copy_signal, self.copy_noise)
-        self.copy_volumes.setState(self.copy_signal, self.copy_noise)
+        self.copy_morse_obj.set_volumes(self.copy_freq,
+                                        self.copy_signal, self.copy_noise)
+        self.copy_volumes.setState(self.copy_freq,
+                                   self.copy_signal, self.copy_noise)
 
         # adjust tabbed view to last view
         self.set_app_tab(self.current_tab_index)
