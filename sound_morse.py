@@ -10,8 +10,10 @@ morse = SoundMorse()
 morse.set_speeds(chars_per_minute, words_per_minute)
 (cwpm, wpm) = morse.get_speeds()
 
-morse.set_volumes(signal, noise)
+morse.set_volumes(frequency, signal, noise)
 morse.set_frequency(frequency)
+
+mores.send(code)
 
 morse.close()
 -------------
@@ -19,7 +21,7 @@ morse.close()
 """
 
 import sys
-import math
+from math import pi, sin
 import audioop
 import pyaudio
 from random import randint
@@ -47,6 +49,15 @@ class SoundMorse:
 
     # Words/minute below which we use the Farnsworth timing method
     FarnsworthThreshold = 18
+
+    # some constants
+    MaxValue = 2**7 // 2
+    LeadInOutCycles = 3
+
+    # volume scaling by frequency - (freq, scale)
+    ScaleVolume = [(400, 90), (450, 84), (500, 78), (550, 72),
+                   (600, 66), (650, 60), (700, 54), (750, 48),
+                   (800, 42), (850, 36), (900, 30), (950, 24), (1000, 18)]
 
 
     def __init__(self, signal=DefaultSignal, noise=DefaultNoise,
@@ -93,15 +104,20 @@ class SoundMorse:
         Result is a string of byte data.
         """
 
-        MaxValue = 2**7 // 2
-        LeadInOutCycles = 3
+        # calculate volume scaling from frequency
+        # we assume frequency is one of those in SoundMorse.ScaleVolume
+        scale = 90
+        for (freq, x) in SoundMorse.ScaleVolume:
+            if self.frequency == freq:
+                scale = x
+                break
 
         # get number of samples in one tone cycle, create one cycle of sound
         num_cycle_samples = SoundMorse.SampleRate // self.frequency
         cycle = []
         for n in range(num_cycle_samples):
-            value = int((math.sin(2*math.pi*n/num_cycle_samples)*MaxValue
-                                  + MaxValue) * signal)
+            value = int((sin(2*pi*n/num_cycle_samples)*SoundMorse.MaxValue
+                         + SoundMorse.MaxValue) * signal * scale/100.0)
             cycle.append(value)
 
         # make complete tone
@@ -111,7 +127,7 @@ class SoundMorse:
             data.extend(cycle)
 
         # add lead-in and lead-out
-        lead_samples = num_cycle_samples*LeadInOutCycles
+        lead_samples = num_cycle_samples * SoundMorse.LeadInOutCycles
         for i in range(lead_samples):
             data[i] = int(data[i] * i/lead_samples)
             data[-i] = int(data[-i] * i/lead_samples)
@@ -227,6 +243,18 @@ class SoundMorse:
 
 
 if __name__ == '__main__':
-    for wpm in [5, 10, 15, 20, 25, 30, 35, 40, 45]:
-        (dot_time, stretch_dot_time) = utils.farnsworth_times(wpm, wpm)
-        print('wpm=%d, dot_time=%d' % (wpm, int(dot_time*500)))
+    morse = SoundMorse()
+    morse.set_speeds(20, 20)
+    volume = 90
+
+    for tone in [400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000]:
+        morse.set_volumes(tone, volume, 0)
+        print('(%d, %d), ' % (tone, volume))
+        morse.send('T')
+        volume -= 6
+
+    volume = 90
+    tone = 400
+    morse.set_volumes(tone, volume, 0)
+    print('%dHz, volume=%d' % (tone, volume))
+    morse.send('T')
