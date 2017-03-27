@@ -55,9 +55,9 @@ class SoundMorse:
     LeadInOutCycles = 3
 
     # volume scaling by frequency - (freq, scale)
-    ScaleVolume = [(400, 90), (450, 84), (500, 78), (550, 72),
-                   (600, 66), (650, 60), (700, 54), (750, 48),
-                   (800, 42), (850, 36), (900, 30), (950, 24), (1000, 18)]
+    ScaleVolume = [(400, 90), (450, 85), (500, 80), (550, 75),
+                   (600, 70), (650, 65), (700, 60), (750, 55),
+                   (800, 50), (850, 45), (900, 40), (950, 35), (1000, 30)]
 
 
     def __init__(self, signal=DefaultSignal, noise=DefaultNoise,
@@ -136,7 +136,7 @@ class SoundMorse:
         if noise > 0.0:
             rand_offset = randint(100, 10000)
             num_samples = num_cycle_samples * num_cycles
-            noise_data = [int((nd * noise)/3) for nd in NoiseData[rand_offset:num_samples+rand_offset]]
+            noise_data = [int((nd * noise)/5) for nd in NoiseData[rand_offset:num_samples+rand_offset]]
             noise_sample = list(noise_data)
             new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
             data = new_data
