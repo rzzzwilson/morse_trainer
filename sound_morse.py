@@ -52,9 +52,11 @@ class SoundMorse:
 
     # some constants
     MaxValue = 2**7 // 2
-    LeadInOutCycles = 3
+    LeadInOutCycles = 3         # num cycles we 'shape' lead-in and lead-out
+                                # this gives a nice morse slound - no 'clicks'
 
     # volume scaling by frequency - (freq, scale)
+    # try to maintain constant apparent signal level no matter the frequency
     ScaleVolume = [(400, 90), (450, 85), (500, 80), (550, 75),
                    (600, 70), (650, 65), (700, 60), (750, 55),
                    (800, 50), (850, 45), (900, 40), (950, 35), (1000, 30)]
@@ -78,6 +80,10 @@ class SoundMorse:
         self.inter_element_silence = None
         self.inter_char_silence = None
         self.inter_word_silence = None
+
+        # dict holding complete byte data for each character
+        # this dict will have the form: {'A': <byte_data>, 'B': ....}
+        self.morse_sounds = None
 
         # create sounds at default speeds
         self.create_sounds()
@@ -113,7 +119,7 @@ class SoundMorse:
                 break
 
         # get number of samples in one tone cycle, create one cycle of sound
-        num_cycle_samples = SoundMorse.SampleRate // self.frequency
+        num_cycle_samples = int(SoundMorse.SampleRate / self.frequency + 0.5)
         cycle = []
         for n in range(num_cycle_samples):
             value = int((sin(2*pi*n/num_cycle_samples)*SoundMorse.MaxValue
@@ -136,7 +142,8 @@ class SoundMorse:
         if noise > 0.0:
             rand_offset = randint(100, 10000)
             num_samples = num_cycle_samples * num_cycles
-            noise_data = [int((nd * noise)/5) for nd in NoiseData[rand_offset:num_samples+rand_offset]]
+            noise_data = [int((nd * noise)/5)
+                          for nd in NoiseData[rand_offset:num_samples+rand_offset]]
             noise_sample = list(noise_data)
             new_data = [int((d+n)/2) for (d, n) in zip(data, noise_data)]
             data = new_data
@@ -165,7 +172,7 @@ class SoundMorse:
 
         dash_time = 3 * dot_time
         inter_elem_time = dot_time
-        inter_char_time = 3 * dot_time
+        inter_char_time = 2 * dot_time  # becasue we always add one inter_elem_time
         inter_word_time = 7 * dot_time
 
         if self.wpm < SoundMorse.FarnsworthThreshold:
@@ -178,6 +185,22 @@ class SoundMorse:
         self.inter_element_silence = self.make_tone(inter_elem_time, signal=0.0, noise=self.noise)
         self.inter_char_silence = self.make_tone(inter_char_time, signal=0.0, noise=self.noise)
         self.inter_word_silence = self.make_tone(inter_word_time, signal=0.0, noise=self.noise)
+
+        # make all character sequences
+        self.morse_sounds = {}
+        for (ch, morse) in utils.Char2Morse.items():
+            b_data = bytes(self.inter_char_silence)
+            for dot_dash in morse:
+                if dot_dash == ' ':
+                    pass
+                elif dot_dash == '.':
+                    b_data += self.dot_sound
+                elif dot_dash == '-':
+                    b_data += self.dash_sound
+                else:
+                    raise RuntimeError("Bad character in morse string: '%s'" % str(ch))
+                b_data += self.inter_element_silence
+            self.morse_sounds[ch] = b_data
 
     def set_speeds(self, cwpm=None, wpm=None):
         """Set morse speeds."""
@@ -211,35 +234,15 @@ class SoundMorse:
         self.frequency = frequency
         self.create_sounds()
 
-    def send(self, code):
-        """Send characters in 'code' to speakers as morse."""
-
-# TODO
-# Look at reorganizing this.  Each element (dot or dash) should have a trailing
-# inter-element silence.  Should add inter-character and inter-word silences when
-# appropriate.
+    def send(self, char):
+        """Send character to speakers as morse."""
 
         # if, by some mischance we haven't created the sounds, do it now
         if self.dot_sound is None:
             self.create_sounds()
 
-        # send the morse
-        for char in code:
-            char = char.upper()
-            if char == ' ':
-                self.stream.write(self.inter_word_silence)
-            elif char in utils.Char2Morse:
-                code = utils.Char2Morse[char]
-                for s in code:
-                    if s == '.':
-                        self.stream.write(self.dot_sound)
-                    elif s == '-':
-                        self.stream.write(self.dash_sound)
-                    self.stream.write(self.inter_element_silence)
-            else:
-                print("Unrecognized character '%s' in morse to send" % char)
-
-            self.stream.write(self.inter_word_silence)
+        char = char.upper()
+        self.stream.write(self.morse_sounds[char])
 
 
 if __name__ == '__main__':
