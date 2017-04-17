@@ -6,6 +6,7 @@ TTD.txt
 icons
 *.OLD
 saved_logs
+morse_trainer
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
