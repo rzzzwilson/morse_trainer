@@ -54,7 +54,7 @@ class Display(QWidget):
         DefaultWidgetWidth = 600
         BaselineOffsetUpper = 34
         BaselineOffsetLower = 68
-        FontSize = 40
+        FontSize = 80
         TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0

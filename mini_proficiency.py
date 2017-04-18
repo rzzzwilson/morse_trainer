@@ -55,7 +55,7 @@ class MiniProficiency(QWidget):
     elif platform.system() == 'Windows':
         Font = 'Courier'
         FontSize = 15
-        TopMargin = 11
+        TopMargin = 18
         LeftMargin = 5
         RightMargin = 5
         BottomMargin = 3
