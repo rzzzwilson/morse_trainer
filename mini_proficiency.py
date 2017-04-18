@@ -35,11 +35,11 @@ class MiniProficiency(QWidget):
     if platform.system() == 'Linux':
         Font = 'Courier'            # the font to use
         FontSize = 15               # font size
-        TopMargin = 11              # top margin
+        TopMargin = 18              # top margin
         LeftMargin = 5              # left margin
         RightMargin = 5             # right margin
         BottomMargin = 3            # bottom margin
-        CharWidth = 10              # character spacing
+        CharWidth = 12              # character spacing
         CharHeight = 10             # character 'height'
         TooltipFontSize = 4         # tooltip font size
     elif platform.system() == 'Darwin':

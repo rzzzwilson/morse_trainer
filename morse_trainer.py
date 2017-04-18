@@ -73,7 +73,7 @@ class MorseTrainer(QTabWidget):
         ButtonWidth = 80
     elif System == 'Linux':
         MinimumWidth = 910
-        MinimumHeight = 435
+        MinimumHeight = 540
         ButtonWidth = 80
     elif System == 'Darwin':
         MinimumWidth = 910
@@ -782,6 +782,7 @@ class MorseTrainer(QTabWidget):
         self.copy_Koch_charset = utils.Koch[:self.copy_Koch_number]
         self.copy_wpm = 5
         self.copy_cwpm = 5
+        self.copy_freq = SoundMorse.DefaultFrequency
         self.copy_pending = ''  # holds last 2 chars sounded
         self.threadCopy = None  # the sounding thread
 
