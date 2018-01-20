@@ -54,7 +54,7 @@ class Display(QWidget):
         DefaultWidgetWidth = 600
         BaselineOffsetUpper = 34
         BaselineOffsetLower = 68
-        FontSize = 40
+        FontSize = 80
         TooltipFontSize = 4
         TextLeftOffset = 3
         RoundedRadius = 3.0
@@ -115,9 +115,8 @@ class Display(QWidget):
 
         # set the widget internal state
         self.setFixedHeight(Display.DefaultWidgetHeight)
-        self.fixed_font = QFont(Display.DisplayFont, Display.FontSize, QFont.DemiBold)
-        self.font_size = Display.FontSize
-        self.font = self.fixed_font
+        self.font = QFont(Display.DisplayFont, Display.FontSize, QFont.Bold)
+        self.font.setPixelSize(Display.FontSize)
 
         # define start positions for upper and lower text
         self.upper_start = QPoint(Display.TextLeftOffset,
@@ -214,6 +213,10 @@ class Display(QWidget):
         """Draw the widget from internal state."""
 
         # set to the font we use in the widget
+#        log(str(dir(self.font)))
+#        log('.pointsize: %s' % type(self.font.pointSize))
+        log('Setting: .pointSize()=%s, .FontSize=%d' % (str(self.font.pointSize()), Display.FontSize))
+        log('Setting: .pixelSize()=%s, .FontSize=%d' % (str(self.font.pixelSize()), Display.FontSize))
         qp.setFont(self.font)
 
         # calculate width of characters

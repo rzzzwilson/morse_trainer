@@ -1,10 +1,10 @@
 REM Use pyinstaller to create a Windows morse_trainer executable.
 REM -------------------------------------------------------------
 
-rmdir /S/Q dist build
-pyinstaller -F --noconsole morse_trainer.py
+REM rmdir /S/Q dist build
+pyinstaller -F -p "C:\Users\r-w\AppData\Local\Programs\Python\Python35\Lib\site-packages\PyQt5" morse_trainer.py
 cd dist
-move morse_trainer.exe ../morse_trainer.win.exe
+move /Y morse_trainer.exe ../morse_trainer.win.exe
 cd ..
-rmdir /S/Q dist build __pycache__
+REM rmdir /S/Q dist build __pycache__
 del *.spec

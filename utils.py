@@ -71,7 +71,6 @@ DotTime2Wpm = ((120, 0), (120, 5), (60, 10), (40, 15), (30, 20),
 Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 
 # stylesheet code for PyQt5
-#StyleCSS = ""
 StyleCSS = """
 /*css stylesheet file that contains all the style information*/
 
@@ -96,6 +95,7 @@ QGroupBox:title{
     border-top: none;
 }
 """
+#StyleCSS = ""
 
 
 def str_trace(msg=None):

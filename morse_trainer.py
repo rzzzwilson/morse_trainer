@@ -69,7 +69,7 @@ class MorseTrainer(QTabWidget):
     # set platform-dependent sizes
     if System == 'Windows':
         MinimumWidth = 910
-        MinimumHeight = 435
+        MinimumHeight = 540
         ButtonWidth = 80
     elif System == 'Linux':
         MinimumWidth = 910
