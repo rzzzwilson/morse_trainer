@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # A bash script to build the standalone executables for morse_trainer.  Uses 
-# 'pyinstaller' to generate an executable for the architecture  it is run on.
+# 'pyinstaller' to generate an executable for the architecture it is run on.
 # Executable files are:
 #     morse_trainer_Linux
 #     morse_trainer_Darwin
