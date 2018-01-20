@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Morse Trainer is an application to help a user learn to send and copy Morse.
