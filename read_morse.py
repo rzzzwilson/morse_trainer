@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Class to read morse sounds from the internal microphone and return
 the English characters.  The code can read dynamic parameters from
-a JSON file.  The dynamic parameters (possibly changed) can be save
+a JSON file.  The dynamic parameters (possibly changed) can be saved
 back to a file.
 
 morse = ReadMorse()

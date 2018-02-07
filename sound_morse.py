@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Class to make morse sounds from English characters.  We use a state
@@ -253,7 +252,7 @@ if __name__ == '__main__':
     for tone in [400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000]:
         morse.set_volumes(tone, volume, 0)
         print('(%d, %d), ' % (tone, volume))
-        morse.send('T')
+        morse.send('X')
         volume -= 6
 
     volume = 90

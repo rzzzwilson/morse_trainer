@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Small utility functions.
@@ -61,14 +60,14 @@ Char2Morse = {
               ' ': ' '
              }
 
+# invert above dict to create map of morse strings to chars
+Morse2Char = {v:k for (k, v) in Char2Morse.items()}
+
 # sequence of tuples (dot_time, wpm) used to interpolate
 # put sentinel values both ends, MUST BE SORTED ON WPM!
 # NOTE: this is arbitrary and will probably need adjustment
 DotTime2Wpm = ((120, 0), (120, 5), (60, 10), (40, 15), (30, 20),
                (24, 25), (20, 30), (17, 35), (15, 40), (13, 45), (10, 50))
-
-# invert above dict to create map of morse strings to chars
-Morse2Char = {v:k for (k, v) in Char2Morse.items()}
 
 # stylesheet code for PyQt5
 StyleCSS = """
