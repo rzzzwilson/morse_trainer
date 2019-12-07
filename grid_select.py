@@ -45,13 +45,13 @@ class GridSelect(QWidget):
         RowHeight = 30              # pixel height of a row
         ColWidth = 30               # pixel width of a column
     elif platform.system() == 'Darwin':
-        MaxColumns = 12
+        MaxColumns = 10
         Font = 'Courier'
-        FontSize = 12
-        TopOffset = 5
-        LeftOffset = 5
-        RowHeight = 20
-        ColWidth = 20
+        FontSize = 10
+        TopOffset = 3
+        LeftOffset = 3
+        RowHeight = 30
+        ColWidth = 28
     elif platform.system() == 'Windows':
         MaxColumns = 12
         Font = 'Courier'
@@ -66,7 +66,7 @@ class GridSelect(QWidget):
     # prepare the signals
     changed = pyqtSignal(dict, name='changed')
 
-    def __init__(self, data, max_cols=12):
+    def __init__(self, data, max_cols=MaxColumns):
         """Initialize the widget.
 
         data  a string of characters to be displayed in the widget
@@ -127,6 +127,8 @@ class GridSelect(QWidget):
 
         # draw the characters in the grid, with surround highlight
         grid = QGridLayout(self)
+        grid.setHorizontalSpacing(2)
+        grid.setVerticalSpacing(2)
         self.setLayout(grid)
 
         positions = [(i,j) for i in range(self.num_rows)
