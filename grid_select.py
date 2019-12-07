@@ -186,8 +186,10 @@ class GridSelect(QWidget):
         We don't assume 'status' contains only keys in the set.
         """
 
-        self.inhibit = True
+        print(f'setState: called, status={status}')
+        print(f'setState: self.status={self.status}')
 
+        self.inhibit = True
 
         # set status and state of each button
         self.status = {}
@@ -196,9 +198,12 @@ class GridSelect(QWidget):
             value = status[label]
             self.status[label] = value
             button.setChecked(value)
-        self.update()
+            button.update()
+            print(f'setting state of button "{label}" ({button} to {value}')
 
         self.inhibit = False
+
+        self.update()
 
     def clear(self):
         """Set all grid buttons to OFF."""
