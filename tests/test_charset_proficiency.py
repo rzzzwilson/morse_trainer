@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Test the 'charset status' widget.
@@ -24,7 +23,9 @@ class TestCharsetProficiency(QWidget):
     def initUI(self):
         self.status = CharsetProficiency('Test Status', utils.Alphabetics,
                                                         utils.Numbers,
-                                                        utils.Punctuation)
+                                                        utils.Punctuation,
+                                                        97)
+#        def __init__(self, gbox_name, alpha, number, punct, threshold):
         redisplay_button = QPushButton('Redisplay', self)
 
         hbox1 = QHBoxLayout()

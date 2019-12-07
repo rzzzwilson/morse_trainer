@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Test the 'charset' custom widget used by Morse Trainer.
@@ -18,7 +17,6 @@ class TestCharset(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-
 
     def initUI(self):
         user_charset = {'A':True, 'B':False, 'C':False, '0':True}

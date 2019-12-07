@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Test the 'grid_display' custom widget used by Morse Trainer.
@@ -19,7 +18,6 @@ class GridSelectExample(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-
 
     def initUI(self):
         self.display_alphabet = GridSelect(utils.Alphabetics)
@@ -53,11 +51,14 @@ class GridSelectExample(QWidget):
     def invertButtonClicked(self):
         """Get alphabet (and others) selection, invert, put back."""
 
+        print('invertButtonClicked: called')
+
         for gd in (self.display_alphabet,
                    self.display_numbers, self.display_punctuation):
             selection = gd.getState()
             inverted = {key:(not value) for (key, value) in selection.items()}
             gd.setState(inverted)
+            gd.update()
 
     def changeAlphabetHandler(self, status):
         print('Alphabet has changed: %s' % str(status))

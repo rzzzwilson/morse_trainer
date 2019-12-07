@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 """
 Test the 'mini charset' custom widget used by Morse Trainer.
