@@ -192,10 +192,13 @@ class GridSelect(QWidget):
         self.inhibit = True
 
         # set status and state of each button
-        self.status = {}
+#        self.status = {}
         for button in self.buttons:
             label = button.text()
             value = status[label]
+            print(f'label={label}, status[label]={status[label]}')
+            if value != self.status[label]:
+                button.toggle()
             self.status[label] = value
             button.setChecked(value)
             button.update()
