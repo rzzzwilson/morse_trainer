@@ -177,7 +177,7 @@ class CopyVolumes(QWidget):
             for (i, (l, p)) in enumerate(levels_list):
                 if percent == p:
                     return (percent, i)
-            raise RuntimeException('Got bad percent value: %s' % str(percent))
+            raise RuntimeError('Got bad percent value: %s' % str(percent))
 
         self.inhibit = True
 

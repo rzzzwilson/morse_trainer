@@ -63,4 +63,6 @@ while True:
 
     if not code:
         break
-    morse.send(code)
+#    morse.send(code)
+    for ch in code:
+        morse.send(ch)

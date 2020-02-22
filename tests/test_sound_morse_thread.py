@@ -32,7 +32,7 @@ def send_morse(string, sound_object):
     # sound each character in the string
     # we do this in this strange way so setting a global from main code will stop the thread
     next_char = string
-    while not StopThread:
+    while not StopThread and next_char:
         char = next_char[0]
         next_char = next_char[1:]
         sound_object.send(char)

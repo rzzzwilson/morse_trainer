@@ -25,12 +25,12 @@ class SpeedsExample(QWidget):
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.volume_group)
-        vbox.addItem(QSpacerItem(100, 100))
+        vbox.addItem(QSpacerItem(100, 50))
         vbox.addWidget(self.button)
         self.setLayout(vbox)
 
         self.setWindowTitle('Example of Copy Volumes widget')
-        self.setFixedSize(400, 125)
+        self.setFixedSize(400, 150)
         self.show()
 
         # connect the widget to '.changed' event handler
@@ -43,7 +43,7 @@ class SpeedsExample(QWidget):
         signal = random.randint(0, 100)
         noise = random.randint(0, 100)
 
-        self.volume_group.setState(signal, noise)
+        self.volume_group.setState(700, signal, noise)
 
 
 app = QApplication(sys.argv)
