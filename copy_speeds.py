@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 A PyQt5 custom widget used by Morse Trainer.
 

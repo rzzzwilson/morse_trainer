@@ -1,5 +1,3 @@
-#!/bin/env python3
-
 """
 CLI program to continually send a morse string.
 

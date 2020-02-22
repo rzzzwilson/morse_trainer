@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Class to read morse sounds from the internal microphone and return
 the English characters.  The code can read dynamic parameters from

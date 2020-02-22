@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Morse Trainer is an application to help a user learn to send and copy Morse.
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Class to make morse sounds from English characters.  We use a state
 machine to send well-formed morse code.

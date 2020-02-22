@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Small utility functions.
 """
@@ -23,6 +21,9 @@ AllUserChars = Alphabetics + Numbers + Punctuation
 
 # all user chars in the 'Koch' order
 Koch = """KMRSUAPTLOWI.NJE=F0Y,VG5/Q9ZH38B?427C1D6X():;!"'"""
+
+if len(Koch) != len(AllUserChars):
+    raise RuntimeError('len(Koch) != len(AllUserChars)')
 
 # ensure Koch is same as AllUserChars
 auc_sorted = ''.join(sorted(AllUserChars))

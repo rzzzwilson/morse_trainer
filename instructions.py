@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 The 'instructions' widget for Morse Trainer.
 

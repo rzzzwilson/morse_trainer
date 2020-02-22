@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Test code to explore setting parse params.
 """
