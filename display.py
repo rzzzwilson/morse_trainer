@@ -210,10 +210,8 @@ class Display(QWidget):
         """Draw the widget from internal state."""
 
         # set to the font we use in the widget
-#        log(str(dir(self.font)))
-#        log('.pointsize: %s' % type(self.font.pointSize))
-        log('Setting: .pointSize()=%s, .FontSize=%d' % (str(self.font.pointSize()), Display.FontSize))
-        log('Setting: .pixelSize()=%s, .FontSize=%d' % (str(self.font.pixelSize()), Display.FontSize))
+#        log('Setting: .pointSize()=%s, .FontSize=%d' % (str(self.font.pointSize()), Display.FontSize))
+#        log('Setting: .pixelSize()=%s, .FontSize=%d' % (str(self.font.pixelSize()), Display.FontSize))
         qp.setFont(self.font)
 
         # calculate width of characters

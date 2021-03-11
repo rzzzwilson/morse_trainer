@@ -1004,83 +1004,90 @@ class CopyThread(QThread):
         self.sound_object.send(self.char)
 
 
-if __name__ == '__main__':
-    import sys
+######
+# Various functions used to run the app.
+######
 
-    # small 'usage' function
-    def usage(msg=None):
-        if msg:
-            print(('*'*80 + '\n%s\n' + '*'*80) % msg)
-        print(__doc__)
+def trace_calls(frame, event, arg):
+    """Set up c_call tracing - https://pymotw.com/3/sys/tracing.html"""
 
-    # our own handler for uncaught exceptions
-    def excepthook(type, value, tb):
-        msg = '\n' + '=' * 80
-        msg += '\nUncaught exception:\n'
-        msg += ''.join(traceback.format_exception(type, value, tb))
-        msg += '=' * 80 + '\n'
-        log.critical(msg)
-        print(msg)
-
-    # plug our handler into the python system
-    sys.excepthook = excepthook
-
-    # start the logging
-    log = logger.Log('debug.log', logger.Log.CRITICAL)
-
-    # announce the start
-    morse_version = utils.str2morse('morse trainer %s' % ProgramVersion)
-    morse_width = len(morse_version)
-    morse_signon = 'Morse Trainer %s' % ProgramVersion
-    log(morse_version)
-    log(morse_signon.center(morse_width))
-    log('AC3DN NK98'.center(morse_width))
-    log(morse_version)
-
-    # parse command line options
-    argv = sys.argv[1:]
-
-    try:
-        (opts, args) = getopt.getopt(argv, 'd:h', ['debug=', 'help'])
-    except getopt.GetoptError as err:
-        usage(err)
-        sys.exit(1)
-
-    for (opt, param) in opts:
-        if opt in ['-d', '--debug']:
-            try:
-                debug = int(param)
-                log.set_level(debug)
-            except ValueError:
-                usage("-d must be followed by an integer, got '%s'" % param)
-                sys.exit(1)
-        elif opt in ['-h', '--help']:
-            usage()
-            sys.exit(0)
-
-    # set up c_call tracing - https://pymotw.com/3/sys/tracing.html
-    def trace_calls(frame, event, arg):
-        if event != 'c_call':
-            return
-        co = frame.f_code
-        func_name = co.co_name
-        func_line_no = frame.f_lineno
-        func_filename = co.co_filename
-        caller = frame.f_back
-        caller_line_no = caller.f_lineno
-        caller_filename = caller.f_code.co_filename
-        log('** arg=%s' % str(arg))
-        log('* Call to', func_name)
-        log('*  on line {} of {}'.format(func_line_no, func_filename))
-        log('*  from line {} of {}'.format(caller_line_no, caller_filename))
+    if event != 'c_call':
         return
+    co = frame.f_code
+    func_name = co.co_name
+    func_line_no = frame.f_lineno
+    func_filename = co.co_filename
+    caller = frame.f_back
+    caller_line_no = caller.f_lineno
+    caller_filename = caller.f_code.co_filename
+    log('** arg=%s' % str(arg))
+    log('* Call to', func_name)
+    log('*  on line {} of {}'.format(func_line_no, func_filename))
+    log('*  from line {} of {}'.format(caller_line_no, caller_filename))
+    return
 
-    sys.settrace(trace_calls)
+def usage(msg=None):
+    """Print the module __doc__ string, plus optional message."""
 
-    # launch the app, catch thread crashes with 'faulthandler'
-    with open(FaultHandlerFile, 'w') as fd:
-        faulthandler.enable(file=fd)   # turn on fault trap
-        app = QApplication(sys.argv)
-        ex = MorseTrainer()
-        ex.show()
-        sys.exit(app.exec())
+    if msg:
+        print(('*'*80 + '\n%s\n' + '*'*80) % msg)
+    print(__doc__)
+
+def excepthook(type, value, tb):
+    """Handler for uncaught exceptions."""
+
+    msg = '\n' + '=' * 80
+    msg += '\nUncaught exception:\n'
+    msg += ''.join(traceback.format_exception(type, value, tb))
+    msg += '=' * 80 + '\n'
+    log.critical(msg)
+    print(msg)
+
+###############################################################################
+# Actual start of the app is here.
+###############################################################################
+
+# plug our handler into the python system
+sys.excepthook = excepthook
+
+# start the logging
+log = logger.Log('debug.log', logger.Log.CRITICAL)
+
+# announce the start
+morse_version = utils.str2morse('morse trainer %s' % ProgramVersion)
+morse_width = len(morse_version)
+morse_signon = 'Morse Trainer %s - AC3DN' % ProgramVersion
+log(morse_version)
+log(morse_signon.center(morse_width))
+log(morse_version)
+
+# parse command line options
+argv = sys.argv[1:]
+
+try:
+    (opts, args) = getopt.getopt(argv, 'd:h', ['debug=', 'help'])
+except getopt.GetoptError as err:
+    usage(err)
+    sys.exit(1)
+
+for (opt, param) in opts:
+    if opt in ['-d', '--debug']:
+        try:
+            debug = int(param)
+            log.set_level(debug)
+        except ValueError:
+            usage("-d must be followed by an integer, got '%s'" % param)
+            sys.exit(1)
+    elif opt in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+
+sys.settrace(trace_calls)
+
+# launch the app, catch thread crashes with 'faulthandler'
+with open(FaultHandlerFile, 'w') as fd:
+    faulthandler.enable(file=fd)   # turn on fault trap
+    app = QApplication(sys.argv)
+    ex = MorseTrainer()
+    ex.show()
+    sys.exit(app.exec())
